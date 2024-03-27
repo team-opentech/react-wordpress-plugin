@@ -6,71 +6,27 @@
  * Author: Tu Nombre
  */
 defined('ABSPATH') or die('¡Acceso directo no permitido!');
-// function enqueue_react_app_script() {
-//     wp_enqueue_script('mi-react-app-js', plugins_url('/build/mi-react-app.js', __FILE__), array(), null, true);
-// }
-
-// function mi_react_app_shortcode($atts) {
-//     static $counter = 0;
-//     $counter++;
-    
-//     $atts = shortcode_atts(array(
-//         'iata_code' => 'Default',
-//         'type' => 'arrivals',
-//         'size' => '10',
-//     ), $atts, 'mi_react_app');
-
-//     $unique_id = 'mi-react-app-' . $counter;
-//     wp_localize_script('mi-react-app-js', 'miReactAppParams' . $counter, array(
-//         'iataCode' => $atts['iata_code'],
-//         'type' => $atts['type'],
-//         'size' => $atts['size'],
-//         'containerId' => $unique_id,
-//     ));
-
-//     return "<div id='{$unique_id}'></div>";
-// }
-// add_shortcode('mi_react_app', 'mi_react_app_shortcode');
 
 function enqueue_react_app_script() {
-    wp_enqueue_script('mi-react-app-js', plugins_url('/build/mi-react-app.js', __FILE__), array(), null, true);
+    // Asegúrate de ajustar la ruta al script de React según tu estructura de archivos
+    wp_enqueue_script('mi-react-app-js', plugins_url('/build/mi-react-app.js', __FILE__), array(), '1.0', true);
 }
+add_action('wp_enqueue_scripts', 'enqueue_react_app_script');
 
-function mi_react_shortcode($atts) {
-    enqueue_react_app_script();
-    
-    $atts = shortcode_atts(array(
-        'iata_code' => 'Default',
-        'type' => 'arrivals',
+function generar_shortcode_react_app($atts, $content, $tag) {
+    $atts = shortcode_atts([
+        'iata_code' => 'JFK',
         'size' => '10',
-    ), $atts, 'mi_react_app');
+    ], $atts);
 
-    wp_localize_script('mi-react-app-js', 'miReactAppParams', array(
-        'iataCode' => $atts['iata_code'],
-        'type' => $atts['type'],
-        'size' => $atts['size']
-    ));
-
-    return "<div id='mi-react-app'></div>"; 
-}
-add_shortcode('mi_react_app', 'mi_react_shortcode');
-
-// function departure_shortcode($atts) {
-//     // enqueue_react_app_script();
+    // Determina el tipo basado en el nombre del shortcode
+    $type = ($tag == 'departures_app') ? 'departures' : 'arrivals';
     
-//     $atts = shortcode_atts(array(
-//         'iata_code' => 'Default',
-//         'type' => 'departures',
-//         'size' => '10',
-//     ), $atts, 'departures_app');
+    // Devuelve el contenedor de la aplicación React con los data attributes necesarios
+    return "<div class='react-app-container' data-react-app='mi-react-app' data-iata-code='{$atts['iata_code']}' data-type='{$type}' data-size='{$atts['size']}'></div>";
+}
 
-//     wp_localize_script('mi-react-app-js', 'miReactAppParams', array(
-//         'iataCode' => $atts['iata_code'],
-//         'type' => $atts['type'],
-//         'size' => $atts['size']
-//     ));
-
-//     return "<div id='departures-app'></div>"; 
-// }
-// add_shortcode('departures_app', 'departure_shortcode');
+// Registra los shortcodes
+add_shortcode('arrivals_app', 'generar_shortcode_react_app');
+add_shortcode('departures_app', 'generar_shortcode_react_app');
 ?>
