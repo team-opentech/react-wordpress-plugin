@@ -1,31 +1,31 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/index.js', // Punto de entrada de tu aplicación
+  entry: './src/index.js',
   output: {
-    path: path.resolve(__dirname, 'build'), // La carpeta de salida de los archivos compilados
-    filename: 'mi-react-app.js', // El nombre del archivo JavaScript compilado
+    path: path.resolve(__dirname, 'build'),
+    filename: 'mi-react-app.js',
   },
   module: {
     rules: [
       {
-        test: /\.(js|jsx|ts|tsx)$/, // Para archivos .js, .jsx, .ts, y .tsx
-        exclude: /node_modules/, // Excluye la carpeta node_modules
+        test: /\.(js|jsx|ts|tsx)$/,
+        exclude: /node_modules/,
         use: {
-          loader: 'babel-loader', // Usa babel-loader para transpilar los archivos
+          loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-react', '@babel/preset-typescript'], // Presets para React y TypeScript
+            presets: ['@babel/preset-react', '@babel/preset-typescript'],
           },
         },
       },
       {
-        test: /\.css$/, // Para archivos .css
+        test: /\.css$/,
         use: [
-          'style-loader', // Inyecta CSS en el DOM
-          'css-loader', // Interpreta @import y url() como import/require()
+          'style-loader',
+          'css-loader',
+          'postcss-loader', // Añade postcss-loader aquí
         ],
       },
-      // Regla para ts-loader específicamente para archivos TypeScript
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
@@ -34,8 +34,6 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js', '.jsx'], // Extensiones que Webpack procesará
+    extensions: ['.tsx', '.ts', '.js', '.jsx'],
   },
 };
-
-

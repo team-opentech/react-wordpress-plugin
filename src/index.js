@@ -30,17 +30,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const appContainers = document.querySelectorAll(".react-app-container");
 
   appContainers.forEach(container => {
-    const type = container.dataset.reactApp === 'mi-flight-info' ? 'vuelo' : container.getAttribute("data-type");
-    const props = {
-      airportCode: container.getAttribute("data-airport-code"),
-      type: type,
-      size: container.getAttribute("data-size"),
-      apiKey: container.getAttribute("data-api-key"),
-      path: container.getAttribute("data-path"),
-      flight: container.getAttribute("data-flight"),
-    };
+    const type = container.getAttribute("data-type");
+    const airportCode = container.getAttribute("data-airport-code");
+    const size = container.getAttribute("data-size");
+    const apiKey = container.getAttribute("data-api-key");
+    const path = container.getAttribute("data-path");
+    const flight = container.getAttribute("data-flight");
 
     // Monta el componente App con los props adecuados.
-    ReactDOM.render(<App {...props} />, container);
+    ReactDOM.render(
+      <App
+        airportCode={airportCode}
+        type={type}
+        size={size}
+        apiKey={apiKey}
+        path={path}
+        flight={flight}
+      />,
+      container
+    );
   });
 });
