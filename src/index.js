@@ -1,39 +1,46 @@
+// import React from "react";
+// import ReactDOM from "react-dom";
+// import App from "./App";
+// import "./style.css"; // Asegura que los estilos se importan correctamente
+
+// document.addEventListener("DOMContentLoaded", () => {
+//   const containers = document.querySelectorAll(".react-app-container");
+
+//   containers.forEach(container => {
+//       const airportCode = container.getAttribute("data-airport-code");
+//       const type = container.getAttribute("data-type");
+//       const size = container.getAttribute("data-size");
+//       const apiKey = container.getAttribute("data-api-key");
+//       const path = container.getAttribute("data-path");
+
+//       // Ahora apiKey y path están disponibles para ser utilizados en tu componente React
+//       ReactDOM.render(
+//           <App airportCode={airportCode} type={type} size={size} apiKey={apiKey} path={path} />,
+//           container
+//       );
+//   });
+// });
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
-import "./style.css"; // Asegura que los estilos se importan correctamente
-
-// document.addEventListener("DOMContentLoaded", () => {
-//   const containers = document.querySelectorAll(
-//     "[data-react-app='mi-react-app']"
-//   );
-
-//   containers.forEach((container) => {
-//     const airportCode = container.getAttribute("data-iata-code");
-//     const type = container.getAttribute("data-type");
-//     const size = container.getAttribute("data-size") || "10"; // Valor predeterminado
-
-//     ReactDOM.render(
-//       <App airportCode={airportCode} type={type} size={size} />,
-//       container
-//     );
-//   });
-// });
+import "./style.css";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const containers = document.querySelectorAll(".react-app-container");
+  // Encuentra todos los contenedores de la aplicación React.
+  const appContainers = document.querySelectorAll(".react-app-container");
 
-  containers.forEach(container => {
-      const airportCode = container.getAttribute("data-airport-code");
-      const type = container.getAttribute("data-type");
-      const size = container.getAttribute("data-size");
-      const apiKey = container.getAttribute("data-api-key");
-      const path = container.getAttribute("data-path");
+  appContainers.forEach(container => {
+    const type = container.dataset.reactApp === 'mi-flight-info' ? 'vuelo' : container.getAttribute("data-type");
+    const props = {
+      airportCode: container.getAttribute("data-airport-code"),
+      type: type,
+      size: container.getAttribute("data-size"),
+      apiKey: container.getAttribute("data-api-key"),
+      path: container.getAttribute("data-path"),
+      flight: container.getAttribute("data-flight"),
+    };
 
-      // Ahora apiKey y path están disponibles para ser utilizados en tu componente React
-      ReactDOM.render(
-          <App airportCode={airportCode} type={type} size={size} apiKey={apiKey} path={path} />,
-          container
-      );
+    // Monta el componente App con los props adecuados.
+    ReactDOM.render(<App {...props} />, container);
   });
 });

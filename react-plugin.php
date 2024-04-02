@@ -7,42 +7,73 @@
  */
 
  defined('ABSPATH') or die('¡Acceso directo no permitido!');
-
- function enqueue_react_app_script() {
-     wp_enqueue_script('mi-react-app-js', plugins_url('/build/mi-react-app.js', __FILE__), array(), '1.0', true);
-     
-     $opciones = array(
-         'apiKey' => get_option('mi_plugin_api_key'),
-         'path' => get_option('mi_plugin_path'),
-     );
-     wp_localize_script('mi-react-app-js', 'opcionesDelPlugin', $opciones);
- }
- add_action('wp_enqueue_scripts', 'enqueue_react_app_script');
- 
  function generar_shortcode_react_app($atts, $content, $tag) {
+    // Atributos por defecto
     $atts = shortcode_atts([
         'iata_code' => '',
         'icao_code' => '',
         'size' => '10',
+        'flight' => '', // Nuevo parámetro para el shortcode numero-vuelo
     ], $atts);
 
-    if (empty($atts['iata_code']) && empty($atts['icao_code'])) {
+    // Validación básica
+    if (($tag == 'arrivals_app' || $tag == 'departures_app') && empty($atts['iata_code']) && empty($atts['icao_code'])) {
         return "Por favor, incluye al menos el IATA code o el ICAO code del aeropuerto para proceder.";
     }
 
-        // Recuperar los valores guardados en los ajustes del plugin
-        $apiKey = get_option('mi_plugin_api_key');
-        $path = get_option('mi_plugin_path');
-
-    $type = ($tag == 'departures_app') ? 'departures' : 'arrivals';
+    $type = $tag == 'departures_app' ? 'departures' : ($tag == 'arrivals_app' ? 'arrivals' : 'vuelo'); // Nuevo caso para 'vuelo'
     $codeValue = !empty($atts['iata_code']) ? $atts['iata_code'] : $atts['icao_code'];
-    $codeType = !empty($atts['iata_code']) ? 'iata' : 'icao';
-    
-    return "<div class='react-app-container' data-react-app='mi-react-app' data-airport-code='{$codeValue}' data-api-key='{$apiKey}' data-path='{$path}' data-code-type='{$codeType}' data-type='{$type}' data-size='{$atts['size']}'></div>";
+
+    // Recuperar los valores guardados en los ajustes del plugin
+    $apiKey = get_option('mi_plugin_api_key');
+    $path = get_option('mi_plugin_path');
+
+    // Devuelve el contenedor dependiendo del tipo
+    if ($type == 'vuelo' && !empty($atts['flight'])) {
+        return "<div class='react-app-container' data-react-app='mi-flight-info' data-flight='{$atts['flight']}' data-api-key='{$apiKey}' data-path='{$path}'></div>";
+    } else {
+        return "<div class='react-app-container' data-react-app='mi-react-app' data-airport-code='{$codeValue}' data-api-key='{$apiKey}' data-path='{$path}' data-code-type='{$codeValue ? 'iata' : 'icao'}' data-type='{$type}' data-size='{$atts['size']}'></div>";
+    }
 }
 
- add_shortcode('arrivals_app', 'generar_shortcode_react_app');
- add_shortcode('departures_app', 'generar_shortcode_react_app');
+add_shortcode('arrivals_app', 'generar_shortcode_react_app');
+add_shortcode('departures_app', 'generar_shortcode_react_app');
+add_shortcode('numero-vuelo', 'generar_shortcode_react_app'); // Registrar el nuevo shortcode
+//  function enqueue_react_app_script() {
+//      wp_enqueue_script('mi-react-app-js', plugins_url('/build/mi-react-app.js', __FILE__), array(), '1.0', true);
+     
+//      $opciones = array(
+//          'apiKey' => get_option('mi_plugin_api_key'),
+//          'path' => get_option('mi_plugin_path'),
+//      );
+//      wp_localize_script('mi-react-app-js', 'opcionesDelPlugin', $opciones);
+//  }
+//  add_action('wp_enqueue_scripts', 'enqueue_react_app_script');
+ 
+//  function generar_shortcode_react_app($atts, $content, $tag) {
+//     $atts = shortcode_atts([
+//         'iata_code' => '',
+//         'icao_code' => '',
+//         'size' => '10',
+//     ], $atts);
+
+//     if (empty($atts['iata_code']) && empty($atts['icao_code'])) {
+//         return "Por favor, incluye al menos el IATA code o el ICAO code del aeropuerto para proceder.";
+//     }
+
+//         // Recuperar los valores guardados en los ajustes del plugin
+//         $apiKey = get_option('mi_plugin_api_key');
+//         $path = get_option('mi_plugin_path');
+
+//     $type = ($tag == 'departures_app') ? 'departures' : 'arrivals';
+//     $codeValue = !empty($atts['iata_code']) ? $atts['iata_code'] : $atts['icao_code'];
+//     $codeType = !empty($atts['iata_code']) ? 'iata' : 'icao';
+    
+//     return "<div class='react-app-container' data-react-app='mi-react-app' data-airport-code='{$codeValue}' data-api-key='{$apiKey}' data-path='{$path}' data-code-type='{$codeType}' data-type='{$type}' data-size='{$atts['size']}'></div>";
+// }
+
+//  add_shortcode('arrivals_app', 'generar_shortcode_react_app');
+//  add_shortcode('departures_app', 'generar_shortcode_react_app');
 
 // Añadir la página de configuraciones y registrar las opciones
 add_action('admin_menu', 'mi_plugin_menu');

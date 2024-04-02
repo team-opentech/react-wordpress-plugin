@@ -1,60 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import { AgGridReact } from 'ag-grid-react';
-// import 'ag-grid-community/styles/ag-grid.css';
-// import 'ag-grid-community/styles/ag-theme-alpine.css';
-// import axios from 'axios';
-
-// const AIRLABS_API_KEY = 'e3d4bf45-f8f2-44f4-a1fd-f18da01fa931';
-
-// const TablaAGGrid = ({airportCode}) => {
-//   const [rowData, setRowData] = useState([]);
-
-//   useEffect(() => {
-//     console.log('Fetching data for airport code:', airportCode); // Verificación
-//     if (airportCode !== 'Valor por defecto') {
-//       const fetchData = async () => {
-//         try {
-//           const response = await axios.get(`https://airlabs.co/api/v9/schedules?arr_iata=${airportCode}&api_key=${AIRLABS_API_KEY}`);
-//           if (response.data && response.data.response) {
-//             const formattedData = response.data.response.map(item => ({
-//               time: item.arr_time,
-//               flight: item.flight_iata,
-//               from: item.dep_iata,
-//               airline: item.airline_iata,
-//               status: item.status,
-//             }));
-//             setRowData(formattedData);
-//           }
-//         } catch (error) {
-//           console.error('Error fetching arrivals data:', error);
-//         }
-//       };
-//       fetchData();
-//     }
-//   }, [airportCode]);
-
-//   const columnDefs = [
-//     { headerName: "Arrival Time", field: "time" },
-//     { headerName: "Flight", field: "flight" },
-//     { headerName: "From", field: "from" },
-//     { headerName: "Airline", field: "airline" },
-//     { headerName: "Status", field: "status" },
-//   ];
-
-//   return (
-//     <div className="ag-theme-alpine" style={{ height: 600, width: '100%' }}>
-//       <AgGridReact
-//         rowData={rowData}
-//         columnDefs={columnDefs}
-//         pagination={true}
-//         paginationPageSize={10}
-//       />
-//     </div>
-//   );
-// };
-
-// export default TablaAGGrid;
-
 import React, { useEffect, useState, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
@@ -105,7 +48,9 @@ const TablaAGGrid = ({ airportCode, type, size, apiKey, path }) => {
       const fetchData = async () => {
         try {
           const endpoint = type === "departures" ? "dep_iata" : "arr_iata";
-          console.log(`AG Grid fetch link: https://airlabs.co/api/v9/schedules?${endpoint}=${airportCode}&api_key=${AIRLABS_API_KEY}`)
+          console.log(
+            `AG Grid fetch link: https://airlabs.co/api/v9/schedules?${endpoint}=${airportCode}&api_key=${AIRLABS_API_KEY}`
+          );
           const response = await axios.get(
             `https://airlabs.co/api/v9/schedules?${endpoint}=${airportCode}&api_key=${AIRLABS_API_KEY}`
           );
@@ -157,6 +102,16 @@ const TablaAGGrid = ({ airportCode, type, size, apiKey, path }) => {
             onGridReady={(params) => setGridApi(params.api)}
             autoSizeStrategy={autoSizeStrategy}
             domLayout="autoHeight"
+            onRowClicked={(event) => {
+              const flightCode = event.data.flight;
+              const baseUrl = `${window.location.protocol}//${window.location.host}`;
+
+              if (!flightCode) {
+                window.location.href = `${baseUrl}/404.html`;
+                return;
+              }
+              window.location.href = `${baseUrl}${path}${flightCode}`;
+            }}
             pagination={true}
             paginationPageSize={size}
           />
@@ -170,6 +125,16 @@ const TablaAGGrid = ({ airportCode, type, size, apiKey, path }) => {
             onGridReady={(params) => setGridApi(params.api)}
             autoSizeStrategy={autoSizeStrategy}
             domLayout="autoHeight"
+            onRowClicked={(event) => {
+              const flightCode = event.data.flight;
+              const baseUrl = `${window.location.protocol}//${window.location.host}`;
+
+              if (!flightCode) {
+                window.location.href = `${baseUrl}/404.html`;
+                return;
+              }
+              window.location.href = `${baseUrl}${path}${flightCode}`;
+            }}
             pagination={true}
             paginationPageSize={size}
           />
@@ -179,21 +144,7 @@ const TablaAGGrid = ({ airportCode, type, size, apiKey, path }) => {
     }
   }
 
-  return (
-    <div className="ag-theme-alpine">
-      {handleGridType(type, size)}
-      {/* <AgGridReact
-        rowData={rowData}
-        columnDefs={columnDefs}
-        ref={gridRef}
-        onGridReady={(params) => setGridApi(params.api)}
-        autoSizeStrategy={autoSizeStrategy}
-        domLayout="autoHeight"
-        pagination={true}
-        paginationPageSize={10}
-      /> */}
-    </div>
-  );
+  return <div className="ag-theme-alpine">{handleGridType(type, size)}</div>;
 };
 
 export default TablaAGGrid;
