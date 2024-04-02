@@ -6,15 +6,15 @@
 
 // const AIRLABS_API_KEY = 'e3d4bf45-f8f2-44f4-a1fd-f18da01fa931';
 
-// const TablaAGGrid = ({iataCode}) => {
+// const TablaAGGrid = ({airportCode}) => {
 //   const [rowData, setRowData] = useState([]);
 
 //   useEffect(() => {
-//     console.log('Fetching data for airport code:', iataCode); // Verificación
-//     if (iataCode !== 'Valor por defecto') {
+//     console.log('Fetching data for airport code:', airportCode); // Verificación
+//     if (airportCode !== 'Valor por defecto') {
 //       const fetchData = async () => {
 //         try {
-//           const response = await axios.get(`https://airlabs.co/api/v9/schedules?arr_iata=${iataCode}&api_key=${AIRLABS_API_KEY}`);
+//           const response = await axios.get(`https://airlabs.co/api/v9/schedules?arr_iata=${airportCode}&api_key=${AIRLABS_API_KEY}`);
 //           if (response.data && response.data.response) {
 //             const formattedData = response.data.response.map(item => ({
 //               time: item.arr_time,
@@ -31,7 +31,7 @@
 //       };
 //       fetchData();
 //     }
-//   }, [iataCode]);
+//   }, [airportCode]);
 
 //   const columnDefs = [
 //     { headerName: "Arrival Time", field: "time" },
@@ -62,9 +62,9 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
 import "./style.css";
 
-const AIRLABS_API_KEY = "e3d4bf45-f8f2-44f4-a1fd-f18da01fa931";
+// const AIRLABS_API_KEY = "e3d4bf45-f8f2-44f4-a1fd-f18da01fa931";
 
-const TablaAGGrid = ({ iataCode, type, size }) => {
+const TablaAGGrid = ({ airportCode, type, size, apiKey, path }) => {
   const gridRef = useRef(null);
   const [gridApi, setGridApi] = useState(null);
   const [rowData, setRowData] = useState([]);
@@ -80,7 +80,7 @@ const TablaAGGrid = ({ iataCode, type, size }) => {
     if (gridApi && window.innerWidth > 768) {
       gridApi.sizeColumnsToFit();
     }
-  }, [iataCode, gridApi]);
+  }, [airportCode, gridApi]);
 
   useEffect(() => {
     function handleResize() {
@@ -99,17 +99,18 @@ const TablaAGGrid = ({ iataCode, type, size }) => {
   }, [gridApi]);
 
   useEffect(() => {
+    const AIRLABS_API_KEY = apiKey;
     console.log("AG Grid Type", type);
-    if (iataCode !== "Valor por defecto") {
+    if (airportCode !== "Valor por defecto") {
       const fetchData = async () => {
         try {
           const endpoint = type === "departures" ? "dep_iata" : "arr_iata";
-          console.log(`AG Grid fetch link: https://airlabs.co/api/v9/schedules?${endpoint}=${iataCode}&api_key=${AIRLABS_API_KEY}`)
+          console.log(`AG Grid fetch link: https://airlabs.co/api/v9/schedules?${endpoint}=${airportCode}&api_key=${AIRLABS_API_KEY}`)
           const response = await axios.get(
-            `https://airlabs.co/api/v9/schedules?${endpoint}=${iataCode}&api_key=${AIRLABS_API_KEY}`
+            `https://airlabs.co/api/v9/schedules?${endpoint}=${airportCode}&api_key=${AIRLABS_API_KEY}`
           );
           // const response = await axios.get(
-          //   `https://airlabs.co/api/v9/schedules?arr_iata=${iataCode}&api_key=${AIRLABS_API_KEY}`
+          //   `https://airlabs.co/api/v9/schedules?arr_iata=${airportCode}&api_key=${AIRLABS_API_KEY}`
           // );
           if (response.data && response.data.response) {
             const formattedData = response.data.response.map((item) => ({
@@ -132,7 +133,7 @@ const TablaAGGrid = ({ iataCode, type, size }) => {
     } else {
       autoSizeStrategy.type = "fitCellContents";
     }
-  }, [iataCode]);
+  }, [airportCode]);
 
   const columnDefs = [
     {
