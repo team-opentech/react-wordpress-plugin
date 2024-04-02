@@ -1,4 +1,7 @@
-/* src/style.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body, html {
   margin: 0;
   padding: 0;
@@ -39,7 +42,7 @@ body, html {
 .app-container h1 {
   color: #fff;
 }
-
+/* 
 .ag-theme-alpine .ag-header-cell {
   background-color: #007bff;
   border-right: none;
@@ -96,4 +99,4 @@ body, html {
   .ag-theme-alpine .ag-cell {
     font-size: 12px;
   }
-}
+} */
