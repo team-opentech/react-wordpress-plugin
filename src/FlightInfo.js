@@ -3,7 +3,7 @@ import { getFlightCardInfo } from './services'; // Asegúrate de que esta ruta s
 import FlightCard from './FlightCard';
 
 const FlightInfo = ({ flightCode, apiKey }) => {
-    console.log('FlightInfo', flightCode);
+    // console.log('FlightInfo', flightCode);
   const [flightInfo, setFlightInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,7 +17,7 @@ const FlightInfo = ({ flightCode, apiKey }) => {
     
     getFlightCardInfo(flightCode, apiKey)
       .then(info => {
-        console.log('Flight info:', info);
+        // console.log('Flight info:', info);
         setFlightInfo(info);
         setLoading(false);
       })

@@ -43,14 +43,14 @@ const TablaAGGrid = ({ airportCode, type, size, apiKey, path }) => {
 
   useEffect(() => {
     const AIRLABS_API_KEY = apiKey;
-    console.log("AG Grid Type", type);
+    // console.log("AG Grid Type", type);
     if (airportCode !== "Valor por defecto") {
       const fetchData = async () => {
         try {
           const endpoint = type === "departures" ? "dep_iata" : "arr_iata";
-          console.log(
-            `AG Grid fetch link: https://airlabs.co/api/v9/schedules?${endpoint}=${airportCode}&api_key=${AIRLABS_API_KEY}`
-          );
+          // console.log(
+          //   `AG Grid fetch link: https://airlabs.co/api/v9/schedules?${endpoint}=${airportCode}&api_key=${AIRLABS_API_KEY}`
+          // );
           const response = await axios.get(
             `https://airlabs.co/api/v9/schedules?${endpoint}=${airportCode}&api_key=${AIRLABS_API_KEY}`
           );
@@ -62,6 +62,7 @@ const TablaAGGrid = ({ airportCode, type, size, apiKey, path }) => {
               time: item.arr_time,
               flight: item.flight_iata,
               from: item.dep_iata,
+              to: item.arr_iata,
               airline: item.airline_iata,
               status: item.status,
             }));
@@ -86,7 +87,7 @@ const TablaAGGrid = ({ airportCode, type, size, apiKey, path }) => {
       field: "time",
     },
     { headerName: "Flight", field: "flight" },
-    { headerName: "From", field: "from" },
+    { headerName: type == "arrivals"? "From":"To", field: type == "arrivals"? "from":"to" },
     { headerName: "Airline", field: "airline" },
     { headerName: "Status", field: "status" },
   ];

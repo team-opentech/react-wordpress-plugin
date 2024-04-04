@@ -72,7 +72,7 @@ const createFlightCardInfo = (flightData) => {
 export async function getFlightCardInfo(flightCode, apiKey) {
   try {
     const flightData = await getFlightData(flightCode, apiKey);
-    console.log("Flight data service function:", flightData);
+    // console.log("Flight data service function:", flightData);
 
     const [airlineDetails, departureDetails, arrivalDetails] =
       await Promise.all([

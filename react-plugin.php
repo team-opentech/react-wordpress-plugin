@@ -7,16 +7,133 @@
  */
 
  defined('ABSPATH') or die('¡Acceso directo no permitido!');
- function enqueue_react_app_script() {
+
+ function mi_plugin_activate() {
+    global $wpdb;
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+    $table_name = $wpdb->prefix . 'flight_data';
+
+    if ($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") != $table_name) {
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            iata_code varchar(4) NOT NULL,
+            icao_code varchar(4) NOT NULL,
+            flight_data longtext NOT NULL,
+            last_updated datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+
+        dbDelta($sql);
+
+        // Guarda un mensaje de éxito en la base de datos para mostrarlo luego
+        update_option('mi_plugin_db_message', 'Base de datos Flight_Data creada con éxito.');
+    } else {
+        // Si la tabla ya existe, también guarda un mensaje
+        update_option('mi_plugin_db_message', 'La base de datos Flight_Data ya existe.');
+    }
+}
+register_activation_hook(__FILE__, 'mi_plugin_activate');
+
+function mi_plugin_show_db_message() {
+    $message = get_option('mi_plugin_db_message');
+    if (!empty($message)) {
+        ?>
+        <script type="text/javascript">
+            console.log('<?php echo esc_js($message); ?>');
+        </script>
+        <?php
+        // Borra el mensaje una vez mostrado para no repetirlo en futuras cargas de página
+        delete_option('mi_plugin_db_message');
+    }
+}
+add_action('wp_footer', 'mi_plugin_show_db_message');
+
+add_action('rest_api_init', function () {
+    register_rest_route('mi-plugin/v1', '/fetch-flight-data', array(
+      'methods' => 'GET',
+      'callback' => 'mi_plugin_fetch_flight_data',
+      'args' => array(
+        'type' => array(
+          'required' => true,
+          'validate_callback' => function ($param, $request, $key) {
+            return in_array($param, ['departures', 'arrivals', 'flight']);
+          }
+        ),
+        'airportCode' => array('required' => false),
+        'flight' => array('required' => false),
+      ),
+      'permission_callback' => '__return_true'
+    ));
+  });
+
+  function mi_plugin_fetch_flight_data($request) {
+    // Recuperar el API Key desde las opciones del plugin
+    $apiKey = get_option('mi_plugin_api_key');
+    if (!$apiKey) {
+      return new WP_Error('api_key_not_set', 'API Key no configurado en el plugin.', ['status' => 500]);
+    }
+  
+    // Recuperar parámetros del request
+    $type = $request->get_param('type');
+    $airportCode = $request->get_param('airportCode');
+    $flight = $request->get_param('flight');
+  
+    // Determinar el endpoint correcto y los parámetros según el tipo
+    $apiUrl = 'https://airlabs.co/api/v9/';
+    switch ($type) {
+      case 'departures':
+        $endpoint = "schedules?dep_iata={$airportCode}&api_key={$apiKey}";
+        break;
+      case 'arrivals':
+        $endpoint = "schedules?arr_iata={$airportCode}&api_key={$apiKey}";
+        break;
+      case 'flight':
+        $endpoint = "flight?flight_iata={$flight}&api_key={$apiKey}";
+        break;
+      default:
+        return new WP_Error('invalid_type', 'El tipo de consulta proporcionado no es válido', ['status' => 400]);
+    }
+  
+    $fullUrl = $apiUrl . $endpoint;
+  
+    // Realizar la petición al API externo
+    $response = wp_remote_get($fullUrl);
+    if (is_wp_error($response)) {
+      return new WP_Error('api_fetch_error', 'Error al realizar el fetch al API externo.', ['status' => 500]);
+    }
+  
+    // Asumiendo que la respuesta es un JSON
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+  
+    // Devolver la respuesta
+    return new WP_REST_Response($data, 200);
+  }
+  
+
+function enqueue_react_app_script() {
     wp_enqueue_script('mi-react-app-js', plugins_url('/build/mi-react-app.js', __FILE__), array(), '1.0', true);
-    
+
+    $db_message = get_option('mi_plugin_db_message', 'No hay mensaje disponible');
+
     $opciones = array(
         'apiKey' => get_option('mi_plugin_api_key'),
         'path' => get_option('mi_plugin_path'),
+        'dbMessage' => $db_message, // Agrega el mensaje de la base de datos aquí
     );
-    wp_localize_script('mi-react-app-js', 'opcionesDelPlugin', $opciones);
+
+    // Pasar todas las opciones al script de React como una variable global
+    wp_localize_script('mi-react-app-js', 'phpVars', $opciones);
+
+    // Opcional: borra el mensaje una vez que lo pasas, para no repetirlo
+    delete_option('mi_plugin_db_message');
 }
 add_action('wp_enqueue_scripts', 'enqueue_react_app_script');
+
+
  function generar_shortcode_react_app($atts, $content, $tag) {
     // Atributos por defecto
     $atts = shortcode_atts([
@@ -34,7 +151,7 @@ add_action('wp_enqueue_scripts', 'enqueue_react_app_script');
     //     return "Por favor, incluye al menos el IATA code o el ICAO code del aeropuerto para proceder.";
     // }
 
-    $type = $tag == 'departures_app' ? 'departures' : ($tag == 'arrivals_app' ? 'arrivals' : 'vuelo'); // Nuevo caso para 'vuelo'
+    $type = $tag == 'departures_app' ? 'departures' : ($tag == 'arrivals_app' ? 'arrivals' : 'flight'); // Nuevo caso para 'vuelo'
     $codeValue = !empty($atts['iata_code']) ? $atts['iata_code'] : $atts['icao_code'];
 
     // Recuperar los valores guardados en los ajustes del plugin

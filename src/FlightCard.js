@@ -12,7 +12,7 @@ import {
 } from "./helper.js"; // Asegúrate de implementar o importar estas funciones
 
 const FlightCard = ({ data }) => {
-  console.log("FlightCard data", data);
+  // console.log("FlightCard data", data);
   const getWidth = (data) => {
     if (data.status === "landed") return 100;
     if (data.status === "scheduled") return 0;

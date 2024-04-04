@@ -26,28 +26,53 @@ import App from "./App";
 import "./style.css";
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Encuentra todos los contenedores de la aplicación React.
+  if (typeof phpVars !== "undefined" && phpVars.dbMessage) {
+    console.log("Mensaje desde PHP:", phpVars.dbMessage);
+  }
+
   const appContainers = document.querySelectorAll(".react-app-container");
 
-  appContainers.forEach(container => {
+  appContainers.forEach((container) => {
     const type = container.getAttribute("data-type");
-    const airportCode = container.getAttribute("data-airport-code");
-    const size = container.getAttribute("data-size");
+    const airportCode = container.getAttribute("data-airport-code") || "";
+    const flight = container.getAttribute("data-flight") || "";
     const apiKey = container.getAttribute("data-api-key");
     const path = container.getAttribute("data-path");
-    const flight = container.getAttribute("data-flight");
+    const size = container.getAttribute("data-size");
 
-    // Monta el componente App con los props adecuados.
-    ReactDOM.render(
-      <App
-        airportCode={airportCode}
-        type={type}
-        size={size}
-        apiKey={apiKey}
-        path={path}
-        flight={flight}
-      />,
-      container
-    );
+    const baseUrl = window.location.origin;
+    const queryParams = new URLSearchParams({
+      type,
+      airportCode: airportCode || 'null',
+      flight,
+    }).toString();
+
+    const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
+
+    fetch(customEndpointUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Data obtenida: ", data.response);
+        ReactDOM.render(
+          <App
+            type={type}
+            airportCode={airportCode}
+            size={size}
+            flight={flight}
+            apiKey={apiKey}
+            path={path}
+            // Ahora puedes pasar la data como prop si es necesario
+          />,
+          container
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetching flight data:", error);
+      });
   });
 });
