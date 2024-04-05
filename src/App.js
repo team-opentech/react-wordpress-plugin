@@ -25,13 +25,13 @@ import TablaAGGrid from "./TablaAGGrid";
 import FlightInfo from "./FlightInfo"; // Asegúrate de tener este componente.
 import "./style.css";
 
-const App = ({ airportCode, type, size, apiKey, path, flight }) => {
+const App = ({ airportCode, type, size, apiKey, path, flight, data }) => {
   // Determina qué componente renderizar basado en el tipo.
   const renderComponent = () => {
-    if (type === 'vuelo' && flight) {
+    if (type === 'flight' && flight) {
       return <FlightInfo flightCode={flight} apiKey={apiKey} path={path} />;
     } else {
-      return <TablaAGGrid airportCode={airportCode} type={type} size={parseInt(size, 10)} apiKey={apiKey} path={path} />;
+      return <TablaAGGrid  type={type} size={parseInt(size, 10)}  path={path} data={data}/>;
     }
   };
 

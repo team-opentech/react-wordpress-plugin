@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
             flight={flight}
             apiKey={apiKey}
             path={path}
-            // Ahora puedes pasar la data como prop si es necesario
+            data={data.response}
           />,
           container
         );
