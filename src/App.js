@@ -29,7 +29,7 @@ const App = ({ airportCode, type, size, apiKey, path, flight, data }) => {
   // Determina qué componente renderizar basado en el tipo.
   const renderComponent = () => {
     if (type === 'flight' && flight) {
-      return <FlightInfo flightCode={flight} apiKey={apiKey} path={path} />;
+      return <FlightInfo path={path} data={data}/>;
     } else {
       return <TablaAGGrid  type={type} size={parseInt(size, 10)}  path={path} data={data}/>;
     }

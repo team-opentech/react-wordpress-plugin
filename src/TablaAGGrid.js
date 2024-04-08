@@ -11,7 +11,7 @@ const TablaAGGrid = ({ type, size, path, data }) => {
   // console.log("Data obtenida TablaAGGrid: ", data);
   const gridRef = useRef(null);
   const [gridApi, setGridApi] = useState(null);
-  const [rowData, setRowData] = useState([]);
+  const [rowData, setRowData] = useState(data);
 
   const autoSizeStrategy = {
     autoSizeAllColumns: true,
@@ -41,17 +41,17 @@ const TablaAGGrid = ({ type, size, path, data }) => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [gridApi]);
-  useEffect(() => {
-    const formattedData = data.map((item) => ({
-      time: item.arr_time,
-      flight: item.flight_iata,
-      from: item.dep_iata,
-      to: item.arr_iata,
-      airline: item.airline_iata,
-      status: item.status,
-    }));
-    setRowData(formattedData);
-  }, [])
+  // useEffect(() => {
+  //   const formattedData = data.map((item) => ({
+  //     time: item.arr_time,
+  //     flight: item.flight_iata,
+  //     from: item.dep_iata,
+  //     to: item.arr_iata,
+  //     airline: item.airline_iata,
+  //     status: item.status,
+  //   }));
+  //   setRowData(formattedData);
+  // }, [])
 
   // useEffect(() => {
   //   const AIRLABS_API_KEY = apiKey;
@@ -93,20 +93,18 @@ const TablaAGGrid = ({ type, size, path, data }) => {
   //   }
   // }, [airportCode]);
 
-
-
   const columnDefs = [
     {
-      headerName: type === "arrivals" ? "Arrival Time" : "Departure Time",
-      field: "time",
+      headerName: "Flight",
+      field: "flight",
     },
-    { headerName: "Flight", field: "flight" },
     {
       headerName: type == "arrivals" ? "From" : "To",
-      field: type == "arrivals" ? "from" : "to",
+      field: "airport",
     },
-    { headerName: "Airline", field: "airline" },
-    { headerName: "Status", field: "status" },
+    // { headerName: "Flight", field: "flight" },
+    { headerName: "Depart", field: "depart" },
+    { headerName: "Arrive", field: "arrive" },
   ];
 
   function handleGridType(type, size) {
@@ -120,15 +118,17 @@ const TablaAGGrid = ({ type, size, path, data }) => {
             onGridReady={(params) => setGridApi(params.api)}
             autoSizeStrategy={autoSizeStrategy}
             domLayout="autoHeight"
-            onCellClicked={(event, ) => {
-              const flightCode = event.data.flight;
-              const baseUrl = `${window.location.protocol}//${window.location.host}`;
+            onCellClicked={(event) => {
+              if (event.column.colId === "flight") {
+                const flightCode = event.data.flight;
+                const baseUrl = `${window.location.protocol}//${window.location.host}`;
 
-              if (!flightCode) {
-                window.location.href = `${baseUrl}/404.html`;
-                return;
+                if (!flightCode) {
+                  window.location.href = `${baseUrl}/404.html`;
+                  return;
+                }
+                window.location.href = `${baseUrl}${path}${flightCode}`;
               }
-              window.location.href = `${baseUrl}${path}${flightCode}`;
             }}
             // onRowClicked={(event) => {
             //   const flightCode = event.data.flight;

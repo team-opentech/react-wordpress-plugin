@@ -35,17 +35,21 @@ document.addEventListener("DOMContentLoaded", () => {
   appContainers.forEach((container) => {
     const type = container.getAttribute("data-type");
     const airportCode = container.getAttribute("data-airport-code") || "";
+    const codeType = container.getAttribute("data-code-type") || "";
     const flight = container.getAttribute("data-flight") || "";
     const apiKey = container.getAttribute("data-api-key");
     const path = container.getAttribute("data-path");
     const size = container.getAttribute("data-size");
 
     const baseUrl = window.location.origin;
-    const queryParams = new URLSearchParams({
-      type,
-      airportCode: airportCode || 'null',
-      flight,
-    }).toString();
+    let queryParams = new URLSearchParams({ type, flight });
+
+    // Solo agrega airportCode a queryParams si está presente
+    if (airportCode && codeType) {
+      queryParams.append('airportCode', airportCode);
+      queryParams.append('codeType', codeType);
+    } 
+    console.log("Query Params", queryParams.toString());
 
     const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
 
@@ -57,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return response.json();
       })
       .then((data) => {
-        console.log("Data obtenida: ", data.response);
+        console.log("Data obtenida: ", data);
         ReactDOM.render(
           <App
             type={type}
@@ -66,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
             flight={flight}
             apiKey={apiKey}
             path={path}
-            data={data.response}
+            data={data}
           />,
           container
         );
