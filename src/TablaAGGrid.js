@@ -4,6 +4,14 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
 import "./style.css";
+import {
+  formatDate,
+  formatTimeWithAMPM,
+  secondsToHours,
+  minutesToHours,
+  getElapsedTime,
+  getRemainingTime,
+} from "./helper.js";
 
 // const AIRLABS_API_KEY = "e3d4bf45-f8f2-44f4-a1fd-f18da01fa931";
 
@@ -11,7 +19,7 @@ const TablaAGGrid = ({ type, size, path, data }) => {
   // console.log("Data obtenida TablaAGGrid: ", data);
   const gridRef = useRef(null);
   const [gridApi, setGridApi] = useState(null);
-  const [rowData, setRowData] = useState(data);
+  const [rowData, setRowData] = useState([]);
 
   const autoSizeStrategy = {
     autoSizeAllColumns: true,
@@ -19,6 +27,16 @@ const TablaAGGrid = ({ type, size, path, data }) => {
     // type: "fitGridWidth"
     type: "",
   };
+
+  // useEffect(() => {
+  //   const formattedData = data.map((item) => ({
+  //     flight: item.flight,
+  //     airport: type == "arrivals" ? item.from : item.to,
+  //     depart: formatTimeWithAMPM(item.depTimeTs),
+  //     arrive: formatTimeWithAMPM(item.arrTimeTs),
+  //   }));
+  //   setRowData(data);
+  // });
   useEffect(() => {
     // Carga de datos y configuración existente...
     if (gridApi && window.innerWidth > 768) {
@@ -41,17 +59,15 @@ const TablaAGGrid = ({ type, size, path, data }) => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [gridApi]);
-  // useEffect(() => {
-  //   const formattedData = data.map((item) => ({
-  //     time: item.arr_time,
-  //     flight: item.flight_iata,
-  //     from: item.dep_iata,
-  //     to: item.arr_iata,
-  //     airline: item.airline_iata,
-  //     status: item.status,
-  //   }));
-  //   setRowData(formattedData);
-  // }, [])
+  useEffect(() => {
+    const formattedData = data.map((item) => ({
+      flight: item.flight,
+      airport: item.airport,
+      depart: formatTimeWithAMPM(parseInt(item.depart)),
+      arrive: formatTimeWithAMPM(parseInt(item.arrive)),
+    }));
+    setRowData(formattedData);
+  }, [])
 
   // useEffect(() => {
   //   const AIRLABS_API_KEY = apiKey;

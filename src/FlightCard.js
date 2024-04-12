@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 // Asumiendo que tienes un archivo de íconos o que estás usando algún paquete para ellos
 // Por ejemplo, podrías usar react-icons para Ionicons
 // import { IoAirplane } from 'react-icons/io5';
@@ -11,8 +11,11 @@ import {
   getRemainingTime,
 } from "./helper.js"; // Asegúrate de implementar o importar estas funciones
 
+
+
 const FlightCard = ({ data }) => {
-  // console.log("FlightCard data", data);
+
+  console.log("FlightCard data", data);
   const getWidth = (data) => {
     if (data.status === "landed") return 100;
     if (data.status === "scheduled") return 0;
@@ -85,16 +88,16 @@ const FlightCard = ({ data }) => {
                   {data.depAirportName} - {data.depIata}
                 </p>
                 <p className="text-sm text-[#7794B0]">
-                  {formatDate(data.depTimeTs)}
+                  {formatDate(parseInt(data.depTimeTs))}
                 </p>
                 {data.depDelayed === null ? (
                   <p className="text-sm text-[#7794B0]">
-                    {formatTimeWithAMPM(data.depTimeTs)}{" "}
+                    {formatTimeWithAMPM(parseInt(data.depTimeTs))}{" "}
                     <span className="text-customGreen">(On time)</span>
                   </p>
                 ) : (
                   <p className="text-sm text-[#7794B0]">
-                    {formatTimeWithAMPM(data.depTimeTs)}{" "}
+                    {formatTimeWithAMPM(parseInt(data.depTimeTs))}{" "}
                     <span className="text-customGreen">
                       ({data.depDelayed} minutes later)
                     </span>
@@ -118,16 +121,16 @@ const FlightCard = ({ data }) => {
                   {data.arrAirportName} - {data.arrIata}
                 </p>
                 <p className="text-sm text-[#7794B0]">
-                  {formatDate(data.arrTimeTs)}
+                  {formatDate(parseInt(data.arrTimeTs))}
                 </p>
                 {data.arrDelayed === null ? (
                   <p className="text-sm text-[#7794B0]">
-                    {formatTimeWithAMPM(data.arrTimeTs)}{" "}
+                    {formatTimeWithAMPM(parseInt(data.arrTimeTs))}{" "}
                     <span className="text-orange-600">(On time)</span>
                   </p>
                 ) : (
                   <p className="text-sm text-[#7794B0]">
-                    {formatTimeWithAMPM(data.arrTimeTs)}{" "}
+                    {formatTimeWithAMPM(parseInt(data.arrTimeTs))}{" "}
                     <span className="text-orange-600">
                       ({data.arrDelayed} minutes later)
                     </span>

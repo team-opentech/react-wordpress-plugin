@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
       queryParams.append('airportCode', airportCode);
       queryParams.append('codeType', codeType);
     } 
-    console.log("Query Params", queryParams.toString());
+    // console.log("Query Params", queryParams.toString());
 
     const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
 

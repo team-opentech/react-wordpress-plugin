@@ -37,6 +37,7 @@ const App = ({ airportCode, type, size, apiKey, path, flight, data }) => {
 
   return (
     <div className="main-container">
+      <h1 style={{ paddingLeft: 16 }}>{type} de Datos del Aeropuerto: {airportCode}</h1>
       {renderComponent()}
     </div>
   );
