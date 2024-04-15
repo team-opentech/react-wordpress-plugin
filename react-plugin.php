@@ -50,6 +50,7 @@
         dep_delayed int DEFAULT 0,
         arr_delayed int DEFAULT 0,
         duration int DEFAULT 0,
+        updated_time datetime NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (flight_iata)
     ) $charset_collate;";
     dbDelta($sql_flights);
@@ -58,7 +59,6 @@
         id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         iata_code varchar(3) NOT NULL,
         type enum('departure', 'arrival') NOT NULL,
-        date date NOT NULL,
         updated_time datetime NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (id),
         UNIQUE KEY idx_iata_type (iata_code, type)
@@ -76,16 +76,6 @@
         FOREIGN KEY (schedule_id) REFERENCES {$wpdb->prefix}schedules(id) ON DELETE CASCADE
     ) $charset_collate;";
     dbDelta($sql_schedule_details);
-    // $sql_schedule_details = "CREATE TABLE {$wpdb->prefix}schedule_details (
-    //     id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-    //     schedule_id bigint(20) UNSIGNED NOT NULL,
-    //     flight_iata varchar(7) NOT NULL,
-    //     airport varchar(255) NOT NULL,
-    //     depart bigint(20) DEFAULT NULL,
-    //     arrive bigint(20) DEFAULT NULL,
-    //     PRIMARY KEY (id)
-    // ) $charset_collate;";
-    // dbDelta($sql_schedule_details);
 
     // Intenta cargar datos JSON de aeropuertos
     $json_data = file_get_contents(plugin_dir_path(__FILE__) . 'airports.json');
@@ -174,6 +164,8 @@ add_action('rest_api_init', function () {
     $flights_table = $wpdb->prefix . 'flights';
     $airports_table = $wpdb->prefix . 'airports';
     $airlines_table = $wpdb->prefix . 'airlines';
+
+
 
     $apiUrl = 'https://airlabs.co/api/v9/';
     $apiImgUrl = 'https://airlabs.co/img/airline/m/';
@@ -493,53 +485,6 @@ add_action('rest_api_init', function () {
                         }
 
                         return new WP_REST_Response($formattedFlights, 200);
-
-                        // foreach ($schedulesData['response'] as $flightData) {
-
-                        //     $airportCodeToCheck = $isDepartures ? $flightData['arr_iata'] : $flightData['dep_iata'];
-
-                        //     $airportName = $wpdb->get_var($wpdb->prepare(
-                        //         "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s",
-                        //         $airportCodeToCheck
-                        //     ));
-                    
-                        //     // Insertar en la tabla schedule_details
-                        //     $wpdb->insert(
-                        //         "{$wpdb->prefix}schedule_details",
-                        //         [
-                        //             'schedule_id' => $scheduleId,
-                        //             'flight_iata' => $flightData['flight_iata'],
-                        //             'airport' => $airportName,
-                        //             'depart' => $flightData['dep_time_ts'],
-                        //             'arrive' => $flightData['arr_time_ts'],
-                        //         ],
-                        //         ['%d', '%s', '%s', '%d', '%d']
-                        //     );
-                        //     if ($insert_result === false) {
-                        //         error_log('Error al insertar en schedule_details: ' . $wpdb->last_error);
-                        //     }
-                            
-                        // }
-                        
-                        // $formattedFlights = array_map(function ($flight) use ($wpdb, $isDepartures) {
-                        //     // Determinar el código IATA correcto para buscar el nombre del aeropuerto
-                        //     $airportCode = $isDepartures ? $flight['arr_iata'] : $flight['dep_iata'];
-                                
-                        //     // Buscar el nombre del aeropuerto en la tabla airports
-                        //     $airportName = $wpdb->get_var($wpdb->prepare(
-                        //         "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s",
-                        //            $airportCode
-                        //     ));
-                        
-                        //     return [
-                        //         'flight' => $flight['flight_iata'],
-                        //         'airport' => $airportName,
-                        //         'depart' => $flight['dep_time_ts'],
-                        //         'arrive' => $flight['arr_time_ts'],
-                        //     ];
-                        // }, $schedulesData['response']);
-
-                        // return new WP_REST_Response($formattedFlights, 200);
                     }
                      else {
                         return new WP_Error('no_data_found', 'No se encontraron datos para los parámetros especificados.', ['status' => 404]);
@@ -606,6 +551,7 @@ add_shortcode('numero-vuelo', 'generar_shortcode_react_app'); // Registrar el nu
 
 // Añadir la página de configuraciones y registrar las opciones
 add_action('admin_menu', 'mi_plugin_menu');
+
 function mi_plugin_menu() {
     add_options_page('Configuración del Plugin de Vuelos', 'Vuelos Settings', 'manage_options', 'mi-plugin-settings', 'mi_plugin_settings_page');
 }
@@ -625,27 +571,50 @@ function mi_plugin_settings_page() {
     <?php
 }
 
+// Hook para inicializar la configuración
 add_action('admin_init', 'mi_plugin_settings_init');
+
 function mi_plugin_settings_init() {
+    // Registro de las configuraciones del plugin
     register_setting('mi-plugin-settings-group', 'mi_plugin_api_key');
     register_setting('mi-plugin-settings-group', 'mi_plugin_path');
+    register_setting('mi-plugin-settings-group', 'mi_plugin_data_expiration');
 
+    // Añadir sección de configuración
     add_settings_section('mi-plugin-settings-section', 'Ajustes del API', 'mi_plugin_settings_section_callback', 'mi-plugin-settings');
 
+    // Añadir campos de configuración
     add_settings_field('mi-plugin-api-key', 'API Key de AirLabs', 'mi_plugin_api_key_callback', 'mi-plugin-settings', 'mi-plugin-settings-section');
     add_settings_field('mi-plugin-path', 'Path para Consultas', 'mi_plugin_path_callback', 'mi-plugin-settings', 'mi-plugin-settings-section');
+    add_settings_field('mi-plugin-data-expiration', 'Tiempo de Expiración de Datos (minutos)', 'mi_plugin_data_expiration_callback', 'mi-plugin-settings', 'mi-plugin-settings-section');
 }
 
-function mi_plugin_settings_section_callback() { echo 'Ingresa tu API Key y el Path para las consultas de vuelos.'; }
-function mi_plugin_api_key_callback() { $api_key = get_option('mi_plugin_api_key'); echo "<input type='text' id='mi_plugin_api_key' name='mi_plugin_api_key' value='" . esc_attr($api_key) . "' />"; }
-function mi_plugin_path_callback() { $path = get_option('mi_plugin_path'); echo "<input type='text' id='mi_plugin_path' name='mi_plugin_path' value='" . esc_attr($path) . "' />"; }
+function mi_plugin_settings_section_callback() {
+    echo 'Ingresa tu API Key y el Path para las consultas de vuelos, así como el tiempo de expiración de los datos almacenados.';
+}
 
-// Añadir el enlace de "Settings" en la página de plugins
+function mi_plugin_api_key_callback() {
+    $api_key = get_option('mi_plugin_api_key');
+    echo "<input type='text' id='mi_plugin_api_key' name='mi_plugin_api_key' value='" . esc_attr($api_key) . "' />";
+}
+
+function mi_plugin_path_callback() {
+    $path = get_option('mi_plugin_path');
+    echo "<input type='text' id='mi_plugin_path' name='mi_plugin_path' value='" . esc_attr($path) . "' />";
+}
+
+function mi_plugin_data_expiration_callback() {
+    $expiration = get_option('mi_plugin_data_expiration', 60); // Valor predeterminado de 60 minutos
+    echo "<input type='number' id='mi_plugin_data_expiration' name='mi_plugin_data_expiration' value='" . esc_attr($expiration) . "' min='1' />";
+}
+
+// Función para añadir el enlace de configuración directamente en la página de plugins
 function mi_plugin_add_settings_link($links) {
     $settings_link = '<a href="options-general.php?page=mi-plugin-settings">' . __('Settings') . '</a>';
     array_push($links, $settings_link);
     return $links;
 }
+
 $plugin = plugin_basename(__FILE__);
 add_filter("plugin_action_links_$plugin", 'mi_plugin_add_settings_link');
 ?>
