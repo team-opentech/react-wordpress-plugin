@@ -30,52 +30,58 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Mensaje desde PHP:", phpVars.dbMessage);
   }
 
-  const appContainers = document.querySelectorAll(".react-app-container");
-
-  appContainers.forEach((container) => {
+  document.querySelectorAll(".react-app-container").forEach(container => {
     const type = container.getAttribute("data-type");
     const airportCode = container.getAttribute("data-airport-code") || "";
-    const codeType = container.getAttribute("data-code-type") || "";
+    const airp_codeType = container.getAttribute("data-airp-codetype") || "";
     const flight = container.getAttribute("data-flight") || "";
-    const apiKey = container.getAttribute("data-api-key");
+    const flight_codeType = container.getAttribute("data-flight-codetype") || "";
     const path = container.getAttribute("data-path");
     const size = container.getAttribute("data-size");
+    const airlineCode = container.getAttribute("data-airline") || "";
+    const airl_codeType = container.getAttribute("data-airl-codetype") || "";
+    const status = container.getAttribute("data-status") || "";
 
     const baseUrl = window.location.origin;
-    let queryParams = new URLSearchParams({ type, flight });
+    let queryParams = new URLSearchParams({
+      type,
+      path,
+      size,
+    });
 
-    // Solo agrega airportCode a queryParams si está presente
-    if (airportCode && codeType) {
-      queryParams.append('airportCode', airportCode);
-      queryParams.append('codeType', codeType);
-    } 
-    // console.log("Query Params", queryParams.toString());
+    // Agregar solo si están presentes
+
+    if (airportCode !== '') queryParams.append('airportCode', airportCode);
+    if (airp_codeType !== '') queryParams.append('airp_codeType', airp_codeType);
+    if (flight !== '') queryParams.append('flight', flight);
+    if (flight_codeType !== '') queryParams.append('flight_codeType', flight_codeType);
+    if (airlineCode !== '') queryParams.append('airlineCode', airlineCode);
+    if (airl_codeType !== '') queryParams.append('airl_codeType', airl_codeType);
+    if (status !== '') queryParams.append('status', status);
 
     const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
 
     fetch(customEndpointUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
+      .then(response => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        console.log("Response:", response);
         return response.json();
       })
-      .then((data) => {
-        console.log("Data obtenida: ", data);
+      .then(data => {
+        console.log("Data obtenida:", data);
         ReactDOM.render(
           <App
             type={type}
-            airportCode={airportCode}
-            size={size}
-            flight={flight}
-            apiKey={apiKey}
             path={path}
+            size={size}
             data={data}
+            airportCode={airportCode}
+            flight={flight}
           />,
           container
         );
       })
-      .catch((error) => {
+      .catch(error => {
         console.error("Error fetching flight data:", error);
       });
   });

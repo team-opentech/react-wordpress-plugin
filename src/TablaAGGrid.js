@@ -4,6 +4,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
 import "./style.css";
+import moment from "moment-timezone";
 import {
   formatDate,
   formatTimeWithAMPM,
@@ -62,9 +63,10 @@ const TablaAGGrid = ({ type, size, path, data }) => {
   useEffect(() => {
     const formattedData = data.map((item) => ({
       flight: item.flight,
-      airport: item.airport,
-      depart: formatTimeWithAMPM(parseInt(item.depart)),
-      arrive: formatTimeWithAMPM(parseInt(item.arrive)),
+      // airport: item.airport + " " + type === "arrivals" ? item.arr_code : item.dep_code,
+      airport: `${item.airport} (${type === "arrivals" ? item.dep_code : item.arr_code})`,
+      depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
+      arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z")
     }));
     setRowData(formattedData);
   }, [])
@@ -124,8 +126,6 @@ const TablaAGGrid = ({ type, size, path, data }) => {
   ];
 
   function handleGridType(type, size) {
-    switch (type) {
-      case "arrivals":
         return (
           <AgGridReact
             rowData={rowData}
@@ -145,47 +145,16 @@ const TablaAGGrid = ({ type, size, path, data }) => {
                 }
                 window.location.href = `${baseUrl}${path}${flightCode}`;
               }
-            }}
-            // onRowClicked={(event) => {
-            //   const flightCode = event.data.flight;
-            //   const baseUrl = `${window.location.protocol}//${window.location.host}`;
-
-            //   if (!flightCode) {
-            //     window.location.href = `${baseUrl}/404.html`;
-            //     return;
-            //   }
-            //   window.location.href = `${baseUrl}${path}${flightCode}`;
-            // }}
-            pagination={true}
-            paginationPageSize={size}
-          />
-        );
-      case "departures":
-        return (
-          <AgGridReact
-            rowData={rowData}
-            columnDefs={columnDefs}
-            ref={gridRef}
-            onGridReady={(params) => setGridApi(params.api)}
-            autoSizeStrategy={autoSizeStrategy}
-            domLayout="autoHeight"
-            onRowClicked={(event) => {
-              const flightCode = event.data.flight;
-              const baseUrl = `${window.location.protocol}//${window.location.host}`;
-
-              if (!flightCode) {
-                window.location.href = `${baseUrl}/404.html`;
-                return;
+              if(event.column.colId === "airport") {
+                const airportCode = event.data.airport.split(" ")[1];
+                const baseUrl = `${window.location.protocol}//${window.location.host}`;
+                window.location.href = `${baseUrl}/airportpath${airportCode}`;
               }
-              window.location.href = `${baseUrl}${path}${flightCode}`;
             }}
             pagination={true}
             paginationPageSize={size}
           />
         );
-      default:
-        return null;
-    }
   }
 
   return <div className="ag-theme-alpine">{handleGridType(type, size)}</div>;

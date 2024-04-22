@@ -425,3 +425,15 @@ https://airlabs.co/api/v9/schedules?arr_iata=JFK&api_key=323b6b8b-15ea-4b7e-9b13
 https://airlabs.co/api/v9/schedules?arr_iata=JFK&api_key=323b6b8b-15ea-4b7e-9b13-dd5e8111891d
 https://airlabs.co/api/v9/schedules?arr_iata=JFK&api_key=323b6b8b-15ea-4b7e-9b13-dd5e8111891d
 https://airlabs.co/api/v9/schedules?arr_iata=JFK&api_key=323b6b8b-15ea-4b7e-9b13-dd5e8111891d
+https://airlabs.co/api/v9/schedules?dep_icao=KJFK&api_key=323b6b8b-15ea-4b7e-9b13-dd5e8111891d
+https://airlabs.co/api/v9/schedules?dep_iata=MIA&api_key=323b6b8b-15ea-4b7e-9b13-dd5e8111891d
+Array
+Array
+https://airlabs.co/api/v9/schedules?dep_iata=MIA&api_key=323b6b8b-15ea-4b7e-9b13-dd5e8111891d
+https://airlabs.co/api/v9/schedules?dep_icao=KJFK&api_key=323b6b8b-15ea-4b7e-9b13-dd5e8111891d
+Array
+Array
+https://airlabs.co/api/v9/schedules?dep_iata=MIA&api_key=323b6b8b-15ea-4b7e-9b13-dd5e8111891d
+https://airlabs.co/api/v9/schedules?dep_iata=KJFK&api_key=323b6b8b-15ea-4b7e-9b13-dd5e8111891d
+
+Array
