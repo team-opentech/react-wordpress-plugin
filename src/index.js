@@ -47,16 +47,24 @@ document.addEventListener("DOMContentLoaded", () => {
       type,
       path,
       size,
+      offset: 0,
     });
 
     // Agregar solo si están presentes
 
-    if (airportCode !== '') queryParams.append('airportCode', airportCode);
-    if (airp_codeType !== '') queryParams.append('airp_codeType', airp_codeType);
-    if (flight !== '') queryParams.append('flight', flight);
-    if (flight_codeType !== '') queryParams.append('flight_codeType', flight_codeType);
-    if (airlineCode !== '') queryParams.append('airlineCode', airlineCode);
-    if (airl_codeType !== '') queryParams.append('airl_codeType', airl_codeType);
+    if (airportCode !== '') {
+      queryParams.append('airportCode', airportCode);
+      queryParams.append('airp_codeType', airp_codeType);
+    
+    }
+    if (flight !== '') {
+      queryParams.append('flight', flight);
+      queryParams.append('flight_codeType', flight_codeType);
+    }
+    if (airlineCode !== ''){
+      queryParams.append('airlineCode', airlineCode);
+      queryParams.append('airl_codeType', airl_codeType)
+    }
     if (status !== '') queryParams.append('status', status);
 
     const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
