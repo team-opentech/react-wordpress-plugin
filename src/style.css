@@ -39,12 +39,42 @@ body, html {
   margin: 0 auto; /* Centra el contenedor en la pantalla */
 }
 
+.button_box {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* Estilos para los botones */
+.button {
+  background-color: #0056b3; /* Azul oscuro de los títulos de la tabla */
+  color: white;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  margin-right: 15px; /* Espaciado entre botones */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #003d82; /* Azul más oscuro para el hover */
+}
+
+.button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+
 .app-container h1 {
   color: #fff;
 }
-/* 
+
 .ag-theme-alpine .ag-header-cell {
-  background-color: #007bff;
+  background-color: #3A5F97;
   border-right: none;
 }
 
@@ -65,9 +95,9 @@ body, html {
   border-right: none;
 }
 
-.ag-theme-alpine .ag-root-wrapper {
+/* .ag-theme-alpine .ag-root-wrapper {
   overflow: hidden;
-}
+} */
 
 .ag-theme-alpine .ag-header-cell-label {
   font-size: 21px;
@@ -99,4 +129,4 @@ body, html {
   .ag-theme-alpine .ag-cell {
     font-size: 12px;
   }
-} */
+}

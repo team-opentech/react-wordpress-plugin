@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const airp_codeType = container.getAttribute("data-airp-codetype") || "";
     const flight = container.getAttribute("data-flight") || "";
     const flight_codeType = container.getAttribute("data-flight-codetype") || "";
-    const path = container.getAttribute("data-path");
     const size = container.getAttribute("data-size");
     const airlineCode = container.getAttribute("data-airline") || "";
     const airl_codeType = container.getAttribute("data-airl-codetype") || "";
@@ -45,7 +44,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseUrl = window.location.origin;
     let queryParams = new URLSearchParams({
       type,
-      path,
       size,
       offset: 0,
     });
@@ -72,19 +70,17 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch(customEndpointUrl)
       .then(response => {
         if (!response.ok) throw new Error("Network response was not ok");
-        console.log("Response:", response);
         return response.json();
       })
       .then(data => {
-        console.log("Data obtenida:", data);
         ReactDOM.render(
           <App
             type={type}
-            path={path}
             size={size}
             data={data}
             airportCode={airportCode}
             flight={flight}
+            queryParams={queryParams}
           />,
           container
         );

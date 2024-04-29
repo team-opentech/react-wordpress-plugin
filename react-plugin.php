@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Mi Plugin React con AG Grid
- * Description: Muestra cómo integrar React y AG Grid en WordPress y pasar datos dinámicamente a través de un shortcode.
+ * Plugin Name: Flight Schedule
+ * Description: Muestra los vuelos de los aeropuertos y aerolineas.
  * Version: 1.0
- * Author: Tu Nombre
+ * Author: Opentech LLC
  */
 
  defined('ABSPATH') or die('¡Acceso directo no permitido!');
@@ -68,6 +68,7 @@
         schedule_type enum('departure', 'arrival') NOT NULL,
         offset int NOT NULL DEFAULT 0,
         updated_time datetime NOT NULL DEFAULT current_timestamp(),
+        last_page boolean DEFAULT false,
         PRIMARY KEY (id),
         UNIQUE KEY idx_iata_type (iata_code, icao_code, airline_iata, airline_icao, schedule_type, offset)
     ) $charset_collate;";
@@ -90,21 +91,22 @@
         arr_icao varchar(4) DEFAULT '',
         tz_dep varchar(40) DEFAULT '',
         tz_arr varchar(40) DEFAULT '',
-        schedule_status varchar(20) DEFAULT '',
+        status varchar(20) DEFAULT '',
         PRIMARY KEY (id),
         FOREIGN KEY (schedule_id) REFERENCES {$wpdb->prefix}schedules(id) ON DELETE CASCADE
     ) $charset_collate;";
     dbDelta($sql_schedule_details);    
 
     // Intenta cargar datos JSON de aeropuertos
-    $json_data = file_get_contents(plugin_dir_path(__FILE__) . 'airports.json');
+    $airportJson = file_get_contents(plugin_dir_path(__FILE__) . 'airports.json');
 
-    if ($json_data === false) {
+
+    if ($airportJson === false) {
         error_log('Error al leer el archivo de aeropuertos');
         return;
     }
 
-    $airports = json_decode($json_data, true);
+    $airports = json_decode($airportJson, true);
 
     if (!is_array($airports) || !isset($airports['response'])){
         error_log('Error al decodificar el archivo JSON de aeropuertos o la clave \'response\' no está presente');
@@ -124,6 +126,38 @@
                 'timezone' => $airport['tz']
             ],
             ['%s', '%s', '%s', '%s', '%s', '%s']
+        );
+
+        if ($result === false) {
+            error_log('Error al insertar aeropuerto: ' . $wpdb->last_error);
+        }
+    }
+
+    // Intenta cargar datos JSON de aerolíneas
+    $airlineJson = file_get_contents(plugin_dir_path(__FILE__) . 'airlines.json');
+    
+    if ($airlineJson === false) {
+        error_log('Error al leer el archivo de aerolíneas');
+        return;
+    }
+
+    $airlines = json_decode($airlineJson, true);
+
+    if (!is_array($airlines) || !isset($airlines['response'])){
+        error_log('Error al decodificar el archivo JSON de aeropuertos o la clave \'response\' no está presente');
+        return;
+    }
+    $airlines_table = $wpdb->prefix . 'airlines';
+    foreach ($airlines['response'] as $airline) {
+        $result = $wpdb->insert(
+            $airlines_table,
+            [
+                'name' => $airline['name'],
+                'iata_code' => $airline['iata_code'],
+                'icao_code' => $airline['icao_code'],
+                'logo_url' => "https://airlabs.co/img/airline/m/{$airline['iata_code']}.png"
+            ],
+            ['%s', '%s', '%s', '%s']
         );
 
         if ($result === false) {
@@ -238,25 +272,25 @@ function mi_plugin_fetch_flight_data($request) {
                 }
                 
 
-                if(!$airlineData && ($flightData['airline_iata'] !== '' || $flightData['airline_icao'] !== '')) {
-                    $response = wp_remote_get("{$apiUrl}airlines?{$airlineApi}&api_key={$apiKey}");
-                    if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) == 200) {
-                        $data = json_decode(wp_remote_retrieve_body($response), true);
-                        if (!empty($data['response'])) {
-                            $airlineData = $data['response'][0];
-                            $wpdb->replace(
-                                $airlines_table,
-                                [
-                                    'iata_code' => $airlineData['iata_code'],
-                                    'icao_code' => $airlineData['icao_code'],
-                                    'name' => $airlineData['name'],
-                                    'logo_url' => "{$apiImgUrl}{$airlineData['iata_code']}.png",
-                                ],
-                                ['%s', '%s', '%s', '%s']
-                            );
-                        }
-                    }                    
-                }
+                // if(!$airlineData && ($flightData['airline_iata'] !== '' || $flightData['airline_icao'] !== '')) {
+                //     $response = wp_remote_get("{$apiUrl}airlines?{$airlineApi}&api_key={$apiKey}");
+                //     if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) == 200) {
+                //         $data = json_decode(wp_remote_retrieve_body($response), true);
+                //         if (!empty($data['response'])) {
+                //             $airlineData = $data['response'][0];
+                //             $wpdb->replace(
+                //                 $airlines_table,
+                //                 [
+                //                     'iata_code' => $airlineData['iata_code'],
+                //                     'icao_code' => $airlineData['icao_code'],
+                //                     'name' => $airlineData['name'],
+                //                     'logo_url' => "{$apiImgUrl}{$airlineData['iata_code']}.png",
+                //                 ],
+                //                 ['%s', '%s', '%s', '%s']
+                //             );
+                //         }
+                //     }                    
+                // }
                 
                 if (!empty($flightData['dep_iata']) || !empty($flightData['dep_icao'])) {
                     $airportCode = !empty($flightData['dep_iata']) ? $flightData['dep_iata'] : $flightData['dep_icao'];
@@ -384,19 +418,19 @@ function mi_plugin_fetch_flight_data($request) {
                     if (!empty($airlineCode)) {
                         // Consulta cuando airline_iata o airline_icao están presentes
                         $schedule = $wpdb->get_row($wpdb->prepare(
-                            "SELECT id, updated_time, offset FROM {$wpdb->prefix}schedules
+                            "SELECT id, updated_time, offset, last_page FROM {$wpdb->prefix}schedules
                             WHERE (iata_code = %s OR icao_code = %s)
                             AND schedule_type = %s
-                            AND (ariline_iata = %s OR airline_icao = %s)
+                            AND (airline_iata = %s OR airline_icao = %s)
                             AND offset = %d", 
                             $airportCode, $airportCode, $scheduleType, $airlineCode, $airlineCode, $offset
                         ), ARRAY_A);
-                        error_log('ERROR_LOG_1: Schedule with airline code: ' . json_encode($schedule));
+                        // error_log('ERROR_LOG_1: Schedule with airline code: ' . json_encode($schedule));
 
                     } else {
                        // Consulta cuando airline_iata y airline_icao están vacíos
                         $schedule = $wpdb->get_row($wpdb->prepare(
-                            "SELECT id, updated_time, offset FROM {$wpdb->prefix}schedules
+                            "SELECT id, updated_time, offset, last_page FROM {$wpdb->prefix}schedules
                             WHERE (iata_code = %s OR icao_code = %s)
                             AND schedule_type = %s
                             AND airline_iata = 'N/A'
@@ -404,10 +438,13 @@ function mi_plugin_fetch_flight_data($request) {
                             AND offset = %d",
                             $airportCode, $airportCode, $scheduleType, $offset
                         ), ARRAY_A);
-                        error_log('ERROR_LOG_2: Schedule without airline code: ' . json_encode($schedule));
+                        // error_log('ERROR_LOG_2: Schedule without airline code: ' . json_encode($schedule));
                     }
 
-                    // if ($schedule && strtotime($schedule['updated_time'] + $exp_data_seconds) < (time())) {
+                    if ($schedule && $schedule['last_page']) {
+                        return new WP_REST_Response(null, 204);
+                    }
+
                     if ($schedule && (((strtotime($schedule['updated_time'])) + $exp_data_seconds) > time())) {
                         // Buscar detalles asociados en schedule_details
                         $query = "SELECT * FROM {$wpdb->prefix}schedule_details WHERE schedule_id = %d AND offset_page = %d";
@@ -422,7 +459,7 @@ function mi_plugin_fetch_flight_data($request) {
                 
                         // Añadir filtro por status si está presente
                         if (!empty($filter)) {
-                            $query .= " AND schedule_status = %s";
+                            $query .= " AND status = %s";
                             $params[] = $filter;
                         }
 
@@ -431,11 +468,27 @@ function mi_plugin_fetch_flight_data($request) {
                         if (!empty($flightDetails)) {
                             // Formatear los detalles del vuelo para la respuesta
                             $formattedFlights = array_map(function ($flight) {
+                                global $wpdb;
+                                $arrAirport = $wpdb->get_var($wpdb->prepare(
+                                    "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                    $flight['arr_iata'], $flight['arr_icao']
+                                ));
+                                $depAirport = $wpdb->get_var($wpdb->prepare(
+                                    "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                    $flight['dep_iata'], $flight['dep_icao']
+                                ));
+                                $airlineName = $wpdb->get_var($wpdb->prepare(
+                                    "SELECT name FROM {$wpdb->prefix}airlines WHERE iata_code = %s OR icao_code = %s",
+                                    $flight['airline_iata'], $flight['airline_icao']
+                                ));
                                 return [
                                     'flight' => !empty($flight['flight_iata']) ? $flight['flight_iata'] : $flight['flight_icao'],
                                     'airport' => $flight['airport'],
+                                    'airline' => $airlineName ?? '',
                                     'depart' => $flight['depart'],
                                     'arrive' => $flight['arrive'],
+                                    'arrAirport' => $arrAirport,
+                                    'depAirport' => $depAirport,
                                     'dep_code' => !empty($flight['dep_iata']) ? $flight['dep_iata'] : $flight['dep_icao'],
                                     'arr_code' => !empty($flight['arr_icao']) ? $flight['arr_iata'] : $flight['arr_icao'],
                                     'tz_dep' => $flight['tz_dep'],
@@ -448,82 +501,23 @@ function mi_plugin_fetch_flight_data($request) {
                             return new WP_REST_Response(['message' => 'No flight details available'], 404);
                         }
                     }
-                
-                    // Si no hay información reciente, consulta al API de Airlabs
-                    $endpointUrl = "{$apiUrl}schedules?" . ($isDepartures ? "dep_" : "arr_") . "{$airp_codeType}={$airportCode}&api_key={$apiKey}&offset={$offset}";
-                
-                    if (!empty($airlineCode)) {
-                        $endpointUrl .= "&airline_" . ($airl_codeType === 'iata' ? 'iata' : 'icao') . "={$airlineCode}";
-                    }
-                
-                    $apiResponse = wp_remote_get($endpointUrl);
-                
-                    if (is_wp_error($apiResponse)) {
-                        return new WP_Error('api_fetch_error', 'Error al obtener datos del API de Airlabs.', ['status' => 500]);
-                    }
-                
-                    $schedulesData = json_decode(wp_remote_retrieve_body($apiResponse), true);
-                    $codeType = $airp_codeType === 'iata' ? 'iata_code' : 'icao_code';
-                    if (isset($schedulesData['response'])) {
-                        // if (!empty($airlineCode)) {
-                        //     // Consulta cuando airline_iata o airline_icao están presentes
-                        //     $schedule = $wpdb->get_row($wpdb->prepare(
-                        //         "SELECT id, updated_time, offset FROM {$wpdb->prefix}schedules
-                        //         WHERE (iata_code = %s OR icao_code = %s)
-                        //         AND type = %s
-                        //         AND (COALESCE(airline_iata, '') = %s OR COALESCE(airline_icao, '') = %s)
-                        //         AND offset = %d", 
-                        //         $airportCode, $airportCode, $type, $airlineCode, $airlineCode, $offset
-                        //     ), ARRAY_A);
 
-                        // } else {
-                        //     // Consulta cuando airline_iata y airline_icao están vacíos
-                        //     $schedule = $wpdb->get_row($wpdb->prepare(
-                        //         "SELECT id, updated_time, offset FROM {$wpdb->prefix}schedules
-                        //         WHERE (iata_code = %s OR icao_code = %s)
-                        //         AND type = %s
-                        //         AND COALESCE(airline_iata, '') = ''
-                        //         AND COALESCE(airline_icao, '') = ''
-                        //         AND offset = %d", 
-                        //         $airportCode, $airportCode, $type, $offset
-                        //     ), ARRAY_A);
-                            
-                        // }
-
+                    $airpCodeType = $airp_codeType === 'iata' ? 'iata_code' : 'icao_code';
+                    // if (isset($schedulesData['response'])) {
                         if (!$schedule) {
                             // Obtener ambos códigos de aeropuertos desde la tabla de aeropuertos
                             $airportData = $wpdb->get_row($wpdb->prepare(
-                                "SELECT iata_code, icao_code FROM {$wpdb->prefix}airports WHERE {$codeType} = %s",
+                                "SELECT iata_code, icao_code FROM {$wpdb->prefix}airports WHERE {$airpCodeType} = %s",
                                 $airportCode
                             ));
                             if (!empty($airlineCode)){
-                                $codeType = $airl_codeType === 'iata' ? 'iata_code' : 'icao_code';
+                                $airlCodeType = $airl_codeType === 'iata' ? 'iata_code' : 'icao_code';
                                 $airlineData = $wpdb->get_row($wpdb->prepare(
-                                    "SELECT iata_code, icao_code FROM {$wpdb->prefix}airlines WHERE {$codeType} = %s",
+                                    "SELECT iata_code, icao_code FROM {$wpdb->prefix}airlines WHERE {$airlCodeType} = %s",
                                     $airlineCode
                                 ));
-                                if(empty($airlineData)) {
-                                    $airlineApiResponse = wp_remote_get("{$apiUrl}airlines?{$codeType}={$airlineCode}&api_key={$apiKey}");
-                                    if (!is_wp_error($airlineApiResponse) && wp_remote_retrieve_response_code($airlineApiResponse) == 200) {
-                                        $airlineData = json_decode(wp_remote_retrieve_body($airlineApiResponse), true);
-                                        $wpdb->replace(
-                                            $airlines_table,
-                                            [
-                                                'iata_code' => $airlineData['iata_code'],
-                                                'icao_code' => $airlineData['icao_code'],
-                                                'name' => $airlineData['name'],
-                                                'logo_url' => "{$apiImgUrl}{$airlineData['iata_code']}.png",
-                                            ],
-                                            ['%s', '%s', '%s', '%s']
-                                        );
-                                    }
-                                    $airlineData = [
-                                        'iata_code' => $airlineData['iata_code'],
-                                        'icao_code' => $airlineData['icao_code']
-                                    ];
-                                } 
                             }
-                            error_log('ERROR_LOG_3: Schedule not found: ' . json_encode($schedule));
+                            // error_log('ERROR_LOG_3: Schedule not found: ' . json_encode($schedule));
                             $wpdb->insert(
                                 "{$wpdb->prefix}schedules",
                                 [
@@ -531,8 +525,8 @@ function mi_plugin_fetch_flight_data($request) {
                                     'updated_time' => current_time('mysql', 1),
                                     'iata_code' => $airportData->iata_code,
                                     'icao_code' => $airportData->icao_code,
-                                    'airline_iata' => $airlineData['iata_code'] ?? 'N/A',
-                                    'airline_icao'=> $airlineData['icao_code'] ?? 'N/A',
+                                    'airline_iata' => $airlineData->iata_code ?? 'N/A',
+                                    'airline_icao'=> $airlineData->icao_code ?? 'N/A',
                                     'offset' => $offset,
                                 ],
                                 ['%s', '%s', '%s', '%s', '%s', '%s', '%d']
@@ -541,7 +535,7 @@ function mi_plugin_fetch_flight_data($request) {
                                 $schedule['offset'] = $offset;
                         } else{
                             // Obtener el registro actual para comparar el updated_time
-                            error_log('ERROR_LOG_4: Schedule found: ' . json_encode($schedule));
+                            // error_log('ERROR_LOG_4: Schedule found: ' . json_encode($schedule));
                             if ($schedule['id'] && (strtotime($schedule['updated_time']) + $exp_data_seconds) < time()) {
                                 // Iniciar transacción
                                 $wpdb->query('START TRANSACTION');
@@ -579,12 +573,40 @@ function mi_plugin_fetch_flight_data($request) {
                                 }
                             }
                         }
+                                        
+                    // Si no hay información reciente, consulta al API de Airlabs
+                    $endpointUrl = "{$apiUrl}schedules?" . ($isDepartures ? "dep_" : "arr_") . "{$airp_codeType}={$airportCode}&api_key={$apiKey}&offset={$offset}";
+                
+                    if (!empty($airlineCode)) {
+                        $endpointUrl .= "&airline_" . ($airl_codeType === 'iata' ? 'iata' : 'icao') . "={$airlineCode}";
+                    }
+                
+                    $apiResponse = wp_remote_get($endpointUrl);
+                
+                    if (is_wp_error($apiResponse)) {
+                        return new WP_Error('api_fetch_error', 'Error al obtener datos del API de Airlabs.', ['status' => 500]);
+                    }
+                
+                    $schedulesData = json_decode(wp_remote_retrieve_body($apiResponse), true);
 
+                    if (empty($schedulesData['response'])) {
+                        $result = $wpdb->update(
+                            "{$wpdb->prefix}schedules",
+                            ['last_page' => true],
+                            ['id' => $schedule['id']],
+                            ['%d'],
+                            ['%d']
+                        );
+                        if ($result) {
+                            return new WP_REST_Response(null, 204); 
+                        } else {
+                            return new WP_Error("api_fetch_error", "Error al actualizar el último estado de la página.", ['status' => 500]);
+                        }
+                    }
+
+                    if (isset($schedulesData['response'])) {
                         $formattedFlights = [];
                         foreach ($schedulesData['response'] as $flightData) {
-                            if (!empty($filter) && $flightData['schedule_status'] !== $filter) {
-                                continue;
-                            }
                 
                             $arrCode = !empty($flightData['arr_iata']) ? $flightData['arr_iata'] : $flightData['arr_icao'];
                             $depCode = !empty($flightData['dep_iata']) ? $flightData['dep_iata'] : $flightData['dep_icao'];
@@ -623,18 +645,39 @@ function mi_plugin_fetch_flight_data($request) {
                                     'arr_icao' => $flightData['arr_icao'] ?? '',
                                     'tz_dep' => $tz_dep ?? '',
                                     'tz_arr' => $tz_arr ?? '',
-                                    'schedule_status' => $flightData['status'] ?? ''
+                                    'status' => $flightData['status'] ?? ''
                                 ],
                                 ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
                             );
                             
                 
                             if ($insert_result !== false) {
+                                if (!empty($filter) && $flightData['status'] !== $filter) {
+                                    continue;
+                                }
+                                $arrAirport = $wpdb->get_var($wpdb->prepare(
+                                    "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                    $flightData['arr_iata'], $flightData['arr_icao']
+                                ));
+    
+                                $depAirport = $wpdb->get_var($wpdb->prepare(
+                                    "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                    $flightData['dep_iata'], $flightData['dep_icao']
+                                ));
+    
+                                $airlineName = $wpdb->get_var($wpdb->prepare(
+                                    "SELECT name FROM {$wpdb->prefix}airlines WHERE iata_code = %s OR icao_code = %s",
+                                    $flightData['airline_iata'], $flightData['airline_icao']
+                                ));
+                                
                                 $formattedFlights[] = [
                                     'flight' => !empty($flightData['flight_iata']) ? $flightData['flight_iata'] : $flightData['flight_icao'],
                                     'airport' => $airportName,
                                     'depart' => $flightData['dep_time_utc'] ?? '',
                                     'arrive' => $flightData['arr_time_utc'] ?? '',
+                                    'airline' => $airlineName ?? '',
+                                    'arrAirport' => $arrAirport,
+                                    'depAirport' => $depAirport,
                                     'dep_code' => !empty($flightData['dep_iata']) ? $flightData['dep_iata'] : $flightData['dep_icao'],
                                     'arr_code' => !empty($flightData['arr_iata']) ? $flightData['arr_iata'] : $flightData['arr_icao'],
                                     'tz_dep' => $tz_dep,
@@ -712,9 +755,8 @@ add_action('wp_enqueue_scripts', 'enqueue_react_app_script');
     $status = $atts['status'];
 
     // Recuperar los valores guardados en los ajustes del plugin
-    $path = get_option('mi_plugin_path');
 
-    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-path='{$path}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}' '></div>";
+    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}'></div>";
 
 }
 

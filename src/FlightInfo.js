@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getFlightCardInfo } from "./services"; // Asegúrate de que esta ruta sea correcta
 import FlightCard from "./FlightCard";
 
-const FlightInfo = ({ path, data }) => {
+const FlightInfo = ({ data }) => {
   console.log("Data para FlightInfo", data);
   const [flightInfo, setFlightInfo] = useState(null);
   const [loading, setLoading] = useState(true);
