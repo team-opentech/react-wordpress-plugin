@@ -1,12 +1,469 @@
 <?php
 /**
- * Plugin Name: Flight Schedule
+ * Plugin Name: SEO Flight Schedule
  * Description: Muestra los vuelos de los aeropuertos y aerolineas.
  * Version: 1.0
  * Author: Opentech LLC
+ * Text Domain: seo-flight-schedule
  */
 
  defined('ABSPATH') or die('¡Acceso directo no permitido!');
+
+ // Register Custom Post Type
+ function register_my_custom_post_types() {
+
+    // $labels = array(
+    //     'name'              => _x('Locations', 'taxonomy general name', 'seo-flight-schedule'),
+    //     'singular_name'     => _x('Location', 'taxonomy singular name', 'seo-flight-schedule'),
+    //     'search_items'      => __('Search Locations', 'seo-flight-schedule'),
+    //     'all_items'         => __('All Locations', 'seo-flight-schedule'),
+    //     'parent_item'       => __('Parent Location', 'seo-flight-schedule'),
+    //     'parent_item_colon' => __('Parent Location:', 'seo-flight-schedule'),
+    //     'edit_item'         => __('Edit Location', 'seo-flight-schedule'),
+    //     'update_item'       => __('Update Location', 'seo-flight-schedule'),
+    //     'add_new_item'      => __('Add New Location', 'seo-flight-schedule'),
+    //     'new_item_name'     => __('New Location Name', 'seo-flight-schedule'),
+    //     'menu_name'         => __('Location', 'seo-flight-schedule'),
+    // );
+    // $args = array(
+    //     'hierarchical'      => true, // make it hierarchical (like categories)
+    //     'labels'            => $labels,
+    //     'show_ui'           => true,
+    //     'show_admin_column' => true,
+    //     'query_var'         => true,
+    //     'rewrite'           => array('slug' => 'location', 'with_front' => true, 'hierarchical' => true),
+    // );
+    // register_taxonomy('location', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+
+        // Register Custom Taxonomy Country
+    $labels = array(
+        'name'              => _x('Countries Taxonomies', 'taxonomy general name', 'seo-flight-schedule'),
+        'singular_name'     => _x('Country Taxonomy', 'taxonomy singular name', 'seo-flight-schedule'),
+        'search_items'      => __('Search Countries Taxonomies', 'seo-flight-schedule'),
+        'all_items'         => __('All Countries Taxonomies', 'seo-flight-schedule'),
+        'parent_item'       => __('Parent Country Taxonomy', 'seo-flight-schedule'),
+        'parent_item_colon' => __('Parent Country Taxonomy:', 'seo-flight-schedule'),
+        'edit_item'         => __('Edit Country Taxonomy', 'seo-flight-schedule'),
+        'update_item'       => __('Update Country Taxonomy', 'seo-flight-schedule'),
+        'add_new_item'      => __('Add New Country Taxonomy', 'seo-flight-schedule'),
+        'new_item_name'     => __('New Country Taxonomy Name', 'seo-flight-schedule'),
+        'menu_name'         => __('Country Taxonomy', 'seo-flight-schedule'),
+    );
+    $args = array(
+        'hierarchical'      => true,
+        'labels'            => $labels,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'query_var'         => true,
+        'rewrite'           => array('slug' => 'country-taxonomy', 'with_front' => true, 'hierarchical' => true),
+    );
+    register_taxonomy('country-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+
+    // Register Custom Taxonomy State
+    $labels = array(
+        'name'              => _x('States Taxonomies', 'taxonomy general name', 'seo-flight-schedule'),
+        'singular_name'     => _x('State Taxonomy', 'taxonomy singular name', 'seo-flight-schedule'),
+        'search_items'      => __('Search States Taxonomies', 'seo-flight-schedule'),
+        'all_items'         => __('All States Taxonomies', 'seo-flight-schedule'),
+        'parent_item'       => __('Parent State Taxonomy', 'seo-flight-schedule'),
+        'parent_item_colon' => __('Parent State Taxonomy:', 'seo-flight-schedule'),
+        'edit_item'         => __('Edit State Taxonomy', 'seo-flight-schedule'),
+        'update_item'       => __('Update State Taxonomy', 'seo-flight-schedule'),
+        'add_new_item'      => __('Add New State Taxonomy', 'seo-flight-schedule'),
+        'new_item_name'     => __('New State Taxonomy Name', 'seo-flight-schedule'),
+        'menu_name'         => __('State Taxonomy', 'seo-flight-schedule'),
+    );
+    $args = array(
+        'hierarchical'      => true, 
+        'labels'            => $labels,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'query_var'         => true,
+        'rewrite'           => array('slug' => 'state-taxonomy', 'with_front' => true, 'hierarchical' => true),
+    );
+    register_taxonomy('state-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+
+    // Register Custom Taxonomy City
+    $labels = array(
+        'name'              => _x('Cities Taxonomies', 'taxonomy general name', 'seo-flight-schedule'),
+        'singular_name'     => _x('City Taxonomy', 'taxonomy singular name', 'seo-flight-schedule'),
+        'search_items'      => __('Search Cities Taxonomies', 'seo-flight-schedule'),
+        'all_items'         => __('All Cities Taxonomies', 'seo-flight-schedule'),
+        'parent_item'       => __('Parent City Taxonomy', 'seo-flight-schedule'),
+        'parent_item_colon' => __('Parent City Taxonomy:', 'seo-flight-schedule'),
+        'edit_item'         => __('Edit City Taxonomy', 'seo-flight-schedule'),
+        'update_item'       => __('Update City Taxonomy', 'seo-flight-schedule'),
+        'add_new_item'      => __('Add New City Taxonomy', 'seo-flight-schedule'),
+        'new_item_name'     => __('New City Taxonomy Name', 'seo-flight-schedule'),
+        'menu_name'         => __('City Taxonomy', 'seo-flight-schedule'),
+    );
+    $args = array(
+        'hierarchical'      => true, // make it hierarchical (like categories)
+        'labels'            => $labels,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'query_var'         => true,
+        'rewrite'           => array('slug' => 'city-taxonomy', 'with_front' => true, 'hierarchical' => true),
+    );
+    register_taxonomy('city-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+
+    //Register custom taxonomy Airports
+$labels = array(
+        'name'              => _x('Airports Taxonomies', 'taxonomy general name', 'seo-flight-schedule'),
+        'singular_name'     => _x('Airport Taxonomy', 'taxonomy singular name', 'seo-flight-schedule'),
+        'search_items'      => __('Search Airports Taxonomies', 'seo-flight-schedule'),
+        'all_items'         => __('All Airports Taxonomies', 'seo-flight-schedule'),
+        'parent_item'       => __('Parent Airport Taxonomy', 'seo-flight-schedule'),
+        'parent_item_colon' => __('Parent Airport Taxonomy:', 'seo-flight-schedule'),
+        'edit_item'         => __('Edit Airport Taxonomy', 'seo-flight-schedule'),
+        'update_item'       => __('Update Airport Taxonomy', 'seo-flight-schedule'),
+        'add_new_item'      => __('Add New Airport Taxonomy', 'seo-flight-schedule'),
+        'new_item_name'     => __('New Airport Taxonomy Name', 'seo-flight-schedule'),
+        'menu_name'         => __('Airport Taxonomy', 'seo-flight-schedule'),
+    );
+    $args = array(
+        'hierarchical'      => true,
+        'labels'            => $labels,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'query_var'         => true,
+        'rewrite'           => array('slug' => 'airport-taxonomy', 'with_front' => true, 'hierarchical' => true),
+    );
+    register_taxonomy('airport-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+
+    //Register custom taxonomy Airlines
+    $labels = array(
+        'name'              => _x('Airlines Taxonomies', 'taxonomy general name', 'seo-flight-schedule'),
+        'singular_name'     => _x('Airline Taxonomy', 'taxonomy singular name', 'seo-flight-schedule'),
+        'search_items'      => __('Search Airlines Taxonomies', 'seo-flight-schedule'),
+        'all_items'         => __('All Airlines Taxonomies', 'seo-flight-schedule'),
+        'parent_item'       => __('Parent Airline Taxonomy', 'seo-flight-schedule'),
+        'parent_item_colon' => __('Parent Airline Taxonomy:', 'seo-flight-schedule'),
+        'edit_item'         => __('Edit Airline Taxonomy', 'seo-flight-schedule'),
+        'update_item'       => __('Update Airline Taxonomy', 'seo-flight-schedule'),
+        'add_new_item'      => __('Add New Airline Taxonomy', 'seo-flight-schedule'),
+        'new_item_name'     => __('New Airline Taxonomy Name', 'seo-flight-schedule'),
+        'menu_name'         => __('Airline Taxonomy', 'seo-flight-schedule'),
+    );
+    $args = array(
+        'hierarchical'      => true, 
+        'labels'            => $labels,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'query_var'         => true,
+        'rewrite'           => array('slug' => 'airline-taxonomy', 'with_front' => true, 'hierarchical' => true),
+    );
+    register_taxonomy('airline-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+
+    // Register Custom Post Type Airports
+    $labels = array(
+        'name'                  => _x('Airports', 'Post Type General Name', 'seo-flight-schedule'),
+        'singular_name'         => _x('Airport', 'Post Type Singular Name', 'seo-flight-schedule'),
+        'menu_name'             => __('Airports', 'seo-flight-schedule'),
+        'name_admin_bar'        => __('Airports', 'seo-flight-schedule'),
+        'archives'              => __('Airport Archives', 'seo-flight-schedule'),
+        'attributes'            => __('Airport Attributes', 'seo-flight-schedule'),
+        'parent_item_colon'     => __('Parent Airport:', 'seo-flight-schedule'),
+        'all_items'             => __('All Airports', 'seo-flight-schedule'),
+        'add_new_item'          => __('Add New Airport', 'seo-flight-schedule'),
+        'add_new'               => __('Add Airport', 'seo-flight-schedule'),
+        'new_item'              => __('New Airport', 'seo-flight-schedule'),
+        'edit_item'             => __('Edit Airport', 'seo-flight-schedule'),
+        'update_item'           => __('Update Airport', 'seo-flight-schedule'),
+        'view_item'             => __('View Airport', 'seo-flight-schedule'),
+        'view_items'            => __('View Airports', 'seo-flight-schedule'),
+        'search_items'          => __('Search Airports', 'seo-flight-schedule'),
+        'not_found'             => __('Airport Not found', 'seo-flight-schedule'),
+        'not_found_in_trash'    => __('Airport Not found in Trash', 'seo-flight-schedule'),
+        'featured_image'        => __('Featured Image', 'seo-flight-schedule'),
+        'set_featured_image'    => __('Set featured image', 'seo-flight-schedule'),
+        'remove_featured_image' => __('Remove featured image', 'seo-flight-schedule'),
+        'use_featured_image'    => __('Use as featured image', 'seo-flight-schedule'),
+        'insert_into_item'      => __('Insert into item', 'seo-flight-schedule'),
+        'uploaded_to_this_item' => __('Uploaded to this item', 'seo-flight-schedule'),
+        'items_list'            => __('Airports list', 'seo-flight-schedule'),
+        'items_list_navigation' => __('Airports list navigation', 'seo-flight-schedule'),
+        'filter_items_list'     => __('Filter Airports list', 'seo-flight-schedule'),
+    );
+    $rewrite = array(
+        'slug'                  => 'airport',
+        'with_front'            => true,
+        'pages'                 => true,
+        'feeds'                 => true,
+    );
+    $args = array(
+        'label'                 => __('Airport', 'seo-flight-schedule'),
+        'description'           => __('Post type for Airports', 'seo-flight-schedule'),
+        'labels'                => $labels,
+        'supports'              => array('title', 'editor', 'trackbacks', 'custom-fields', 'page-attributes', 'post-formats'),
+        'taxonomies'            => array('country-taxonomy', 'state-taxonomy', 'city-taxonomy', 'airport-taxonomy', 'airline-taxonomy'),
+        'hierarchical'          => true,
+        'public'                => true,
+        'show_ui'               => true,
+        'show_in_menu'          => 'seo-flight-schedule',
+        'menu_position'         => 5,
+        'menu_icon'             => 'dashicons-airplane',
+        'show_in_admin_bar'     => true,
+        'show_in_nav_menus'     => true,
+        'can_export'            => true,
+        'has_archive'           => true,
+        'exclude_from_search'   => false,
+        'publicly_queryable'    => true,
+        'rewrite'               => $rewrite,
+        'capability_type'       => 'post',
+    );
+    register_post_type('post_type_airports', $args);
+
+    //Register Custom Post Type Airlines
+    	$labels = array(
+		'name'                  => _x( 'Airlines', 'Post Type General Name', 'seo-flight-schedule' ),
+		'singular_name'         => _x( 'Airline', 'Post Type Singular Name', 'seo-flight-schedule' ),
+		'menu_name'             => __( 'Airlines', 'seo-flight-schedule' ),
+		'name_admin_bar'        => __( 'Airlines', 'seo-flight-schedule' ),
+		'archives'              => __( 'Airline Archives', 'seo-flight-schedule' ),
+		'attributes'            => __( 'Airline Attributes', 'seo-flight-schedule' ),
+		'parent_item_colon'     => __( 'Parent Airline:', 'seo-flight-schedule' ),
+		'all_items'             => __( 'All Airlines', 'seo-flight-schedule' ),
+		'add_new_item'          => __( 'Add New Airline', 'seo-flight-schedule' ),
+		'add_new'               => __( 'Add Airline', 'seo-flight-schedule' ),
+		'new_item'              => __( 'New Airline', 'seo-flight-schedule' ),
+		'edit_item'             => __( 'Edit Airline', 'seo-flight-schedule' ),
+		'update_item'           => __( 'Update Airline', 'seo-flight-schedule' ),
+		'view_item'             => __( 'View Airline', 'seo-flight-schedule' ),
+		'view_items'            => __( 'View Airlines', 'seo-flight-schedule' ),
+		'search_items'          => __( 'Search Airlines', 'seo-flight-schedule' ),
+		'not_found'             => __( 'Airline Not found', 'seo-flight-schedule' ),
+		'not_found_in_trash'    => __( 'Airline Not found in Trash', 'seo-flight-schedule' ),
+		'featured_image'        => __( 'Featured Image', 'seo-flight-schedule' ),
+		'set_featured_image'    => __( 'Set featured image', 'seo-flight-schedule' ),
+		'remove_featured_image' => __( 'Remove featured image', 'seo-flight-schedule' ),
+		'use_featured_image'    => __( 'Use as featured image', 'seo-flight-schedule' ),
+		'insert_into_item'      => __( 'Insert into item', 'seo-flight-schedule' ),
+		'uploaded_to_this_item' => __( 'Uploaded to this item', 'seo-flight-schedule' ),
+		'items_list'            => __( 'Airlines list', 'seo-flight-schedule' ),
+		'items_list_navigation' => __( 'Airlines list navigation', 'seo-flight-schedule' ),
+		'filter_items_list'     => __( 'Filter Airlines list', 'seo-flight-schedule' ),
+	);
+	$rewrite = array(
+		'slug'                  => 'airline',
+		'with_front'            => true,
+		'pages'                 => true,
+		'feeds'                 => false,
+	);
+	$args = array(
+		'label'                 => __( 'Airline', 'seo-flight-schedule' ),
+		'description'           => __( 'Post type for Airlines', 'seo-flight-schedule' ),
+		'labels'                => $labels,
+		'supports'              => array( 'title', 'editor', 'trackbacks', 'custom-fields', 'page-attributes', 'post-formats' ),
+		'taxonomies'            => array('country-taxonomy', 'state-taxonomy', 'city-taxonomy', 'airport-taxonomy', 'airline-taxonomy'),
+		'hierarchical'          => true,
+		'public'                => true,
+		'show_ui'               => true,
+		'show_in_menu'          => 'seo-flight-schedule',
+		'menu_position'         => 5,
+		'menu_icon'             => 'dashicons-airplane',
+		'show_in_admin_bar'     => true,
+		'show_in_nav_menus'     => true,
+		'can_export'            => true,
+		'has_archive'           => true,
+		'exclude_from_search'   => false,
+		'publicly_queryable'    => true,
+		'rewrite'               => $rewrite,
+		'capability_type'       => 'post',
+	);
+	register_post_type( 'post_type_airlines', $args );
+    
+        // Register Custom Post Type Flights
+        $labels = array(
+            'name'                  => _x('Flights', 'Post Type General Name', 'seo-flight-schedule'),
+            'singular_name'         => _x('Flight', 'Post Type Singular Name', 'seo-flight-schedule'),
+            'menu_name'             => __('Flights', 'seo-flight-schedule'),
+            'name_admin_bar'        => __('Flights', 'seo-flight-schedule'),
+            'archives'              => __('Flight Archives', 'seo-flight-schedule'),
+            'attributes'            => __('Flight Attributes', 'seo-flight-schedule'),
+            'parent_item_colon'     => __('Parent Flight:', 'seo-flight-schedule'),
+            'all_items'             => __('All Flights', 'seo-flight-schedule'),
+            'add_new_item'          => __('Add New Flight', 'seo-flight-schedule'),
+            'add_new'               => __('Add Flight', 'seo-flight-schedule'),
+            'new_item'              => __('New Flight', 'seo-flight-schedule'),
+            'edit_item'             => __('Edit Flight', 'seo-flight-schedule'),
+            'update_item'           => __('Update Flight', 'seo-flight-schedule'),
+            'view_item'             => __('View Flight', 'seo-flight-schedule'),
+            'view_items'            => __('View Flights', 'seo-flight-schedule'),
+            'search_items'          => __('Search Flights', 'seo-flight-schedule'),
+            'not_found'             => __('Flight Not found', 'seo-flight-schedule'),
+            'not_found_in_trash'    => __('Flight Not found in Trash', 'seo-flight-schedule'),
+            'featured_image'        => __('Featured Image', 'seo-flight-schedule'),
+            'set_featured_image'    => __('Set featured image', 'seo-flight-schedule'),
+            'remove_featured_image' => __('Remove featured image', 'seo-flight-schedule'),
+            'use_featured_image'    => __('Use as featured image', 'seo-flight-schedule'),
+            'insert_into_item'      => __('Insert into item', 'seo-flight-schedule'),
+            'uploaded_to_this_item' => __('Uploaded to this item', 'seo-flight-schedule'),
+            'items_list'            => __('Flights list', 'seo-flight-schedule'),
+            'items_list_navigation' => __('Flights list navigation', 'seo-flight-schedule'),
+            'filter_items_list'     => __('Filter Flights list', 'seo-flight-schedule'),
+        );
+        $rewrite = array(
+            'slug'                  => 'flight',
+            'with_front'            => true,
+            'pages'                 => true,
+            'feeds'                 => true,
+        );
+        $args = array(
+            'label'                 => __('Flight', 'seo-flight-schedule'),
+            'description'           => __('Post type for Flights', 'seo-flight-schedule'),
+            'labels'                => $labels,
+            'supports'              => array('title', 'editor', 'trackbacks', 'custom-fields', 'page-attributes', 'post-formats'),
+            'taxonomies'            => array('country-taxonomy', 'state-taxonomy', 'city-taxonomy', 'airport-taxonomy', 'airline-taxonomy'),
+            'hierarchical'          => true,
+            'public'                => true,
+            'show_ui'               => true,
+            'show_in_menu'          => 'seo-flight-schedule',
+            'menu_position'         => 5,
+            'menu_icon'             => 'dashicons-airplane',
+            'show_in_admin_bar'     => true,
+            'show_in_nav_menus'     => true,
+            'can_export'            => true,
+            'has_archive'           => true,
+            'exclude_from_search'   => false,
+            'publicly_queryable'    => true,
+            'rewrite'               => $rewrite,
+            'capability_type'       => 'post',
+        );
+        register_post_type('post_type_flights', $args);
+}
+add_action('init', 'register_my_custom_post_types');
+
+function add_seo_flight_scheduling_menu() {
+    add_menu_page(
+        'SEO Flight Scheduling', 
+        'SEO Flight Scheduling', 
+        'manage_options', 
+        'seo-flight-schedule',
+        '', 
+        'dashicons-airplane', 
+        6
+    );
+}
+add_action('admin_menu', 'add_seo_flight_scheduling_menu');
+
+function add_taxonomies_to_menu() {
+    // add_submenu_page(
+    //     'seo-flight-schedule',            // El slug del menú padre
+    //     'Manage Locations',                 // Título de la página
+    //     'Locations',                        // Título del menú
+    //     'manage_options',                   // Capacidad necesaria para ver este menú
+    //     'edit-tags.php?taxonomy=location'  // La URL para gestionar la taxonomía
+    // );
+    add_submenu_page(
+        'seo-flight-schedule',
+        'Manage Countries Taxonomies',
+        'Countries Taxonomy',
+        'manage_options',
+        'edit-tags.php?taxonomy=country-taxonomy'
+    );
+    add_submenu_page(
+        'seo-flight-schedule',
+        'Manage States Taxonomies',
+        'States Taxonomy',
+        'manage_options',
+        'edit-tags.php?taxonomy=state-taxonomy'
+    );
+    add_submenu_page(
+        'seo-flight-schedule',
+        'Manage Cities Taxonomies',
+        'Cities Taxonomy',
+        'manage_options',
+        'edit-tags.php?taxonomy=city-taxonomy'
+    );
+    add_submenu_page(
+        'seo-flight-schedule',
+        'Manage Airports Taxonomies',
+        'Airports Taxonomy',
+        'manage_options',
+        'edit-tags.php?taxonomy=airport-taxonomy'
+    );
+     add_submenu_page(
+        'seo-flight-schedule',
+        'Manage Airlines Taxonomies',
+        'Airlines Taxonomy',
+        'manage_options',
+        'edit-tags.php?taxonomy=airline-taxonomy'
+    );
+}
+add_action('admin_menu', 'add_taxonomies_to_menu');
+
+function admin_script_for_custom_taxonomy_menu() {
+    global $parent_file;
+    if (get_current_screen()->taxonomy == 'location') {
+        $parent_file = 'seo-flight-schedule';
+    }
+    if (get_current_screen()->taxonomy == 'country') {
+        $parent_file = 'seo-flight-schedule';
+    }
+    if (get_current_screen()->taxonomy == 'state') {
+        $parent_file = 'seo-flight-schedule';
+    }
+}
+add_action('admin_head', 'admin_script_for_custom_taxonomy_menu');
+
+
+// Custom rewrite rules
+// function custom_rewrite_rules() {
+//     add_rewrite_rule(
+//         '^location/([^/]+)/([^/]+)/([^/]+)/airport/([^/]+)/?$',
+//         'index.php?location=$matches[3]&airport=$matches[4]',
+//         'top'
+//     );
+// }
+// add_action('init', 'custom_rewrite_rules');
+
+// Custom post type link
+// function custom_post_type_permalink($post_link, $post) {
+//     if (($post->post_type == 'airport' || $post->post_type == 'airline' || $post->post_type == 'flight') && $taxonomy_terms = wp_get_object_terms($post->ID, 'location')) {
+//         $terms = wp_get_object_terms($post->ID, 'location'); // Asegúrate de que 'location' es el slug correcto de la taxonomía
+//         if (!is_wp_error($taxonomy_terms) && !empty($taxonomy_terms)) {
+//             // Ordena los términos de más bajo a más alto en la jerarquía
+//             usort($terms, function ($a, $b) {
+//                 return $a->parent - $b->parent;
+//             });
+//             $term = array_pop($taxonomy_terms); // Obtén el término más bajo
+//             $ancestors = array_reverse(get_ancestors($term->term_id, 'location', 'taxonomy')); // Obtén todos los ancestros
+//             $ancestors[] = $term->term_id; // Incluye el término actual
+//             $path = '';
+//             foreach ($ancestors as $ancestor) {
+//                 $term = get_term($ancestor, 'location');
+//                 $path .= $term->slug . '/';
+//             }
+//             $post_link = home_url(user_trailingslashit('airport/' . $path . $post->post_name));
+//         }
+//     }
+//     return $post_link;
+// }
+// add_filter('post_type_link', 'custom_post_type_permalink', 10, 4);
+
+// function custom_post_type_link($post_link, $post, $leavename, $sample) {
+//     if ($post->post_type == 'airports') {
+//         // Recuperamos los términos asignados al post
+//         $terms = wp_get_object_terms($post->ID, 'location');
+        
+//         // Verificamos si no hay errores y si hay términos asignados
+//         if (!is_wp_error($terms) && !empty($terms)) {
+//             // Asumimos que los términos están ordenados correctamente de padre a hijo
+//             $slug = '';
+//             foreach ($terms as $term) {
+//                 if (isset($term->slug)) {
+//                     $slug .= $term->slug . '/' . $slug;
+//                 }
+//             }
+//             // Generamos el nuevo enlace con la estructura deseada
+//             $post_link = home_url(user_trailingslashit($slug . 'airport/' . $post->post_name));
+//         }
+//     }
+//     return $post_link;
+// }
+// add_filter('post_type_link', 'custom_post_type_link', 10, 4);
+
 
  function mi_plugin_activate() {
     global $wpdb;
@@ -166,6 +623,9 @@
     }
 
     update_option('mi_plugin_db_message', 'Tablas de Mi Plugin React creadas con éxito.');
+
+    register_my_custom_post_types();
+    flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'mi_plugin_activate');
 
@@ -785,6 +1245,64 @@ function mi_plugin_settings_page() {
     </div>
     <?php
 }
+function mi_plugin_docs_page() {
+    ?>
+    <div class="wrap">
+        <h2>Documentación del Plugin de Vuelos</h2>
+        <p>Aquí puedes encontrar cómo usar el plugin, consejos de integración y solución de problemas comunes.</p>
+
+        <!-- Uso Básico -->
+        <h3>Uso Básico</h3>
+        <p>Para comenzar rápidamente con nuestro plugin, simplemente inserta uno de los siguientes shortcodes en cualquier página o entrada para mostrar información en tiempo real sobre vuelos.</p>
+
+        <!-- Shortcodes -->
+        <h3>Shortcodes Disponibles</h3>
+        
+        <!-- Llegadas -->
+        <h4>Llegadas [arrivals_app]</h4>
+        <p>Este shortcode muestra información sobre las llegadas a un aeropuerto específico. Utiliza los siguientes parámetros para personalizar la salida:</p>
+        <ul>
+            <li><strong>iata_code</strong>: Código IATA del aeropuerto. (opcional si se proporciona `icao_code`)</li>
+            <li><strong>icao_code</strong>: Código ICAO del aeropuerto. (opcional si se proporciona `iata_code`)</li>
+            <li><strong>size</strong>: Número de vuelos a mostrar.</li>
+            <li><strong>airline_iata</strong>: Filtrar por código IATA de la aerolínea. (opcional)</li>
+            <li><strong>airline_icao</strong>: Filtrar por código ICAO de la aerolínea. (opcional)</li>
+            <li><strong>status</strong>: Filtrar vuelos por estado. (opcional)</li>
+        </ul>
+        <p><strong>Ejemplo:</strong> <code>[arrivals_app iata_code="JFK" size="5"]</code></p>
+
+        <!-- Salidas -->
+        <h4>Salidas [departures_app]</h4>
+        <p>Muestra información sobre las salidas desde un aeropuerto específico. Acepta los siguientes parámetros para personalización:</p>
+        <ul>
+            <li><strong>iata_code</strong>: Código IATA del aeropuerto. (opcional si se proporciona `icao_code`)</li>
+            <li><strong>icao_code</strong>: Código ICAO del aeropuerto. (opcional si se proporciona `iata_code`)</li>
+            <li><strong>size</strong>: Número de vuelos a mostrar.</li>
+            <li><strong>airline_iata</strong>: Filtrar por código IATA de la aerolínea. (opcional)</li>
+            <li><strong>airline_icao</strong>: Filtrar por código ICAO de la aerolínea. (opcional)</li>
+            <li><strong>status</strong>: Filtrar vuelos por estado. (opcional)</li>
+        </ul>
+        <p><strong>Ejemplo:</strong> <code>[departures_app icao_code="LAX" size="10"]</code></p>
+
+        <!-- Número de Vuelo -->
+        <h4>Número de Vuelo [numero-vuelo]</h4>
+        <p>Obtiene información específica de un vuelo usando su código. Ideal para seguir vuelos individuales. Acepta los siguientes parámetros:</p>
+        <ul>
+            <li><strong>flight_iata</strong>: Código IATA del vuelo. (opcional si se proporciona `flight_icao`)</li>
+            <li><strong>flight_icao</strong>: Código ICAO del vuelo. (opcional si se proporciona `flight_iata`)</li>
+        </ul>
+        <p><strong>Ejemplo:</strong> <code>[numero-vuelo flight_iata="AA123"]</code></p>
+
+        <!-- Preguntas Frecuentes -->
+        <h3>Preguntas Frecuentes</h3>
+        <p>Aquí puedes encontrar respuestas a preguntas comunes que ayudarán a resolver cualquier duda rápida sobre el uso del plugin.</p>
+
+        <!-- Soporte Técnico -->
+        <h3>Soporte Técnico</h3>
+        <p>Si encuentras problemas técnicos o necesitas ayuda personalizada, no dudes en contactar nuestro equipo de soporte a través de <a href="mailto:team@lccopen.tech">team@lccopen.tech</a>.</p>
+    </div>
+    <?php
+}
 
 // Hook para inicializar la configuración
 add_action('admin_init', 'mi_plugin_settings_init');
@@ -805,7 +1323,7 @@ function mi_plugin_settings_init() {
 }
 
 function mi_plugin_settings_section_callback() {
-    echo 'Ingresa tu API Key y el Path para las consultas de vuelos, así como el tiempo de expiración de los datos almacenados.';
+    echo 'Ingresa tu API Key y el tiempo de expiración de los datos almacenados.';
 }
 
 function mi_plugin_api_key_callback() {
@@ -830,6 +1348,25 @@ function mi_plugin_add_settings_link($links) {
     return $links;
 }
 
+function mi_plugin_add_admin_pages() {
+    add_options_page(
+        'Documentación del Plugin de Vuelos',  // Título de la página
+        'Docs Plugin de Vuelos',              // Título del menú
+        'manage_options',                     // Capacidad requerida
+        'mi_plugin_docs_page',                // Slug del menú
+        'mi_plugin_docs_page'                 // Función que muestra el contenido de la página
+    );
+}
+add_action('admin_menu', 'mi_plugin_add_admin_pages');
+
+function mi_plugin_add_docs_link($links) {
+    $docs_link = '<a href="' . admin_url('admin.php?page=mi_plugin_docs_page') . '">' . __('Docs') . '</a>';
+    array_push($links, $docs_link);  // Añade al final de los enlaces existentes
+    return $links;
+}
+
+
 $plugin = plugin_basename(__FILE__);
 add_filter("plugin_action_links_$plugin", 'mi_plugin_add_settings_link');
+add_filter("plugin_action_links_$plugin", 'mi_plugin_add_docs_link');
 ?>

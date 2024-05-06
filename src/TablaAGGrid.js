@@ -17,7 +17,15 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
   const [loading, setLoading] = useState(false);
   const [lastPage, setLastPage] = useState(false);
   const [params, setParams] = useState(queryParams);
+  const [nextClicked, setNextClicked] = useState(false);
   const baseUrl = window.location.origin;
+
+  const handleNextClick = () => {
+    if (!loading && !lastPage) {
+      gridApi.paginationGoToNextPage();
+      setNextClicked(true); // Indicar que el botón Next ha sido clickeado
+    }
+  };
 
   const onPaginationChanged = () => {
     if (!gridApi) return;
@@ -30,9 +38,10 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
     setCurrentPage(currentPage);
     setLastPage(currentPage === totalPages - 1);
 
-    if (currentPage === totalPages - 1 && dataFromApi) {
+    if (currentPage >= totalPages - 1 && dataFromApi && nextClicked) {
       handleMoreDataFromApi();
     }
+    setNextClicked(false); // Reiniciar el estado después de actualizar la paginación
   };
 
   useEffect(() => {
@@ -94,43 +103,43 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
 
   const tableName = () => {
     const status = queryParams.get("status");
-    const airline = data[0].airline;
+    const airline = queryParams.get("airlineCode") ? data[0].airline : "";
     const airport =
       type === "arrivals" ? data[0].arrAirport : data[0].depAirport;
 
     const StatusIcon = () => {
       switch (status) {
         case "cancelled":
-          return <Cancelled_Flight style={{ width: 12, height: 12 }} />;
+          return <Cancelled_Flight style={{width: 5, height: 5}} />;
         case "landed":
-          return <Landed_Flight style={{ width: 12, height: 12 }} />;
+          return <Landed_Flight style={{width: 5, height: 5}}/>;
         case "scheduled":
-          return <Scheduled_Flight style={{ width: 12, height: 12 }} />;
+          return <Scheduled_Flight style={{width: 5, height: 5}} />;
         default:
-          return <Active_Flight style={{ width: 12, height: 12 }} />;
+          return <Active_Flight style={{width: 5, height: 5}} />;
       }
     };
 
     const ScheduledIcon = () => {
       if (type === "arrivals") {
-        return <Arrival_Airplane style={{ width: 12, height: 12 }} />;
+        return <Arrival_Airplane style={{width: 5, height: 5}} />;
       } else {
-        return <Departure_Airplane style={{ width: 12, height: 12 }} />;
+        return <Departure_Airplane style={{width: 5, height: 5}} />;
       }
     };
 
     return (
-      <div className="flex flex-wrap h-auto w-full text-white bg-[#3A5F97] items-center justify-center py-[1%] capitalize space-x-4">
+      <div className="flex flex-wrap h-auto w-full text-white bg-[#3A5F97] items-center justify-center py-[1%] uppercase space-x-4">
         {status && <StatusIcon />}
         {!status && <ScheduledIcon />}
-        <h1 className="text-white text-2xl font-semibold">
+        <h1 className="text-white text-[1rem] font-semibold">
           {status
             ? `${status} Flights ${type === "arrivals" ? "to " : "from "}`
             : ""}
           {!status
             ? `${type === "arrivals" ? "Arrivals to" : "Departures from"}`
             : ""}{" "}
-          {airport} {airline ? `with ${airline}` : ""}
+          {airport} {airline ? `- ${airline}` : ""}
         </h1>
       </div>
     );
@@ -258,9 +267,9 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
           Previous
         </button>
         <button
-          className={`button ${!lastPage && !loading ? "" : "disabled"}`}
-          onClick={() => gridApi.paginationGoToNextPage()}
-          disabled={lastPage || loading}
+          className={`button ${dataFromApi && !loading ? "" : "disabled"}`}
+          onClick={handleNextClick}
+          disabled={(!dataFromApi && lastPage) || loading}
         >
           Next
         </button>
