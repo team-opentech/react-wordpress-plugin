@@ -395,13 +395,22 @@ add_action('admin_menu', 'add_taxonomies_to_menu');
 
 function admin_script_for_custom_taxonomy_menu() {
     global $parent_file;
-    if (get_current_screen()->taxonomy == 'location') {
+    // if (get_current_screen()->taxonomy == 'location') {
+    //     $parent_file = 'seo-flight-schedule';
+    // }
+    if (get_current_screen()->taxonomy == 'country-taxonomy') {
         $parent_file = 'seo-flight-schedule';
     }
-    if (get_current_screen()->taxonomy == 'country') {
+    if (get_current_screen()->taxonomy == 'state-taxonomy') {
         $parent_file = 'seo-flight-schedule';
     }
-    if (get_current_screen()->taxonomy == 'state') {
+    if (get_current_screen()->taxonomy == 'city-taxonomy') {
+        $parent_file = 'seo-flight-schedule';
+    }
+    if (get_current_screen()->taxonomy == 'airport-taxonomy') {
+        $parent_file = 'seo-flight-schedule';
+    }
+    if (get_current_screen()->taxonomy == 'airline-taxonomy') {
         $parent_file = 'seo-flight-schedule';
     }
 }
