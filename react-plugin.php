@@ -3,7 +3,7 @@
  * Plugin Name: SEO Flight Schedule
  * Description: Muestra los vuelos de los aeropuertos y aerolineas.
  * Version: 1.0
- * Author: Opentech LLC
+ * Author: Opentech
  * Text Domain: seo-flight-schedule
  */
 
@@ -548,13 +548,16 @@ add_action('admin_head', 'admin_script_for_custom_taxonomy_menu');
         flight_icao varchar(8) DEFAULT '',
         airline_iata varchar(3) DEFAULT '',
         airline_icao varchar(4) DEFAULT '',
+        airline_name varchar(255) DEFAULT '',
         airport varchar(255) DEFAULT '',
         depart varchar(40) DEFAULT '',
         arrive varchar(40) DEFAULT '',
         dep_iata varchar(3) DEFAULT '',
         dep_icao varchar(4) DEFAULT '',
+        dep_city varchar(40) DEFAULT '',
         arr_iata varchar(3) DEFAULT '',
         arr_icao varchar(4) DEFAULT '',
+        arr_city varchar(40) DEFAULT '',
         tz_dep varchar(40) DEFAULT '',
         tz_arr varchar(40) DEFAULT '',
         status varchar(20) DEFAULT '',
@@ -639,15 +642,15 @@ add_action('admin_head', 'admin_script_for_custom_taxonomy_menu');
 register_activation_hook(__FILE__, 'mi_plugin_activate');
 
 
- function mi_plugin_show_db_message() {
-     $message = get_option('mi_plugin_db_message');
-     if (!empty($message)) {
-         echo "<script type='text/javascript'>console.log('" . esc_js($message) . "');</script>";
-         // Borra el mensaje una vez mostrado para no repetirlo en futuras cargas de página
-         delete_option('mi_plugin_db_message');
-     }
- }
- add_action('wp_footer', 'mi_plugin_show_db_message');
+//  function mi_plugin_show_db_message() {
+//      $message = get_option('mi_plugin_db_message');
+//      if (!empty($message)) {
+//          echo "<script type='text/javascript'>console.log('" . esc_js($message) . "');</script>";
+//          // Borra el mensaje una vez mostrado para no repetirlo en futuras cargas de página
+//          delete_option('mi_plugin_db_message');
+//      }
+//  }
+//  add_action('wp_footer', 'mi_plugin_show_db_message');
 
 add_action('rest_api_init', function () {
     register_rest_route('mi-plugin/v1', '/fetch-flight-data', array(
@@ -946,22 +949,26 @@ function mi_plugin_fetch_flight_data($request) {
                                     "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
                                     $flight['dep_iata'], $flight['dep_icao']
                                 ));
-                                $airlineName = $wpdb->get_var($wpdb->prepare(
-                                    "SELECT name FROM {$wpdb->prefix}airlines WHERE iata_code = %s OR icao_code = %s",
-                                    $flight['airline_iata'], $flight['airline_icao']
-                                ));
+                                // $airlineName = $wpdb->get_var($wpdb->prepare(
+                                //     "SELECT name FROM {$wpdb->prefix}airlines WHERE iata_code = %s OR icao_code = %s",
+                                //     $flight['airline_iata'], $flight['airline_icao']
+                                // ));
                                 return [
                                     'flight' => !empty($flight['flight_iata']) ? $flight['flight_iata'] : $flight['flight_icao'],
                                     'airport' => $flight['airport'],
-                                    'airline' => $airlineName ?? '',
+                                    'airline_name' => $flight['airline_name'],
+                                    'airline_code' => !empty($flight['airline_iata']) ? $flight['airline_iata'] : $flight['airline_icao'],
                                     'depart' => $flight['depart'],
                                     'arrive' => $flight['arrive'],
                                     'arrAirport' => $arrAirport,
                                     'depAirport' => $depAirport,
                                     'dep_code' => !empty($flight['dep_iata']) ? $flight['dep_iata'] : $flight['dep_icao'],
+                                    'dep_city' => $flight['dep_city'],
                                     'arr_code' => !empty($flight['arr_icao']) ? $flight['arr_iata'] : $flight['arr_icao'],
+                                    'arr_city' => $flight['arr_city'],
                                     'tz_dep' => $flight['tz_dep'],
                                     'tz_arr' => $flight['tz_arr'],
+                                    'status' => $flight['status'],
                                 ];
                             }, $flightDetails);
                 
@@ -1085,6 +1092,21 @@ function mi_plugin_fetch_flight_data($request) {
                                 "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
                                 $airportCodeToCheck, $airportCodeToCheck
                             ));
+
+                            $airline_name = $wpdb->get_var($wpdb->prepare(
+                                "SELECT name FROM {$wpdb->prefix}airlines WHERE iata_code = %s OR icao_code = %s",
+                                $flightData['airline_iata'], $flightData['airline_icao']
+                            ));
+                            
+                            $dep_city = $wpdb->get_var($wpdb->prepare(
+                                "SELECT city FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                $flightData['dep_iata'], $flightData['dep_icao']
+                            ));
+
+                            $arr_city = $wpdb->get_var($wpdb->prepare(
+                                "SELECT city FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                $flightData['arr_iata'], $flightData['arr_icao']
+                            ));
                 
                             $tz_arr = $wpdb->get_var($wpdb->prepare(
                                 "SELECT timezone FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
@@ -1106,17 +1128,20 @@ function mi_plugin_fetch_flight_data($request) {
                                     'airline_iata' => $flightData['airline_iata'] ?? '',
                                     'airline_icao' => $flightData['airline_icao'] ?? '',
                                     'airport' => $airportName ?? '',
+                                    'airline_name' => $airline_name ?? '',
                                     'depart' => $flightData['dep_time_utc'] ?? '',
                                     'arrive' => $flightData['arr_time_utc'] ?? '',
                                     'dep_iata' => $flightData['dep_iata'] ?? '',
                                     'dep_icao' => $flightData['dep_icao'] ?? '',
+                                    'dep_city' => $dep_city ?? '',
                                     'arr_iata' => $flightData['arr_iata'] ?? '',
                                     'arr_icao' => $flightData['arr_icao'] ?? '',
+                                    'arr_city' => $arr_city ?? '',
                                     'tz_dep' => $tz_dep ?? '',
                                     'tz_arr' => $tz_arr ?? '',
                                     'status' => $flightData['status'] ?? ''
                                 ],
-                                ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
+                                ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
                             );
                             
                 
@@ -1133,24 +1158,23 @@ function mi_plugin_fetch_flight_data($request) {
                                     "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
                                     $flightData['dep_iata'], $flightData['dep_icao']
                                 ));
-    
-                                $airlineName = $wpdb->get_var($wpdb->prepare(
-                                    "SELECT name FROM {$wpdb->prefix}airlines WHERE iata_code = %s OR icao_code = %s",
-                                    $flightData['airline_iata'], $flightData['airline_icao']
-                                ));
                                 
                                 $formattedFlights[] = [
                                     'flight' => !empty($flightData['flight_iata']) ? $flightData['flight_iata'] : $flightData['flight_icao'],
                                     'airport' => $airportName,
                                     'depart' => $flightData['dep_time_utc'] ?? '',
                                     'arrive' => $flightData['arr_time_utc'] ?? '',
-                                    'airline' => $airlineName ?? '',
+                                    'airline_name' => $airline_name,
+                                    'airline_code' => !empty($flightData['airline_iata']) ? $flightData['airline_iata'] : $flightData['airline_icao'],
                                     'arrAirport' => $arrAirport,
                                     'depAirport' => $depAirport,
                                     'dep_code' => !empty($flightData['dep_iata']) ? $flightData['dep_iata'] : $flightData['dep_icao'],
+                                    'dep_city' => $dep_city,
                                     'arr_code' => !empty($flightData['arr_iata']) ? $flightData['arr_iata'] : $flightData['arr_icao'],
+                                    'arr_city' => $arr_city,
                                     'tz_dep' => $tz_dep,
                                     'tz_arr' => $tz_arr,
+                                    'status' => $flightData['status'],
                                 ];
                             } else {
                                 error_log('Error al insertar en schedule_details: ' . $wpdb->last_error);
@@ -1302,9 +1326,11 @@ function mi_plugin_docs_page() {
         </ul>
         <p><strong>Ejemplo:</strong> <code>[numero-vuelo flight_iata="AA123"]</code></p>
 
-        <!-- Preguntas Frecuentes -->
-        <h3>Preguntas Frecuentes</h3>
-        <p>Aquí puedes encontrar respuestas a preguntas comunes que ayudarán a resolver cualquier duda rápida sobre el uso del plugin.</p>
+        <!-- Configuración -->
+        <h3>Configuración</h3>
+        <p>Si deseas configurar manualmente los permalinks a su gusto, debes descargar el plugin Permalink Manager.</p>
+        <p>Con este plugin puedes configurar y estructurar los permalinks para cada post, page, media, etc. que hayas definido.</p>
+        <p>Se puede descargar el plugin Permalink Manager <a href="https://wordpress.org/plugins/permalink-manager/">aquí</a></p>
 
         <!-- Soporte Técnico -->
         <h3>Soporte Técnico</h3>

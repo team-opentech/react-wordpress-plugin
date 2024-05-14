@@ -3,10 +3,17 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "./style.css";
-import moment from "moment-timezone";
+import moment, { min } from "moment-timezone";
 
 const TablaAGGrid = ({ type, size, queryParams, data }) => {
-  // console.log("Data obtenida TablaAGGrid: ", data);
+  console.log("Window Url ", window.location);
+  console.log(
+    "Window Url split airline ",
+    window.location.href
+      .split("/airport")[0]
+      .split("/airline")[0]
+      .split("/flight")[0]
+  );
   const gridRef = useRef(null);
   const [gridApi, setGridApi] = useState(null);
   const [gridColumnApi, setGridColumnApi] = useState(null);
@@ -18,7 +25,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
   const [lastPage, setLastPage] = useState(false);
   const [params, setParams] = useState(queryParams);
   const [nextClicked, setNextClicked] = useState(false);
-  const baseUrl = window.location.origin;
+  // const baseUrl = window.location.href.split("/airport")[0].split("/airline")[0].split("/flight")[0];
 
   const handleNextClick = () => {
     if (!loading && !lastPage) {
@@ -61,44 +68,37 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
 
   const autoSizeStrategy = {
     autoSizeAllColumns: true,
-    // type: "fitCellContents"
-    // type: "fitGridWidth"
-    type: "",
+    type: window.innerWidth > 768 ? "fitGridWidth": "fitCellContents",
   };
 
   useEffect(() => {
-    // Carga de datos y configuración existente...
-    if (gridApi && window.innerWidth > 768) {
-      gridApi.sizeColumnsToFit();
+    if (window.innerWidth > 768) {
+      const formattedData = data.map((item) => ({
+        flight: item.flight,
+        airport: `${item.airport} (${
+          type === "arrivals" ? item.dep_code : item.arr_code
+        })`,
+        city: type === "arrivals" ? item.dep_city : item.arr_city,
+        airline_name: `${item.airline_name} (${item.airline_code})`,
+        depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
+        arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
+        status: item.status,
+      }));
+      setRowData(formattedData);
+    } else {
+      const formattedData = data.map((item) => ({
+        flight: item.flight,
+        city:
+          type === "arrivals"
+            ? `${item.dep_city}/(${item.dep_code})`
+            : `${item.arr_city}/(${item.arr_code})`,
+        airline_name: `${item.airline_name} (${item.airline_code})`,
+        depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
+        arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
+        status: item.status,
+      }));
+      setRowData(formattedData);
     }
-  }, [gridApi]);
-
-  useEffect(() => {
-    function handleResize() {
-      if (gridApi) {
-        if (window.innerWidth > 768) {
-          gridApi.sizeColumnsToFit();
-          autoSizeStrategy.type = "fitGridWidth";
-        } else {
-          gridApi.resetRowHeights();
-          autoSizeStrategy.type = "fitCellContents";
-        }
-      }
-    }
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [gridApi]);
-
-  useEffect(() => {
-    const formattedData = data.map((item) => ({
-      flight: item.flight,
-      airport: `${item.airport} (${
-        type === "arrivals" ? item.dep_code : item.arr_code
-      })`,
-      depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
-      arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
-    }));
-    setRowData(formattedData);
   }, []);
 
   const tableName = () => {
@@ -110,21 +110,21 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
     const StatusIcon = () => {
       switch (status) {
         case "cancelled":
-          return <Cancelled_Flight style={{width: 5, height: 5}} />;
+          return <Cancelled_Flight style={{ width: 5, height: 5 }} />;
         case "landed":
-          return <Landed_Flight style={{width: 5, height: 5}}/>;
+          return <Landed_Flight style={{ width: 5, height: 5 }} />;
         case "scheduled":
-          return <Scheduled_Flight style={{width: 5, height: 5}} />;
+          return <Scheduled_Flight style={{ width: 5, height: 5 }} />;
         default:
-          return <Active_Flight style={{width: 5, height: 5}} />;
+          return <Active_Flight style={{ width: 5, height: 5 }} />;
       }
     };
 
     const ScheduledIcon = () => {
       if (type === "arrivals") {
-        return <Arrival_Airplane style={{width: 5, height: 5}} />;
+        return <Arrival_Airplane style={{ width: 5, height: 5 }} />;
       } else {
-        return <Departure_Airplane style={{width: 5, height: 5}} />;
+        return <Departure_Airplane style={{ width: 5, height: 5 }} />;
       }
     };
 
@@ -132,7 +132,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
       <div className="flex flex-wrap h-auto w-full text-white bg-[#3A5F97] items-center justify-center py-[1%] uppercase space-x-4">
         {status && <StatusIcon />}
         {!status && <ScheduledIcon />}
-        <h1 className="text-white text-[1rem] font-semibold">
+        <h2 className="text-white font-semibold">
           {status
             ? `${status} Flights ${type === "arrivals" ? "to " : "from "}`
             : ""}
@@ -140,38 +140,12 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
             ? `${type === "arrivals" ? "Arrivals to" : "Departures from"}`
             : ""}{" "}
           {airport} {airline ? `- ${airline}` : ""}
-        </h1>
+        </h2>
       </div>
     );
   };
-  // const tableName = () => {
-  //   const status = queryParams.get("status");
-  //   const airline = data[0].airline;
-  //   const airport = type === "arrivals" ? data[0].arrAirport : data[0].depAirport;
 
-  //   const status_icon = (status) => {
-  //     switch (status) {
-  //       case "cancelled":
-  //         return Cancelled_Flight;
-  //       case "landed":
-  //         return Landed_Flight;
-  //       case "scheduled":
-  //         return Scheduled_Flight;
-  //       default:
-  //         return Flight;
-  //     }
-  //   }
-
-  //   return (
-  //     <h1 className="flex flex-wrap h-auto w-full text-white bg-[#3A5F97] text-2xl font-semibold text-center items-center justify-center py-[1%] capitalize">
-  //       {status ? `${status} Flights ${type === "arrivals"? "from ":"to "}` : ""}
-  //       {!status ? `${type === "arrivals" ? "Arrivals to" : "Departures from"}`:""} {airport}{" "}
-  //       {airline ? `with ${airline}` : ""}
-  //     </h1>
-  //   );
-  // }
-
-  const columnDefs = [
+  const columnDefsDesktop = [
     {
       headerName: "Flight",
       field: "flight",
@@ -179,19 +153,142 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         color: "#0056b3",
         textDecoration: "underline",
         cursor: "pointer",
+        wordBreak: "break-all",
+        flexWrap: "wrap",
+        minWidth: 120,
       },
+      minWidth: 120,
     },
     {
-      headerName: type === "arrivals" ? "From" : "To",
+      headerName: "Airline",
+      field: "airline_name",
+      cellStyle: {
+        color: "#0056b3",
+        textDecoration: "underline",
+        cursor: "pointer",
+        wordBreak: "break-all",
+        flexWrap: "wrap",
+        minWidth: 250,
+      },
+      minWidth: 250,
+    },
+    {
+      headerName: type === "arrivals" ? "Departure City" : "Arrival City",
+      field: "city",
+      cellStyle: {
+        wordBreak: "break-all",
+        flexWrap: "wrap",
+        minWidth: 150,
+      },
+      minWidth: 150,
+    },
+    {
+      headerName: type === "arrivals" ? "Departure Airport" : "Arrival Airport",
       field: "airport",
       cellStyle: {
         color: "#0056b3",
         textDecoration: "underline",
         cursor: "pointer",
+        wordBreak: "break-all",
+        flexWrap: "wrap",
+        minWidth: 300,
+      },
+      minWidth: 300,
+    },
+    {
+      headerName: "Depart",
+      field: "depart",
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120},
+      minWidth: 120,
+    },
+    {
+      headerName: "Arrive",
+      field: "arrive",
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120},
+      minWidth: 120,
+    },
+    {
+      headerName: "Status",
+      field: "status",
+      cellStyle: (params) => {
+        {
+          if (params.value === "landed") {
+            return { color: "green" };
+          }
+          if (params.value === "scheduled") {
+            return { color: "gray" };
+          }
+          if (params.value === "cancelled") {
+            return { color: "red" };
+          }
+          return { color: "blue" };
+        }
+      },
+      minWidth: 120,
+    },
+  ];
+
+  const columnDefsMobile = [
+    {
+      headerName: "Flight",
+      field: "flight",
+      cellStyle: {
+        color: "#0056b3",
+        textDecoration: "underline",
+        cursor: "pointer",
+        wordBreak: "break-all",
+        flexWrap: "wrap",
       },
     },
-    { headerName: "Depart", field: "depart" },
-    { headerName: "Arrive", field: "arrive" },
+    {
+      headerName: "Airline",
+      field: "airline_name",
+      cellStyle: {
+        color: "#0056b3",
+        textDecoration: "underline",
+        cursor: "pointer",
+        wordBreak: "break-all",
+        flexWrap: "wrap",
+      },
+    },
+    {
+      headerName: type === "arrivals" ? "Departure City/Airport" : "Arrival City/Airport",
+      field: "city",
+      cellStyle: (params) => {
+        {
+          if (params.value.includes("/")) {
+            return { color: "#0056b3", textDecoration: "underline", cursor: "pointer" };
+          }
+          return { wordBreak: "break-all", flexWrap: "wrap" };
+        }
+      },
+    },
+    {
+      headerName: type === "arrivals" ? "Arrive" : "Depart",
+      field: type === "arrivals" ? "arrive" : "depart",
+      cellStyle: {
+        wordBreak: "break-all",
+        flexWrap: "wrap",
+      },
+    },
+    {
+      headerName: "Status",
+      field: "status",
+      cellStyle: (params) => {
+        {
+          if (params.value === "landed") {
+            return { color: "green" };
+          }
+          if (params.value === "scheduled") {
+            return { color: "gray" };
+          }
+          if (params.value === "cancelled") {
+            return { color: "red" };
+          }
+          return { color: "blue" };
+        }
+      },
+    },
   ];
 
   function handleMoreDataFromApi() {
@@ -203,9 +300,9 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
       // Prepara la nueva URL con el nuevo offset
       const newParams = new URLSearchParams(params); // Asegúrate de que customEndpointUrl es accesible
       newParams.set("offset", newOffset); // Actualiza el parámetro offset
-
+      const baseDomain = window.location.origin;
       const url = new URL(
-        `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${newParams}`
+        `${baseDomain}/wp-json/mi-plugin/v1/fetch-flight-data?${newParams}`
       );
       // Hace la petición con la nueva URL
       fetch(url.toString())
@@ -251,6 +348,52 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
 
   return (
     <div className="ag-theme-alpine">
+      {tableName()}
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={
+          window.innerWidth > 768 ? columnDefsDesktop : columnDefsMobile
+        }
+        ref={gridRef}
+        suppressPaginationPanel={true}
+        onPaginationChanged={onPaginationChanged}
+        onGridReady={(params) => setGridApi(params.api)}
+        // onGridReady={onGridReady}
+        autoSizeStrategy={autoSizeStrategy}
+        domLayout="autoHeight"
+        onCellClicked={(event) => {
+          if (event.column.colId === "flight") {
+            const flightCode = event.data.flight;
+
+            if (!flightCode) {
+              window.location.href = `${window.location.origin}/404.html`;
+              return;
+            }
+            const baseUrl = window.location.href;
+            window.location.href = `${baseUrl}/flight/${flightCode}`;
+          }
+          if (event.column.colId === "airport") {
+            const airportCode = event.data.airport.split("(")[1];
+            const cleanCode = airportCode.replace(")", "");
+            const baseUrl = window.location.href.split("/airport")[0];
+            window.location.href = `${baseUrl}/airport/${cleanCode}`;
+          }
+          if (event.column.colId === "city" && window.innerWidth <= 768) {
+            const airportCode = event.data.city.split("/(")[1];
+            const cleanCode = airportCode.replace(")", "");
+            const baseUrl = window.location.href.split("/airport")[0];
+            window.location.href = `${baseUrl}/airport/${cleanCode}`;
+          }
+          if (event.column.colId === "airline_name") {
+            const airlineCode = event.data.airline_name.split("(")[1];
+            const cleanCode = airlineCode.replace(")", "");
+            const baseUrl = window.location.href.split("/airline")[0];
+            window.location.href = `${baseUrl}/airline/${cleanCode}`;
+          }
+        }}
+        pagination={true}
+        paginationPageSize={size}
+      />
       <div className="flex justify-start items-center space-x-4 my-4">
         <button
           className={`button ${currentPage > 0 && !loading ? "" : "disabled"}`}
@@ -289,38 +432,6 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
           </p>
         )}
       </div>
-      {tableName()}
-      <AgGridReact
-        rowData={rowData}
-        columnDefs={columnDefs}
-        ref={gridRef}
-        suppressPaginationPanel={true}
-        onPaginationChanged={onPaginationChanged}
-        onGridReady={(params) => setGridApi(params.api)}
-        // onGridReady={onGridReady}
-        autoSizeStrategy={autoSizeStrategy}
-        domLayout="autoHeight"
-        onCellClicked={(event) => {
-          if (event.column.colId === "flight") {
-            const flightCode = event.data.flight;
-            const baseUrl = `${window.location.protocol}//${window.location.host}`;
-
-            if (!flightCode) {
-              window.location.href = `${baseUrl}/404.html`;
-              return;
-            }
-            window.location.href = `${baseUrl}/flights/${flightCode}`;
-          }
-          if (event.column.colId === "airport") {
-            const airportCode = event.data.airport.split("(")[1];
-            const cleanCode = airportCode.replace(")", "");
-            const baseUrl = `${window.location.protocol}//${window.location.host}`;
-            window.location.href = `${baseUrl}/airport/${cleanCode}`;
-          }
-        }}
-        pagination={true}
-        paginationPageSize={size}
-      />
     </div>
   );
 };

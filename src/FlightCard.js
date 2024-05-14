@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 // Asumiendo que tienes un archivo de íconos o que estás usando algún paquete para ellos
 // Por ejemplo, podrías usar react-icons para Ionicons
 // import { IoAirplane } from 'react-icons/io5';
@@ -11,32 +11,33 @@ import {
   getRemainingTime,
 } from "./helper.js"; // Asegúrate de implementar o importar estas funciones
 
-
-
 const FlightCard = ({ data }) => {
-
   console.log("FlightCard data", data);
   const getWidth = (data) => {
     if (data.status === "landed") return 100;
     if (data.status === "scheduled") return 0;
-    return (getElapsedTime(data) / (data.duration * 60)) * 100;
+    if ((getElapsedTime(data) / (data.duration * 60)) * 100 > 100) {
+      return 100;
+    } else {
+      return (getElapsedTime(data) / (data.duration * 60)) * 100;
+    }
   };
 
   const renderFlightStatus = (data) => {
     if (data.status === "landed")
       return (
-        <p classNameName="text-xs text-orange-600">
+        <p className="text-sm text-[#7794B0]">
           Landed {minutesToHours(data.duration)} ago
         </p>
       );
     if (data.status === "scheduled")
       return (
-        <p classNameName="text-xs text-orange-600">
+        <p className="text-sm text-[#7794B0]">
           Expected to depart in {secondsToHours(getRemainingTime(data))}
         </p>
       );
     return (
-      <p classNameName="text-xs text-orange-600">
+      <p className="text-sm text-[#7794B0]">
         Arriving in {secondsToHours(getRemainingTime(data))}
       </p>
     );
@@ -72,70 +73,76 @@ const FlightCard = ({ data }) => {
             </div>
             <div className="w-full flex flex-row p-4 gap-4 flex-wrap justify-between lg:px-8">
               <div className="w-fit">
-                <p className="font-semibold text-lg text-customGreen leading-none uppercase">
+                {/* <p className="font-semibold text-lg text-customGreen leading-none uppercase">
                   {data.depIata}
-                </p>
+                </p> */}
                 <p className="font-semibold text-lg text-[#013877] leading-none uppercase">
                   {data.depCity}
                 </p>
-                <p className="font-light text-sm text-[#7794B0] pt-1">
+                {/* <p className="font-light text-sm text-[#7794B0] pt-1">
                   left{" "}
                   <span className="font-semibold text-base text-[#013877]">
                     Gate {data.depGate}
                   </span>
-                </p>
+                </p> */}
                 <p className="text-blue-500 font-semibold pb-1 border-b-[1px] border-dashed border-[#7794B0]">
                   {data.depAirportName} - {data.depIata}
                 </p>
-                <p className="text-sm text-[#7794B0]">
+                <p className="text-sm text-[#7794B0] capitalize">
                   {formatDate(parseInt(data.depTimeTs))}
                 </p>
                 {data.depDelayed === null ? (
-                  <p className="text-sm text-[#7794B0]">
+                  <p className="text-sm text-[#7794B0] capitalize">
                     {formatTimeWithAMPM(parseInt(data.depTimeTs))}{" "}
-                    <span className="text-customGreen">(On time)</span>
+                    {/* <span className="text-customGreen">(On time)</span> */}
                   </p>
                 ) : (
-                  <p className="text-sm text-[#7794B0]">
+                  <p className="text-sm text-[#7794B0] capitalize">
                     {formatTimeWithAMPM(parseInt(data.depTimeTs))}{" "}
-                    <span className="text-customGreen">
+                    {/* <span className="text-customGreen">
                       ({data.depDelayed} minutes later)
-                    </span>
+                    </span> */}
                   </p>
                 )}
               </div>
               <div className="w-fit self-end">
-                <p className="font-semibold text-lg text-orange-600 leading-none uppercase">
+                {/* <p className="font-semibold text-lg text-orange-600 leading-none uppercase">
                   {data.arrIata}
-                </p>
+                </p> */}
                 <p className="font-semibold text-lg text-[#013877] leading-none uppercase">
                   {data.arrCity}
                 </p>
-                <p className="font-light text-sm text-[#7794B0] pt-1">
+                {/* <p className="font-light text-sm text-[#7794B0] pt-1">
                   arriving at{" "}
                   <span className="font-semibold text-base text-[#013877]">
                     Gate {data.arrGate}
                   </span>
-                </p>
+                </p> */}
                 <p className="text-blue-500 font-semibold pb-1 border-b-[1px] border-dashed border-[#7794B0]">
                   {data.arrAirportName} - {data.arrIata}
                 </p>
-                <p className="text-sm text-[#7794B0]">
+                <p className="text-sm text-[#7794B0] capitalize">
                   {formatDate(parseInt(data.arrTimeTs))}
                 </p>
                 {data.arrDelayed === null ? (
-                  <p className="text-sm text-[#7794B0]">
+                  <p className="text-sm text-[#7794B0] capitalize">
                     {formatTimeWithAMPM(parseInt(data.arrTimeTs))}{" "}
-                    <span className="text-orange-600">(On time)</span>
+                    {/* <span className="text-orange-600">(On time)</span> */}
                   </p>
                 ) : (
-                  <p className="text-sm text-[#7794B0]">
+                  <p className="text-sm text-[#7794B0] capitalize">
                     {formatTimeWithAMPM(parseInt(data.arrTimeTs))}{" "}
-                    <span className="text-orange-600">
+                    {/* <span className="text-orange-600">
                       ({data.arrDelayed} minutes later)
-                    </span>
+                    </span> */}
                   </p>
                 )}
+                <p className="font-light text-sm text-[#7794B0] pt-1">
+                  Arriving at{" "}
+                  <span className="font-semibold text-base text-[#013877]">
+                    Gate {data.arrGate}
+                  </span>
+                </p>
               </div>
             </div>
             <div className="w-full px-6 relative lg:px-12">
@@ -153,8 +160,8 @@ const FlightCard = ({ data }) => {
                 <div className="h-4 w-4 rounded-full bg-customGreen absolute -inset-y-2 left-4 lg:left-10"></div>
               </div>
             </div>
-            <div className="w-full flex flex-row p-4 justify-between gap-x-2 lg:px-8">
-              <div>
+            <div className="w-full flex flex-row p-4 justify-center gap-x-2 lg:px-8">
+              {/* <div>
                 {data.status === "en-route" && (
                   <div className="bg-[#4C6884] rounded p-1">
                     <p className="text-xs font-medium text-white">
@@ -162,8 +169,7 @@ const FlightCard = ({ data }) => {
                     </p>
                   </div>
                 )}
-                {/* <p className='text-xs font-medium text-[#4C6884] pt-1'><span className='font-bold'>243 mi</span> flow</p> */}
-              </div>
+              </div> */}
               <div>
                 <p className="text-xs font-medium text-center text-[#4C6884] pt-1">
                   <span className="font-bold">
@@ -172,7 +178,7 @@ const FlightCard = ({ data }) => {
                   total travel time
                 </p>
               </div>
-              <div>
+              {/* <div>
                 {data.status === "en-route" && (
                   <div className="bg-[#4C6884] rounded p-1">
                     <p className="text-xs font-medium text-white">
@@ -180,8 +186,7 @@ const FlightCard = ({ data }) => {
                     </p>
                   </div>
                 )}
-                {/* <p className='text-xs font-medium text-[#4C6884] pt-1'><span className='font-bold'>1,377 mi</span> mi to go</p> */}
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
