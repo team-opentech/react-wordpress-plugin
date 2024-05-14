@@ -1300,9 +1300,16 @@ function mi_plugin_docs_page() {
             <li><strong>size</strong>: Número de vuelos a mostrar.</li>
             <li><strong>airline_iata</strong>: Filtrar por código IATA de la aerolínea. (opcional)</li>
             <li><strong>airline_icao</strong>: Filtrar por código ICAO de la aerolínea. (opcional)</li>
-            <li><strong>status</strong>: Filtrar vuelos por estado. (opcional)</li>
+            <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
         </ul>
-        <p><strong>Ejemplo:</strong> <code>[arrivals_app iata_code="JFK" size="5"]</code></p>
+        <p>
+            <strong>Ejemplos:</strong>
+            <ul>
+                <li><code>[arrivals_app iata_code="JFK" size="5"]</code></li>
+                <li><code>[arrivals_app iata_code="LAX" size="10" airline_iata="AA"]</code></li>
+                <li><code>[arrivals_app icao_code="KMIA" size="15" status="cancelled"]</code></li>
+            </ul> 
+        </p>
 
         <!-- Salidas -->
         <h4>Salidas [departures_app]</h4>
@@ -1313,9 +1320,16 @@ function mi_plugin_docs_page() {
             <li><strong>size</strong>: Número de vuelos a mostrar.</li>
             <li><strong>airline_iata</strong>: Filtrar por código IATA de la aerolínea. (opcional)</li>
             <li><strong>airline_icao</strong>: Filtrar por código ICAO de la aerolínea. (opcional)</li>
-            <li><strong>status</strong>: Filtrar vuelos por estado. (opcional)</li>
+            <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
         </ul>
-        <p><strong>Ejemplo:</strong> <code>[departures_app icao_code="LAX" size="10"]</code></p>
+        <p>
+            <strong>Ejemplos:</strong>
+            <ul>
+                <li><code>[departures_app iata_code="LAX" size="10"]</code></li>
+                <li><code>[departures_app iata_code="LAX" size="10" airline_iata="AA"]</code></li>
+                <li><code>[departures_app icao_code="KMIA" size="15" status="landed"]</code></li>
+            </ul> 
+        </p>
 
         <!-- Número de Vuelo -->
         <h4>Número de Vuelo [numero-vuelo]</h4>

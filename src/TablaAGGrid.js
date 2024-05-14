@@ -68,7 +68,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
 
   const autoSizeStrategy = {
     autoSizeAllColumns: true,
-    type: window.innerWidth > 768 ? "fitGridWidth": "fitCellContents",
+    type: window.innerWidth > 768 ? "fitGridWidth" : "fitCellContents",
   };
 
   useEffect(() => {
@@ -129,7 +129,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
     };
 
     return (
-      <div className="flex flex-wrap h-auto w-full text-white bg-[#3A5F97] items-center justify-center py-[1%] uppercase space-x-4">
+      <div className="flex flex-wrap h-auto w-full text-white bg-[#013877] items-center justify-center py-[1%] uppercase space-x-4">
         {status && <StatusIcon />}
         {!status && <ScheduledIcon />}
         <h2 className="text-white font-semibold">
@@ -158,6 +158,20 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         minWidth: 120,
       },
       minWidth: 120,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
     },
     {
       headerName: "Airline",
@@ -171,6 +185,20 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         minWidth: 250,
       },
       minWidth: 250,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
     },
     {
       headerName: type === "arrivals" ? "Departure City" : "Arrival City",
@@ -181,6 +209,20 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         minWidth: 150,
       },
       minWidth: 150,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
     },
     {
       headerName: type === "arrivals" ? "Departure Airport" : "Arrival Airport",
@@ -194,18 +236,60 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         minWidth: 300,
       },
       minWidth: 300,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
     },
     {
       headerName: "Depart",
       field: "depart",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120},
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
       minWidth: 120,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
     },
     {
       headerName: "Arrive",
       field: "arrive",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120},
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
       minWidth: 120,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
     },
     {
       headerName: "Status",
@@ -225,6 +309,20 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         }
       },
       minWidth: 120,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
     },
   ];
 
@@ -239,6 +337,20 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         wordBreak: "break-all",
         flexWrap: "wrap",
       },
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
     },
     {
       headerName: "Airline",
@@ -250,17 +362,50 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         wordBreak: "break-all",
         flexWrap: "wrap",
       },
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
     },
     {
-      headerName: type === "arrivals" ? "Departure City/Airport" : "Arrival City/Airport",
+      headerName:
+        type === "arrivals" ? "Departure City/Airport" : "Arrival City/Airport",
       field: "city",
       cellStyle: (params) => {
         {
           if (params.value.includes("/")) {
-            return { color: "#0056b3", textDecoration: "underline", cursor: "pointer" };
+            return {
+              color: "#0056b3",
+              textDecoration: "underline",
+              cursor: "pointer",
+            };
           }
           return { wordBreak: "break-all", flexWrap: "wrap" };
         }
+      },
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
       },
     },
     {
@@ -269,6 +414,20 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
       cellStyle: {
         wordBreak: "break-all",
         flexWrap: "wrap",
+      },
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
       },
     },
     {
@@ -287,6 +446,20 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
           }
           return { color: "blue" };
         }
+      },
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
       },
     },
   ];

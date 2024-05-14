@@ -9,11 +9,13 @@ body, html {
   height: 100% !important;
   box-sizing: border-box !important;
   background-color: #f4f4f4 !important;
+  font-family: 'Lato', sans-serif !important;
 }
 .main-container{
   align-items: center !important;
   width: 100% !important;
   overflow-x: hidden !important;
+  font-family: 'Lato', sans-serif !important;
 }
 @media screen and (max-width: 768px) {
   .main-container {
@@ -22,7 +24,7 @@ body, html {
 }
 
 #mi-react-app {
-  font-family: "Lato", sans-serif !important;
+  font-family: 'Lato', sans-serif !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
@@ -54,10 +56,11 @@ body, html {
   cursor: pointer;
   transition: background-color 0.3s ease;
   width: 150px;
+  font-family: 'Lato', sans-serif;
 }
 
 .button:hover {
-  background-color: #003d82; /* Azul más oscuro para el hover */
+  background-color: #013877; /* Azul más oscuro para el hover */
 }
 
 .button:disabled {
@@ -76,9 +79,9 @@ body, html {
 }
 
 .ag-theme-alpine .ag-header-cell {
-  background-color: #3A5F97;
+  background-color: #013877;
   border-right: none;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   word-wrap: break-word;
 }
 
@@ -86,10 +89,10 @@ body, html {
   background-color: #0069d9 !important;
 }
 
-.ag-theme-alpine .ag-header-cell-label {
+.ag-theme-alpine .ag-header-cell-label .ag-header-cell-text {
   background-color: inherit;
   color: white;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   word-wrap: break-word;
 }
 
@@ -99,7 +102,7 @@ body, html {
 
 .ag-theme-alpine .ag-cell {
   border-right: none;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   word-wrap: break-word;
 }
 
@@ -112,7 +115,7 @@ body, html {
   font-weight: 500;
   font-family: "Lato";
   width: 100%;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   word-wrap: break-word;
 }
 
@@ -120,7 +123,6 @@ body, html {
   font-size: 12px;
   font-weight: 400;
   font-family: "Lato";
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   word-wrap: break-word;
 }
-
