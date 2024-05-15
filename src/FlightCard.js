@@ -79,12 +79,12 @@ const FlightCard = ({ data }) => {
                 <p className="font-semibold text-lg text-[#013877] leading-none uppercase">
                   {data.depCity}
                 </p>
-                <p className="font-light text-sm text-[#7794B0] pt-1">
+                {/* <p className="font-light text-sm text-[#7794B0] pt-1">
                   left{" "}
                   <span className="font-semibold text-base text-[#013877]">
                     Gate {data.depGate}
                   </span>
-                </p>
+                </p> */}
                 <p className="text-blue-500 font-semibold pb-1 border-b-[1px] border-dashed border-[#7794B0]">
                   {data.depAirportName} - {data.depIata}
                 </p>
@@ -104,6 +104,12 @@ const FlightCard = ({ data }) => {
                     </span> */}
                   </p>
                 )}
+                <p className="font-light text-sm text-[#7794B0] pt-1">
+                  left{" "}
+                  <span className="font-semibold text-base text-[#013877]">
+                    Gate {data.depGate}
+                  </span>
+                </p>
               </div>
               <div className="w-fit self-end">
                 {/* <p className="font-semibold text-lg text-orange-600 leading-none uppercase">

@@ -973,7 +973,9 @@ function mi_plugin_fetch_flight_data($request) {
                             }, $flightDetails);
                 
                             return new WP_REST_Response($formattedFlights, 200);
-                        } else {
+                        } else if (empty($flightDetails) && $status){
+                            return new WP_REST_Response([], 200);
+                        }else{
                             return new WP_REST_Response(['message' => 'No flight details available'], 404);
                         }
                     }

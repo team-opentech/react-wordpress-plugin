@@ -132,14 +132,17 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
       <div className="flex flex-wrap h-auto w-full text-white bg-[#013877] items-center justify-center py-[1%] uppercase space-x-4">
         {status && <StatusIcon />}
         {!status && <ScheduledIcon />}
-        <h2 className="text-white font-semibold">
-          {status
+        <h2 className="text-white font-semibold font-sans">
+          {/* {status
             ? `${status} Flights ${type === "arrivals" ? "to " : "from "}`
-            : ""}
+            : ""} */}
+          {airport}{" "}
           {!status
-            ? `${type === "arrivals" ? "Arrivals to" : "Departures from"}`
+            ? `${
+                (type === "arrivals" && !status) ? "Arrival schedule" : "Departures schedule"
+              }`
             : ""}{" "}
-          {airport} {airline ? `- ${airline}` : ""}
+          {status ? `${status} flights` : ""}
         </h2>
       </div>
     );
@@ -353,31 +356,6 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
       },
     },
     {
-      headerName: "Airline",
-      field: "airline_name",
-      cellStyle: {
-        color: "#0056b3",
-        textDecoration: "underline",
-        cursor: "pointer",
-        wordBreak: "break-all",
-        flexWrap: "wrap",
-      },
-      headerComponentParams: {
-        template:
-          '<div class="ag-cell-label-container" role="presentation">' +
-          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
-          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
-          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
-          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
-          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
-          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
-          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
-          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
-          "  </div>" +
-          "</div>",
-      },
-    },
-    {
       headerName:
         type === "arrivals" ? "Departure City/Airport" : "Arrival City/Airport",
       field: "city",
@@ -392,28 +370,6 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
           }
           return { wordBreak: "break-all", flexWrap: "wrap" };
         }
-      },
-      headerComponentParams: {
-        template:
-          '<div class="ag-cell-label-container" role="presentation">' +
-          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
-          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
-          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
-          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
-          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
-          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
-          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
-          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
-          "  </div>" +
-          "</div>",
-      },
-    },
-    {
-      headerName: type === "arrivals" ? "Arrive" : "Depart",
-      field: type === "arrivals" ? "arrive" : "depart",
-      cellStyle: {
-        wordBreak: "break-all",
-        flexWrap: "wrap",
       },
       headerComponentParams: {
         template:
@@ -447,6 +403,71 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
           return { color: "blue" };
         }
       },
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
+    },
+    {
+      headerName: "Airline",
+      field: "airline_name",
+      cellStyle: {
+        color: "#0056b3",
+        textDecoration: "underline",
+        cursor: "pointer",
+        wordBreak: "break-all",
+        flexWrap: "wrap",
+      },
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
+    },
+    {
+      headerName: "Depart",
+      field: "depart",
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
+      minWidth: 120,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
+    },
+    {
+      headerName: "Arrive",
+      field: "arrive",
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
+      minWidth: 120,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
