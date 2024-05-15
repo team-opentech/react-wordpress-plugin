@@ -446,8 +446,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
     {
       headerName: "Depart",
       field: "depart",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
-      minWidth: 120,
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap"},
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -466,8 +465,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
     {
       headerName: "Arrive",
       field: "arrive",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
-      minWidth: 120,
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap" },
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
