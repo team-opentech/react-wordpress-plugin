@@ -23,13 +23,17 @@ module.exports = {
         use: [
           'style-loader',
           'css-loader',
-          'postcss-loader', // Añade postcss-loader aquí
+          'postcss-loader', // Asegúrate de que postcss-loader esté configurado correctamente si es necesario
         ],
       },
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/,
+      },
+      {
+        test: /\.svg$/,
+        use: ['@svgr/webpack', 'file-loader'], // Esta línea añade soporte para SVG
       },
     ],
   },

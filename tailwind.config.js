@@ -28,6 +28,9 @@ module.exports = {
         },
         customGreen: "#43B923",
       },
+      fontFamily: {
+        sans: ["Arial", "sans-serif"],
+      },
     },
   },
   plugins: [],
