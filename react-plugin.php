@@ -913,7 +913,7 @@ function mi_plugin_fetch_flight_data($request) {
                         // error_log('ERROR_LOG_2: Schedule without airline code: ' . json_encode($schedule));
                     }
 
-                    if ($schedule && $schedule['last_page']) {
+                    if ($schedule && $schedule['last_page'] && !(((strtotime($schedule['updated_time'])) + $exp_data_seconds) > time())) {
                         return new WP_REST_Response(null, 204);
                     }
 
@@ -1023,7 +1023,10 @@ function mi_plugin_fetch_flight_data($request) {
                                     "{$wpdb->prefix}schedules",
                                     ['updated_time' => current_time('mysql', 1)],
                                     ['id' => $schedule['id']],
+                                    ['last-page' => false],
                                     ['%s'],
+                                    ['%d'],
+                                    ['%d'],
                                 );
 
                                 // Verificar si la actualización fue exitosa

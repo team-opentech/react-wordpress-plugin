@@ -562,23 +562,23 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
               return;
             }
             const baseUrl = window.location.href;
-            window.location.href = `${baseUrl}/flight/${flightCode}`;
+            window.location.href = `/flight/${flightCode}`;
           }
           if (event.column.colId === "airport") {
             const airportCode = event.data.airport.split("(")[1];
-            const cleanCode = airportCode.replace(")", "");
+            const cleanCode = airportCode.replace(")", "").toLowerCase();
             const baseUrl = window.location.href.split("/airport")[0];
             window.location.href = `${baseUrl}/airport/${cleanCode}`;
           }
           if (event.column.colId === "city" && window.innerWidth <= 768) {
             const airportCode = event.data.city.split("/(")[1];
-            const cleanCode = airportCode.replace(")", "");
+            const cleanCode = airportCode.replace(")", "").toLowerCase();
             const baseUrl = window.location.href.split("/airport")[0];
             window.location.href = `${baseUrl}/airport/${cleanCode}`;
           }
           if (event.column.colId === "airline_name") {
             const airlineCode = event.data.airline_name.split("(")[1];
-            const cleanCode = airlineCode.replace(")", "");
+            const cleanCode = airlineCode.replace(")", "").toLowerCase();
             const baseUrl = window.location.href.split("/airline")[0];
             window.location.href = `${baseUrl}/airline/${cleanCode}`;
           }

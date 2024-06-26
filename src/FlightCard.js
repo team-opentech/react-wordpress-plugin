@@ -1,7 +1,5 @@
 import React, { useEffect } from "react";
-// Asumiendo que tienes un archivo de íconos o que estás usando algún paquete para ellos
-// Por ejemplo, podrías usar react-icons para Ionicons
-// import { IoAirplane } from 'react-icons/io5';
+
 import {
   formatDate,
   formatTimeWithAMPM,
@@ -9,7 +7,7 @@ import {
   minutesToHours,
   getElapsedTime,
   getRemainingTime,
-} from "./helper.js"; // Asegúrate de implementar o importar estas funciones
+} from "./helper.js";
 
 const FlightCard = ({ data }) => {
   console.log("FlightCard data", data);
