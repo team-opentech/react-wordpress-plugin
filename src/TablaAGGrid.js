@@ -6,14 +6,14 @@ import "./style.css";
 import moment, { min } from "moment-timezone";
 
 const TablaAGGrid = ({ type, size, queryParams, data }) => {
-  console.log("Window Url ", window.location);
-  console.log(
-    "Window Url split airline ",
-    window.location.href
-      .split("/airport")[0]
-      .split("/airline")[0]
-      .split("/flight")[0]
-  );
+  // console.log("Window Url ", window.location);
+  // console.log(
+  //   "Window Url split airline ",
+  //   window.location.href
+  //     .split("/airport")[0]
+  //     .split("/airline")[0]
+  //     .split("/flight")[0]
+  // );
   const gridRef = useRef(null);
   const [gridApi, setGridApi] = useState(null);
   const [gridColumnApi, setGridColumnApi] = useState(null);
@@ -78,6 +78,14 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         airport: `${item.airport} (${
           type === "arrivals" ? item.dep_code : item.arr_code
         })`,
+        airport_city:
+          type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
+        airport_state:
+          type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
+        airport_country:
+          type === "arrivals"
+            ? item.depAirport_country
+            : item.arrAirport_country,
         city: type === "arrivals" ? item.dep_city : item.arr_city,
         airline_name: `${item.airline_name} (${item.airline_code})`,
         depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
@@ -139,7 +147,9 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
           {airport}{" "}
           {!status
             ? `${
-                (type === "arrivals" && !status) ? "Arrival schedule" : "Departures schedule"
+                type === "arrivals" && !status
+                  ? "Arrival schedule"
+                  : "Departures schedule"
               }`
             : ""}{" "}
           {status ? `${status} flights` : ""}
@@ -446,7 +456,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
     {
       headerName: "Depart",
       field: "depart",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap"},
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap" },
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -524,6 +534,22 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
             airport: `${item.airport} (${
               type === "arrivals" ? item.dep_code : item.arr_code
             })`,
+            airport: `${item.airport} (${
+              type === "arrivals" ? item.dep_code : item.arr_code
+            })`,
+            airport_city:
+              type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
+            airport_state:
+              type === "arrivals"
+                ? item.depAirport_state
+                : item.arrAirport_state,
+            airport_country:
+              type === "arrivals"
+                ? item.depAirport_country
+                : item.arrAirport_country,
+            city: type === "arrivals" ? item.dep_city : item.arr_city,
+            airline_name: `${item.airline_name} (${item.airline_code})`,
+            status: item.status,
             depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
             arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
           }));
@@ -561,26 +587,61 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
               window.location.href = `${window.location.origin}/404.html`;
               return;
             }
-            const baseUrl = window.location.href;
             window.location.href = `/flight/${flightCode}`;
           }
           if (event.column.colId === "airport") {
             const airportCode = event.data.airport.split("(")[1];
+            const airport_city = event.data.airport_city
+              .replace(" ", "-")
+              .toLowerCase();
+            const airport_state = event.data.airport_state
+              .replace(" ", "-")
+              .toLowerCase();
+            const airport_country = event.data.airport_country
+              .replace(" ", "-")
+              .toLowerCase();
             const cleanCode = airportCode.replace(")", "").toLowerCase();
-            const baseUrl = window.location.href.split("/airport")[0];
-            window.location.href = `${baseUrl}/airport/${cleanCode}`;
+            // Verifica si baseUrl termina con '/' y elimina el último carácter si es necesario
+            window.location.href = `/${airport_country}/${airport_state}/${airport_city}/${cleanCode}/${
+              type === "arrivals" ? "departures" : "arrivals"
+            }`;
           }
           if (event.column.colId === "city" && window.innerWidth <= 768) {
             const airportCode = event.data.city.split("/(")[1];
+            const airport_city = event.data.airport_city
+              .replace(" ", "-")
+              .toLowerCase();
+            const airport_state = event.data.airport_state
+              .replace(" ", "-")
+              .toLowerCase();
+            const airport_country = event.data.airport_country
+              .replace(" ", "-")
+              .toLowerCase();
             const cleanCode = airportCode.replace(")", "").toLowerCase();
-            const baseUrl = window.location.href.split("/airport")[0];
-            window.location.href = `${baseUrl}/airport/${cleanCode}`;
+            // Verifica si baseUrl termina con '/' y elimina el último carácter si es necesario
+            window.location.href = `/${airport_country}/${airport_state}/${airport_city}/${cleanCode}/${
+              type === "arrivals" ? "departures" : "arrivals"
+            }`;
           }
           if (event.column.colId === "airline_name") {
             const airlineCode = event.data.airline_name.split("(")[1];
+            const airport_city = event.data.airport_city
+              .replace(" ", "-")
+              .toLowerCase();
+            const airport_state = event.data.airport_state
+              .replace(" ", "-")
+              .toLowerCase();
+            const airport_country = event.data.airport_country
+              .replace(" ", "-")
+              .toLowerCase();
             const cleanCode = airlineCode.replace(")", "").toLowerCase();
-            const baseUrl = window.location.href.split("/airline")[0];
-            window.location.href = `${baseUrl}/airline/${cleanCode}`;
+            let baseUrl = window.location.href;
+            // Verifica si baseUrl termina con '/' y elimina el último carácter si es necesario
+            if (baseUrl.endsWith("/")) {
+              window.location.href = `${baseUrl}${cleanCode}`;
+            } else {
+              window.location.href = `${baseUrl}/${cleanCode}`;
+            }
           }
         }}
         pagination={true}

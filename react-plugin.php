@@ -495,6 +495,7 @@ add_action('admin_head', 'admin_script_for_custom_taxonomy_menu');
         icao_code varchar(4) DEFAULT '',
         name varchar(255) NOT NULL,
         city varchar(255) DEFAULT '',
+        state varchar(255) DEFAULT '',
         timezone varchar(40),
         country varchar(255) DEFAULT '',
         PRIMARY KEY (iata_code, icao_code)
@@ -592,9 +593,10 @@ add_action('admin_head', 'admin_script_for_custom_taxonomy_menu');
                 'icao_code' => $airport['icao'],
                 'country' => $airport['country'],
                 'city' => $airport['city'],
+                'state' => $airport['state'],
                 'timezone' => $airport['tz']
             ],
-            ['%s', '%s', '%s', '%s', '%s', '%s']
+            ['%s', '%s', '%s', '%s', '%s' , '%s', '%s']
         );
 
         if ($result === false) {
@@ -913,11 +915,11 @@ function mi_plugin_fetch_flight_data($request) {
                         // error_log('ERROR_LOG_2: Schedule without airline code: ' . json_encode($schedule));
                     }
 
-                    if ($schedule && $schedule['last_page'] && !(((strtotime($schedule['updated_time'])) + $exp_data_seconds) > time())) {
-                        return new WP_REST_Response(null, 204);
-                    }
+                    // if ($schedule && ($schedule['last_page'] === 1) && (((strtotime($schedule['updated_time'])) + $exp_data_seconds) > time())) {
+                    //     return new WP_REST_Response(null, 204);
+                    // }
 
-                    if ($schedule && (((strtotime($schedule['updated_time'])) + $exp_data_seconds) > time())) {
+                    if ($schedule && (((strtotime($schedule['updated_time'])) + $exp_data_seconds) > time()) && !$schedule['last_page']) {
                         // Buscar detalles asociados en schedule_details
                         $query = "SELECT * FROM {$wpdb->prefix}schedule_details WHERE schedule_id = %d AND offset_page = %d";
 
@@ -941,12 +943,12 @@ function mi_plugin_fetch_flight_data($request) {
                             // Formatear los detalles del vuelo para la respuesta
                             $formattedFlights = array_map(function ($flight) {
                                 global $wpdb;
-                                $arrAirport = $wpdb->get_var($wpdb->prepare(
-                                    "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                $arrAirport = $wpdb->get_row($wpdb->prepare(
+                                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
                                     $flight['arr_iata'], $flight['arr_icao']
                                 ));
-                                $depAirport = $wpdb->get_var($wpdb->prepare(
-                                    "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                $depAirport = $wpdb->get_row($wpdb->prepare(
+                                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
                                     $flight['dep_iata'], $flight['dep_icao']
                                 ));
                                 // $airlineName = $wpdb->get_var($wpdb->prepare(
@@ -960,8 +962,14 @@ function mi_plugin_fetch_flight_data($request) {
                                     'airline_code' => !empty($flight['airline_iata']) ? $flight['airline_iata'] : $flight['airline_icao'],
                                     'depart' => $flight['depart'],
                                     'arrive' => $flight['arrive'],
-                                    'arrAirport' => $arrAirport,
-                                    'depAirport' => $depAirport,
+                                    'arrAirport' => $arrAirport['name'],
+                                    'arrAirport_city' => $arrAirport['city'],
+                                    'arrAirport_state' =>$arrAirport['state'],
+                                    'arrAirport_country' =>$arrAirport['country'],
+                                    'depAirport' => $depAirport['name'],
+                                    'depAirport_city' => $depAirport['city'],
+                                    'depAirport_state' =>$depAirport['state'],
+                                    'depAirport_country' =>$depAirport['country'],
                                     'dep_code' => !empty($flight['dep_iata']) ? $flight['dep_iata'] : $flight['dep_icao'],
                                     'dep_city' => $flight['dep_city'],
                                     'arr_code' => !empty($flight['arr_icao']) ? $flight['arr_iata'] : $flight['arr_icao'],
@@ -1154,13 +1162,13 @@ function mi_plugin_fetch_flight_data($request) {
                                 if (!empty($filter) && $flightData['status'] !== $filter) {
                                     continue;
                                 }
-                                $arrAirport = $wpdb->get_var($wpdb->prepare(
-                                    "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                $arrAirport = $wpdb->get_row($wpdb->prepare(
+                                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
                                     $flightData['arr_iata'], $flightData['arr_icao']
                                 ));
     
-                                $depAirport = $wpdb->get_var($wpdb->prepare(
-                                    "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                                $depAirport = $wpdb->get_row($wpdb->prepare(
+                                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
                                     $flightData['dep_iata'], $flightData['dep_icao']
                                 ));
                                 
@@ -1171,8 +1179,14 @@ function mi_plugin_fetch_flight_data($request) {
                                     'arrive' => $flightData['arr_time_utc'] ?? '',
                                     'airline_name' => $airline_name,
                                     'airline_code' => !empty($flightData['airline_iata']) ? $flightData['airline_iata'] : $flightData['airline_icao'],
-                                    'arrAirport' => $arrAirport,
-                                    'depAirport' => $depAirport,
+                                    'arrAirport' => $arrAirport['name'],
+                                    'arrAirport_city' => $arrAirport['city'],
+                                    'arrAirport_state' =>$arrAirport['state'],
+                                    'arrAirport_country' =>$arrAirport['country'],
+                                    'depAirport' => $depAirport['name'],
+                                    'depAirport_city' => $depAirport['city'],
+                                    'depAirport_state' =>$depAirport['state'],
+                                    'depAirport_country' =>$depAirport['country'],
                                     'dep_code' => !empty($flightData['dep_iata']) ? $flightData['dep_iata'] : $flightData['dep_icao'],
                                     'dep_city' => $dep_city,
                                     'arr_code' => !empty($flightData['arr_iata']) ? $flightData['arr_iata'] : $flightData['arr_icao'],
