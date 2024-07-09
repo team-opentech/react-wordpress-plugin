@@ -416,64 +416,6 @@ function admin_script_for_custom_taxonomy_menu() {
 }
 add_action('admin_head', 'admin_script_for_custom_taxonomy_menu');
 
-
-// Custom rewrite rules
-// function custom_rewrite_rules() {
-//     add_rewrite_rule(
-//         '^location/([^/]+)/([^/]+)/([^/]+)/airport/([^/]+)/?$',
-//         'index.php?location=$matches[3]&airport=$matches[4]',
-//         'top'
-//     );
-// }
-// add_action('init', 'custom_rewrite_rules');
-
-// Custom post type link
-// function custom_post_type_permalink($post_link, $post) {
-//     if (($post->post_type == 'airport' || $post->post_type == 'airline' || $post->post_type == 'flight') && $taxonomy_terms = wp_get_object_terms($post->ID, 'location')) {
-//         $terms = wp_get_object_terms($post->ID, 'location'); // Asegúrate de que 'location' es el slug correcto de la taxonomía
-//         if (!is_wp_error($taxonomy_terms) && !empty($taxonomy_terms)) {
-//             // Ordena los términos de más bajo a más alto en la jerarquía
-//             usort($terms, function ($a, $b) {
-//                 return $a->parent - $b->parent;
-//             });
-//             $term = array_pop($taxonomy_terms); // Obtén el término más bajo
-//             $ancestors = array_reverse(get_ancestors($term->term_id, 'location', 'taxonomy')); // Obtén todos los ancestros
-//             $ancestors[] = $term->term_id; // Incluye el término actual
-//             $path = '';
-//             foreach ($ancestors as $ancestor) {
-//                 $term = get_term($ancestor, 'location');
-//                 $path .= $term->slug . '/';
-//             }
-//             $post_link = home_url(user_trailingslashit('airport/' . $path . $post->post_name));
-//         }
-//     }
-//     return $post_link;
-// }
-// add_filter('post_type_link', 'custom_post_type_permalink', 10, 4);
-
-// function custom_post_type_link($post_link, $post, $leavename, $sample) {
-//     if ($post->post_type == 'airports') {
-//         // Recuperamos los términos asignados al post
-//         $terms = wp_get_object_terms($post->ID, 'location');
-        
-//         // Verificamos si no hay errores y si hay términos asignados
-//         if (!is_wp_error($terms) && !empty($terms)) {
-//             // Asumimos que los términos están ordenados correctamente de padre a hijo
-//             $slug = '';
-//             foreach ($terms as $term) {
-//                 if (isset($term->slug)) {
-//                     $slug .= $term->slug . '/' . $slug;
-//                 }
-//             }
-//             // Generamos el nuevo enlace con la estructura deseada
-//             $post_link = home_url(user_trailingslashit($slug . 'airport/' . $post->post_name));
-//         }
-//     }
-//     return $post_link;
-// }
-// add_filter('post_type_link', 'custom_post_type_link', 10, 4);
-
-
  function mi_plugin_activate() {
     global $wpdb;
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -642,17 +584,6 @@ add_action('admin_head', 'admin_script_for_custom_taxonomy_menu');
     flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'mi_plugin_activate');
-
-
-//  function mi_plugin_show_db_message() {
-//      $message = get_option('mi_plugin_db_message');
-//      if (!empty($message)) {
-//          echo "<script type='text/javascript'>console.log('" . esc_js($message) . "');</script>";
-//          // Borra el mensaje una vez mostrado para no repetirlo en futuras cargas de página
-//          delete_option('mi_plugin_db_message');
-//      }
-//  }
-//  add_action('wp_footer', 'mi_plugin_show_db_message');
 
 add_action('rest_api_init', function () {
     register_rest_route('mi-plugin/v1', '/fetch-flight-data', array(
@@ -962,14 +893,14 @@ function mi_plugin_fetch_flight_data($request) {
                                     'airline_code' => !empty($flight['airline_iata']) ? $flight['airline_iata'] : $flight['airline_icao'],
                                     'depart' => $flight['depart'],
                                     'arrive' => $flight['arrive'],
-                                    'arrAirport' => $arrAirport['name'],
-                                    'arrAirport_city' => $arrAirport['city'],
-                                    'arrAirport_state' =>$arrAirport['state'],
-                                    'arrAirport_country' =>$arrAirport['country'],
-                                    'depAirport' => $depAirport['name'],
-                                    'depAirport_city' => $depAirport['city'],
-                                    'depAirport_state' =>$depAirport['state'],
-                                    'depAirport_country' =>$depAirport['country'],
+                                    'arrAirport' => $arrAirport->name,
+                                    'arrAirport_city' => $arrAirport->city,
+                                    'arrAirport_state' =>$arrAirport->state,
+                                    'arrAirport_country' =>$arrAirport->country,
+                                    'depAirport' => $depAirport->name,
+                                    'depAirport_city' => $depAirport->city,
+                                    'depAirport_state' =>$depAirport->state,
+                                    'depAirport_country' =>$depAirport->country,
                                     'dep_code' => !empty($flight['dep_iata']) ? $flight['dep_iata'] : $flight['dep_icao'],
                                     'dep_city' => $flight['dep_city'],
                                     'arr_code' => !empty($flight['arr_icao']) ? $flight['arr_iata'] : $flight['arr_icao'],
@@ -1179,14 +1110,14 @@ function mi_plugin_fetch_flight_data($request) {
                                     'arrive' => $flightData['arr_time_utc'] ?? '',
                                     'airline_name' => $airline_name,
                                     'airline_code' => !empty($flightData['airline_iata']) ? $flightData['airline_iata'] : $flightData['airline_icao'],
-                                    'arrAirport' => $arrAirport['name'],
-                                    'arrAirport_city' => $arrAirport['city'],
-                                    'arrAirport_state' =>$arrAirport['state'],
-                                    'arrAirport_country' =>$arrAirport['country'],
-                                    'depAirport' => $depAirport['name'],
-                                    'depAirport_city' => $depAirport['city'],
-                                    'depAirport_state' =>$depAirport['state'],
-                                    'depAirport_country' =>$depAirport['country'],
+                                    'arrAirport' => $arrAirport->name,
+                                    'arrAirport_city' => $arrAirport->city,
+                                    'arrAirport_state' => $arrAirport->state ,
+                                    'arrAirport_country' => $arrAirport->country,
+                                    'depAirport' => $depAirport->name,
+                                    'depAirport_city' => $depAirport->city,
+                                    'depAirport_state' => $depAirport->state,
+                                    'depAirport_country' => $depAirport->country,
                                     'dep_code' => !empty($flightData['dep_iata']) ? $flightData['dep_iata'] : $flightData['dep_icao'],
                                     'dep_city' => $dep_city,
                                     'arr_code' => !empty($flightData['arr_iata']) ? $flightData['arr_iata'] : $flightData['arr_icao'],
