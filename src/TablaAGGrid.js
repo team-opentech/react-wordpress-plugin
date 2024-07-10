@@ -1,19 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "./style.css";
 import moment, { min } from "moment-timezone";
+import CustomLoadingOverlay from "./customLoadingOverlay";
 
-const TablaAGGrid = ({ type, size, queryParams, data }) => {
-  // console.log("Window Url ", window.location);
-  // console.log(
-  //   "Window Url split airline ",
-  //   window.location.href
-  //     .split("/airport")[0]
-  //     .split("/airline")[0]
-  //     .split("/flight")[0]
-  // );
+const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
   const gridRef = useRef(null);
   const [gridApi, setGridApi] = useState(null);
   const [gridColumnApi, setGridColumnApi] = useState(null);
@@ -25,6 +18,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
   const [lastPage, setLastPage] = useState(false);
   const [params, setParams] = useState(queryParams);
   const [nextClicked, setNextClicked] = useState(false);
+
   // const baseUrl = window.location.href.split("/airport")[0].split("/airline")[0].split("/flight")[0];
 
   const handleNextClick = () => {
@@ -72,48 +66,54 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
   };
 
   useEffect(() => {
-    if (window.innerWidth > 768) {
-      const formattedData = data.map((item) => ({
-        flight: item.flight,
-        airport: `${item.airport} (${
-          type === "arrivals" ? item.dep_code : item.arr_code
-        })`,
-        airport_city:
-          type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
-        airport_state:
-          type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
-        airport_country:
-          type === "arrivals"
-            ? item.depAirport_country
-            : item.arrAirport_country,
-        city: type === "arrivals" ? item.dep_city : item.arr_city,
-        airline_name: `${item.airline_name} (${item.airline_code})`,
-        depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
-        arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
-        status: item.status,
-      }));
-      setRowData(formattedData);
+    if (data && data.length > 0) {
+      if (window.innerWidth > 768) {
+        const formattedData = data.map((item) => ({
+          flight: item.flight,
+          airport: `${item.airport} (${
+            type === "arrivals" ? item.dep_code : item.arr_code
+          })`,
+          airport_city:
+            type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
+          airport_state:
+            type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
+          airport_country:
+            type === "arrivals"
+              ? item.depAirport_country
+              : item.arrAirport_country,
+          city: type === "arrivals" ? item.dep_city : item.arr_city,
+          airline_name: `${item.airline_name} (${item.airline_code})`,
+          depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
+          arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
+          status: item.status,
+        }));
+        setRowData(formattedData);
+      } else {
+        const formattedData = data.map((item) => ({
+          flight: item.flight,
+          city:
+            type === "arrivals"
+              ? `${item.dep_city}/(${item.dep_code})`
+              : `${item.arr_city}/(${item.arr_code})`,
+          airline_name: `${item.airline_name} (${item.airline_code})`,
+          depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
+          arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
+          status: item.status,
+        }));
+        setRowData(formattedData);
+      }
     } else {
-      const formattedData = data.map((item) => ({
-        flight: item.flight,
-        city:
-          type === "arrivals"
-            ? `${item.dep_city}/(${item.dep_code})`
-            : `${item.arr_city}/(${item.arr_code})`,
-        airline_name: `${item.airline_name} (${item.airline_code})`,
-        depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
-        arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
-        status: item.status,
-      }));
-      setRowData(formattedData);
+      setRowData([]);
     }
-  }, []);
+  }, [data, type]);
 
   const tableName = () => {
     const status = queryParams.get("status");
     const airline = queryParams.get("airlineCode") ? data[0].airline : "";
     const airport =
-      type === "arrivals" ? data[0].arrAirport : data[0].depAirport;
+      data && data.length > 0 && type === "arrivals"
+        ? data[0].arrAirport
+        : data[0].depAirport || "";
 
     const StatusIcon = () => {
       switch (status) {
@@ -501,7 +501,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
 
       // Prepara la nueva URL con el nuevo offset
       const newParams = new URLSearchParams(params); // Asegúrate de que customEndpointUrl es accesible
-      newParams.set("offset", newOffset); // Actualiza el parámetro offset
+      newParams.set("offset_value", newOffset); // Actualiza el parámetro offset
       const baseDomain = window.location.origin;
       const url = new URL(
         `${baseDomain}/wp-json/mi-plugin/v1/fetch-flight-data?${newParams}`
@@ -566,9 +566,21 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
 
   return (
     <div className="ag-theme-alpine">
-      {tableName()}
+      {data && tableName()}
+      {loadingData && (
+        <div
+          className="ag-custom-loading-cell"
+          style={{ padding: "15px", lineHeight: "25px", fontSize: "24px" }}
+        >
+          <i className="fas fa-spinner fa-pulse"></i>{" "}
+          <span> Loading data, one moment please...</span>
+        </div>
+      )}
       <AgGridReact
         rowData={rowData}
+        loading={loadingData}
+        suppressNoRowsOverlay={true}
+        loadingOverlayComponent={CustomLoadingOverlay}
         columnDefs={
           window.innerWidth > 768 ? columnDefsDesktop : columnDefsMobile
         }
@@ -580,6 +592,7 @@ const TablaAGGrid = ({ type, size, queryParams, data }) => {
         autoSizeStrategy={autoSizeStrategy}
         domLayout="autoHeight"
         onCellClicked={(event) => {
+          if (data && data.length === 0) return;
           if (event.column.colId === "flight") {
             const flightCode = event.data.flight;
 

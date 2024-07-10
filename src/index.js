@@ -18,7 +18,7 @@ document.querySelectorAll(".react-app-container").forEach((container) => {
   let queryParams = new URLSearchParams({
     type,
     size,
-    offset: 0,
+    offset_value: 0,
   });
 
   if (airportCode !== "") {

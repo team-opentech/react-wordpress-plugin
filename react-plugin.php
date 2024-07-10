@@ -475,11 +475,11 @@ add_action('admin_head', 'admin_script_for_custom_taxonomy_menu');
         airline_iata varchar(3) NOT NULL DEFAULT '',
         airline_icao varchar(4) NOT NULL DEFAULT '',
         schedule_type enum('departure', 'arrival') NOT NULL,
-        offset int NOT NULL DEFAULT 0,
+        offset_value int NOT NULL DEFAULT 0,
         updated_time datetime NOT NULL DEFAULT current_timestamp(),
         last_page boolean DEFAULT false,
         PRIMARY KEY (id),
-        UNIQUE KEY idx_iata_type (iata_code, icao_code, airline_iata, airline_icao, schedule_type, offset)
+        UNIQUE KEY idx_iata_type (iata_code, icao_code, airline_iata, airline_icao, schedule_type, offset_value)
     ) $charset_collate;";
     dbDelta($sql_schedules);
 
@@ -618,7 +618,7 @@ add_action('rest_api_init', function () {
           }
         ),
         'status' => array('required' => false),
-        'offset' => array('required' => false),
+        'offset_value' => array('required' => false),
       ),
       'permission_callback' => '__return_true'
     ));
@@ -642,7 +642,7 @@ function mi_plugin_fetch_flight_data($request) {
     $airlineCode = $request->get_param('airlineCode');
     $airl_codeType = $request->get_param('airl_codeType');
     $status = $request->get_param('status');
-    $offset = $request->get_param('offset');
+    $offset = $request->get_param('offset_value');
 
     // Tablas de la base de datos
     $flights_table = $wpdb->prefix . 'flights';
@@ -823,11 +823,11 @@ function mi_plugin_fetch_flight_data($request) {
                     if (!empty($airlineCode)) {
                         // Consulta cuando airline_iata o airline_icao están presentes
                         $schedule = $wpdb->get_row($wpdb->prepare(
-                            "SELECT id, updated_time, offset, last_page FROM {$wpdb->prefix}schedules
+                            "SELECT id, updated_time, offset_value, last_page FROM {$wpdb->prefix}schedules
                             WHERE (iata_code = %s OR icao_code = %s)
                             AND schedule_type = %s
                             AND (airline_iata = %s OR airline_icao = %s)
-                            AND offset = %d", 
+                            AND offset_value = %d", 
                             $airportCode, $airportCode, $scheduleType, $airlineCode, $airlineCode, $offset
                         ), ARRAY_A);
                         // error_log('ERROR_LOG_1: Schedule with airline code: ' . json_encode($schedule));
@@ -835,12 +835,12 @@ function mi_plugin_fetch_flight_data($request) {
                     } else {
                        // Consulta cuando airline_iata y airline_icao están vacíos
                         $schedule = $wpdb->get_row($wpdb->prepare(
-                            "SELECT id, updated_time, offset, last_page FROM {$wpdb->prefix}schedules
+                            "SELECT id, updated_time, offset_value, last_page FROM {$wpdb->prefix}schedules
                             WHERE (iata_code = %s OR icao_code = %s)
                             AND schedule_type = %s
                             AND airline_iata = 'N/A'
                             AND airline_icao = 'N/A'
-                            AND offset = %d",
+                            AND offset_value = %d",
                             $airportCode, $airportCode, $scheduleType, $offset
                         ), ARRAY_A);
                         // error_log('ERROR_LOG_2: Schedule without airline code: ' . json_encode($schedule));
@@ -854,7 +854,7 @@ function mi_plugin_fetch_flight_data($request) {
                         // Buscar detalles asociados en schedule_details
                         $query = "SELECT * FROM {$wpdb->prefix}schedule_details WHERE schedule_id = %d AND offset_page = %d";
 
-                        $params = [$schedule['id'], $schedule['offset']];
+                        $params = [$schedule['id'], $schedule['offset_value']];
                 
                         // Añadir filtro por airlineCode si está presente
                         if (!empty($airlineCode)) {
@@ -944,12 +944,12 @@ function mi_plugin_fetch_flight_data($request) {
                                     'icao_code' => $airportData->icao_code,
                                     'airline_iata' => $airlineData->iata_code ?? 'N/A',
                                     'airline_icao'=> $airlineData->icao_code ?? 'N/A',
-                                    'offset' => $offset,
+                                    'offset_value' => $offset,
                                 ],
                                 ['%s', '%s', '%s', '%s', '%s', '%s', '%d']
                             );                    
                                 $schedule['id'] = $wpdb->insert_id;
-                                $schedule['offset'] = $offset;
+                                $schedule['offset_value'] = $offset;
                         } else{
                             // Obtener el registro actual para comparar el updated_time
                             // error_log('ERROR_LOG_4: Schedule found: ' . json_encode($schedule));
@@ -960,12 +960,10 @@ function mi_plugin_fetch_flight_data($request) {
                                 // Actualizar el registro en la tabla schedules
                                 $updated = $wpdb->update(
                                     "{$wpdb->prefix}schedules",
-                                    ['updated_time' => current_time('mysql', 1)],
-                                    ['id' => $schedule['id']],
-                                    ['last-page' => false],
-                                    ['%s'],
-                                    ['%d'],
-                                    ['%d'],
+                                    ['updated_time' => current_time('mysql', 1), 'last_page' => false],
+                                    ['id' => $schedule['id']], 
+                                    ['%s', '%d'],
+                                    ['%d']
                                 );
 
                                 // Verificar si la actualización fue exitosa

@@ -1,15 +1,17 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import TablaAGGrid from "./TablaAGGrid";
 import FlightInfo from "./FlightInfo"; // Asegúrate de tener este componente.
 import "./style.css";
 
 const App = ({ type, size, flight, queryParams }) => {
   const [data, setData] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
   const baseUrl = window.location.origin;
 
   const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
 
   useEffect(() => {
+    // console.log("Fetching data...");
     fetch(customEndpointUrl)
       .then((response) => {
         if (!response.ok) throw new Error("Network response was not ok");
@@ -17,6 +19,7 @@ const App = ({ type, size, flight, queryParams }) => {
       })
       .then((data) => {
         setData(data);
+        setLoadingData(false);
       })
       .catch((error) => {
         console.error("Error fetching flight data:", error);
@@ -25,13 +28,13 @@ const App = ({ type, size, flight, queryParams }) => {
 
   return (
     <div className="main-container">
-      {type === "flight" && flight ? (
-        <FlightInfo data={data} />
-      ) : (
+      {type === "flight" && flight && <FlightInfo data={data} />}
+      {type != "flight" && (
         <TablaAGGrid
+          loadingData={loadingData}
           type={type}
           size={parseInt(size, 10)}
-          data={data}
+          data={data.length === 0 ? null : data}
           queryParams={queryParams}
         />
       )}
