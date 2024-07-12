@@ -648,13 +648,9 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
               .replace(" ", "-")
               .toLowerCase();
             const cleanCode = airlineCode.replace(")", "").toLowerCase();
-            let baseUrl = window.location.href;
-            // Verifica si baseUrl termina con '/' y elimina el último carácter si es necesario
-            if (baseUrl.endsWith("/")) {
-              window.location.href = `${baseUrl}${cleanCode}`;
-            } else {
-              window.location.href = `${baseUrl}/${cleanCode}`;
-            }
+            window.location.href = `/${airport_country}/${airport_state}/${airport_city}/${
+              type === "arrivals" ? "departures" : "arrivals"
+            }/${cleanCode}`;
           }
         }}
         pagination={true}
