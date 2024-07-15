@@ -10,10 +10,11 @@ import {
 } from "./helper.js";
 
 const FlightCard = ({ data }) => {
-  console.log("FlightCard data", data);
+  // console.log("FlightCard data", data);
   const getWidth = (data) => {
-    if (data.status === "landed") return 100;
-    if (data.status === "scheduled") return 0;
+    if (data === null) return;
+    if (data?.status === "landed") return 100;
+    if (data?.status === "scheduled") return 0;
     if ((getElapsedTime(data) / (data.duration * 60)) * 100 > 100) {
       return 100;
     } else {
@@ -22,7 +23,8 @@ const FlightCard = ({ data }) => {
   };
 
   const renderFlightStatus = (data) => {
-    if (data.status === "landed")
+    if (data === null) return;
+    if (data?.status === "landed")
       return (
         <p className="text-sm text-[#7794B0]">
           Landed {minutesToHours(data.duration)} ago
@@ -48,7 +50,7 @@ const FlightCard = ({ data }) => {
             <div className="w-full flex flex-row items-center p-4 lg:px-8">
               <div className="pr-2 border-lightBlue-500">
                 <img
-                  src={data.airlineLogo}
+                  src={data?.airlineLogo || ""}
                   alt="airline logo"
                   width="48"
                   height="48"
@@ -56,17 +58,17 @@ const FlightCard = ({ data }) => {
               </div>
               <div className="px-2 border-x-[1px] border-lightBlue-500">
                 <p className="text-sm text-[#7794B0] font-semibold">
-                  {data.airlineName} {data.flightNumber}
+                  {data?.airlineName || ""} {data?.flightNumber || ""}
                 </p>
                 <p className="text-sm text-[#7794B0] font-normal">
-                  {data.flightIcao} / {data.flightIata}
+                  {data?.flightIcao || ""} / {data?.flightIata || ""}
                 </p>
               </div>
               <div className="pl-2">
                 <p className="uppercase text-sm font-bold text-orange-600">
-                  {data.status}
+                  {data?.status || ""}
                 </p>
-                {renderFlightStatus(data)}
+                {renderFlightStatus(data || null)}
               </div>
             </div>
             <div className="w-full flex flex-row p-4 gap-4 flex-wrap justify-between lg:px-8">
@@ -75,28 +77,28 @@ const FlightCard = ({ data }) => {
                   {data.depIata}
                 </p> */}
                 <p className="font-semibold text-lg text-[#013877] leading-none uppercase">
-                  {data.depCity}
+                  {data?.depCity || ""}
                 </p>
                 {/* <p className="font-light text-sm text-[#7794B0] pt-1">
                   left{" "}
                   <span className="font-semibold text-base text-[#013877]">
-                    Gate {data.depGate}
+                    Gate {data?.depGate}
                   </span>
                 </p> */}
                 <p className="text-blue-500 font-semibold pb-1 border-b-[1px] border-dashed border-[#7794B0]">
-                  {data.depAirportName} - {data.depIata}
+                  {data?.depAirportName || ""} - {data?.depIata || ""}
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
-                  {formatDate(parseInt(data.depTimeTs))}
+                  {formatDate(parseInt(data?.depTimeTs || null))}
                 </p>
-                {data.depDelayed === null ? (
+                {data?.depDelayed === null ? (
                   <p className="text-sm text-[#7794B0] capitalize">
-                    {formatTimeWithAMPM(parseInt(data.depTimeTs))}{" "}
+                    {formatTimeWithAMPM(parseInt(data?.depTimeTs || null))}{" "}
                     {/* <span className="text-customGreen">(On time)</span> */}
                   </p>
                 ) : (
                   <p className="text-sm text-[#7794B0] capitalize">
-                    {formatTimeWithAMPM(parseInt(data.depTimeTs))}{" "}
+                    {formatTimeWithAMPM(parseInt(data?.depTimeTs || null))}{" "}
                     {/* <span className="text-customGreen">
                       ({data.depDelayed} minutes later)
                     </span> */}
@@ -105,7 +107,7 @@ const FlightCard = ({ data }) => {
                 <p className="font-light text-sm text-[#7794B0] pt-1">
                   left{" "}
                   <span className="font-semibold text-base text-[#013877]">
-                    Gate {data.depGate}
+                    Gate {data?.depGate || ""}
                   </span>
                 </p>
               </div>
@@ -114,7 +116,7 @@ const FlightCard = ({ data }) => {
                   {data.arrIata}
                 </p> */}
                 <p className="font-semibold text-lg text-[#013877] leading-none uppercase">
-                  {data.arrCity}
+                  {data?.arrCity || ""}
                 </p>
                 {/* <p className="font-light text-sm text-[#7794B0] pt-1">
                   arriving at{" "}
@@ -123,19 +125,19 @@ const FlightCard = ({ data }) => {
                   </span>
                 </p> */}
                 <p className="text-blue-500 font-semibold pb-1 border-b-[1px] border-dashed border-[#7794B0]">
-                  {data.arrAirportName} - {data.arrIata}
+                  {data?.arrAirportName || ""} - {data?.arrIata || ""}
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
-                  {formatDate(parseInt(data.arrTimeTs))}
+                  {formatDate(parseInt(data?.arrTimeTs || null))}
                 </p>
-                {data.arrDelayed === null ? (
+                {data?.arrDelayed === null ? (
                   <p className="text-sm text-[#7794B0] capitalize">
-                    {formatTimeWithAMPM(parseInt(data.arrTimeTs))}{" "}
+                    {formatTimeWithAMPM(parseInt(data?.arrTimeTs || null))}{" "}
                     {/* <span className="text-orange-600">(On time)</span> */}
                   </p>
                 ) : (
                   <p className="text-sm text-[#7794B0] capitalize">
-                    {formatTimeWithAMPM(parseInt(data.arrTimeTs))}{" "}
+                    {formatTimeWithAMPM(parseInt(data?.arrTimeTs || null))}{" "}
                     {/* <span className="text-orange-600">
                       ({data.arrDelayed} minutes later)
                     </span> */}
@@ -144,7 +146,7 @@ const FlightCard = ({ data }) => {
                 <p className="font-light text-sm text-[#7794B0] pt-1">
                   Arriving at{" "}
                   <span className="font-semibold text-base text-[#013877]">
-                    Gate {data.arrGate}
+                    Gate {data?.arrGate || ""}
                   </span>
                 </p>
               </div>
@@ -154,7 +156,7 @@ const FlightCard = ({ data }) => {
                 <div
                   className="h-1 bg-customGreen relative"
                   style={{
-                    width: `${getWidth(data)}%`,
+                    width: `${getWidth(data || null)}%`,
                   }}
                 >
                   {/* <IoAirplaneSolid className='text-customGreen h-7 w-7 absolute -inset-y-3 -right-3' /> */}
@@ -177,7 +179,7 @@ const FlightCard = ({ data }) => {
               <div>
                 <p className="text-xs font-medium text-center text-[#4C6884] pt-1">
                   <span className="font-bold">
-                    {minutesToHours(data.duration)}
+                    {minutesToHours(data?.duration || null)}
                   </span>{" "}
                   total travel time
                 </p>

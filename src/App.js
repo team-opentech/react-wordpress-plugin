@@ -7,8 +7,10 @@ const App = ({ type, size, flight, queryParams }) => {
   const [data, setData] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const baseUrl = window.location.origin;
+  // console.log("flight", flight);
 
   const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
+  // console.log("customEndpointUrl", customEndpointUrl);
 
   useEffect(() => {
     // console.log("Fetching data...");
@@ -28,7 +30,7 @@ const App = ({ type, size, flight, queryParams }) => {
 
   return (
     <div className="main-container">
-      {type === "flight" && flight && <FlightInfo data={data} />}
+      {type === "flight" && <FlightInfo data={data.length === 0 ? null : data} />}
       {type != "flight" && (
         <TablaAGGrid
           loadingData={loadingData}

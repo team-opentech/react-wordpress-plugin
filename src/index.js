@@ -20,6 +20,9 @@ document.querySelectorAll(".react-app-container").forEach((container) => {
     size,
     offset_value: 0,
   });
+  // console.log("flight", flight);
+  // console.log("flight_codeType", flight_codeType);
+  // console.log("type", type);
 
   if (airportCode !== "") {
     queryParams.append("airportCode", airportCode);
@@ -44,19 +47,4 @@ document.querySelectorAll(".react-app-container").forEach((container) => {
       queryParams={queryParams}
     />
   );
-  // const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
-
-  // fetch(customEndpointUrl)
-  //   .then((response) => {
-  //     if (!response.ok) throw new Error("Network response was not ok");
-  //     return response.json();
-  //   })
-  //   .then((data) => {
-     
-  //   })
-  //   .catch((error) => {
-  //     console.error("Error fetching flight data:", error);
-  //     const root = ReactDOM.createRoot(container);
-  //     root.render(<div>Error loading data: {error.message}</div>);
-  //   });
 });

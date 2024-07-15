@@ -1,6 +1,7 @@
 import { DateTime } from "luxon";
 
 export function getElapsedTime(flightInfo) {
+  if (!flightInfo) return;
   const departureTime = Number(flightInfo.depTimeTs);
   if (isNaN(departureTime)) throw new Error("Invalid departure timestamp.");
 
@@ -10,6 +11,7 @@ export function getElapsedTime(flightInfo) {
 }
 
 export function getRemainingTime(flightInfo) {
+  if (!flightInfo) return;
   const totalDurationSeconds = flightInfo.duration * 60;
 
   const elapsedTime = getElapsedTime(flightInfo);
@@ -18,6 +20,7 @@ export function getRemainingTime(flightInfo) {
 }
 
 export function getRemainingTimeToDepart(flightInfo) {
+  if (!flightInfo) return;
   const departureTime = Number(flightInfo.depTimeTs);
   if (isNaN(departureTime)) throw new Error("Invalid departure timestamp.");
 
@@ -74,6 +77,7 @@ export function secondsToHours(secondsInput){
 }
 
 export function convertUnixToDateTime(timeTs) {
+  if (timeTs === null) return null;
   return DateTime.fromSeconds(timeTs).setZone("America/Caracas");
 }
 
@@ -97,6 +101,7 @@ export function formatTimeToAMPM(dateTimeString){
 }
 
 export const getDayOfWeek = (dateTimeString) => {
+    if (!dateTimeString) return "-----";
     const [datePart, timePart] = dateTimeString.split(' ');
   
     const [year, month, day] = datePart.split('-').map(Number);
@@ -109,7 +114,7 @@ export const getDayOfWeek = (dateTimeString) => {
   }
 
   export function getFormatTime(dateTimeString) {
-
+    if (!dateTimeString) return "-----";
     const [/*datePart*/, timePart] = dateTimeString.split(' ');
   
     // const [year, month, day] = datePart.split('-').map(Number);
