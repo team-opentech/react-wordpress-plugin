@@ -6,6 +6,7 @@ import "./style.css";
 const App = ({ type, size, flight, queryParams }) => {
   const [data, setData] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [error, setError] = useState(null);
   const baseUrl = window.location.origin;
   // console.log("flight", flight);
 
@@ -15,16 +16,27 @@ const App = ({ type, size, flight, queryParams }) => {
   useEffect(() => {
     // console.log("Fetching data...");
     fetch(customEndpointUrl)
-      .then((response) => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json();
-      })
+    .then((response) => {
+      return response.json().then(data => {
+        if (!response.ok) {
+          throw data;
+        }
+        return data;
+      });
+    })
       .then((data) => {
         setData(data);
         setLoadingData(false);
       })
       .catch((error) => {
         console.error("Error fetching flight data:", error);
+        if (error.code === "month_limit_exceeded") {
+          setError({ message: error.message, code: error.code });
+        } else {
+          setError({ message: "Error fetching flight data", code: "generic_error" });
+        }
+        console.log("Error", error);
+        setLoadingData(false);
       });
   }, []);
 

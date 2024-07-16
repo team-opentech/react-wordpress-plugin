@@ -69,7 +69,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     if (data && data.length > 0) {
       if (window.innerWidth > 768) {
         const formattedData = data.map((item) => ({
-          flight: item.flight,
+          flight: item.flight.toLowerCase(),
           airport: `${item.airport} (${
             type === "arrivals" ? item.dep_code : item.arr_code
           })`,
@@ -93,7 +93,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         setRowData(formattedData);
       } else {
         const formattedData = data.map((item) => ({
-          flight: item.flight,
+          flight: item.flight.toLowerCase(),
           city:
             type === "arrivals"
               ? `${item.dep_city}/(${item.dep_code})`
@@ -606,7 +606,6 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         autoSizeStrategy={autoSizeStrategy}
         domLayout="autoHeight"
         onCellClicked={(event) => {
-          if (data && data.length === 0) return;
           if (event.column.colId === "flight") {
             const flightCode = event.data.flight;
 
@@ -638,14 +637,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           }
           if (event.column.colId === "airline_name") {
             const airlineCode = event.data.airline_code.toLowerCase();
-            const airport_city = event.data.airport_city
-            const airport_state = event.data.airport_state
-            const airport_country = event.data.airport_country
             const baseUrl = window.location.href.split(type === "arrivals" ? "arrivals" : "departures")[0];
-            window.location.href = `${baseUrl}${type === "arrivals" ? "departures" : "arrivals"}/${airlineCode}`;
-            // window.location.href = `/${airport_country}/${airport_state}/${airport_city}/${
-            //   type === "arrivals" ? "departures" : "arrivals"
-            // }/${airlineCode}`;
+            window.location.href = `${baseUrl}${type === "arrivals" ? "arrivals" : "departures"}/${airlineCode}`;
           }
         }}
         pagination={true}
