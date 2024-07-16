@@ -30,7 +30,7 @@ const App = ({ type, size, flight, queryParams }) => {
 
   return (
     <div className="main-container">
-      {type === "flight" && <FlightInfo data={data.length === 0 ? null : data} />}
+      {type === "flight" && <FlightInfo data={data.length === 0 ? null : data} loadingData={loadingData}/>}
       {type != "flight" && (
         <TablaAGGrid
           loadingData={loadingData}

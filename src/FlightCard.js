@@ -9,7 +9,7 @@ import {
   getRemainingTime,
 } from "./helper.js";
 
-const FlightCard = ({ data }) => {
+const FlightCard = ({ data, loadingData }) => {
   // console.log("FlightCard data", data);
   const getWidth = (data) => {
     if (data === null) return;
@@ -45,6 +45,15 @@ const FlightCard = ({ data }) => {
   return (
     <section className="container mx-auto my-8">
       <div className="px-4 flex flex-col items-center justify-center sm:px-16">
+      {loadingData && (
+        <div
+          className="ag-custom-loading-cell"
+          style={{ padding: "15px", lineHeight: "25px", fontSize: "24px" }}
+        >
+          <i className="fas fa-spinner fa-pulse"></i>{" "}
+          <span> Loading data, one moment please...</span>
+        </div>
+      )}
         <div className="bg-lightBlue-500 rounded-xl w-full p-4 sm:p-8 md:p-12 shadow-sm">
           <div className="bg-white w-full h-full rounded-xl shadow-sm flex flex-col">
             <div className="w-full flex flex-row items-center p-4 lg:px-8">
