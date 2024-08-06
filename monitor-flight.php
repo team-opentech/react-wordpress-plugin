@@ -3,7 +3,7 @@
 /**
  * Plugin Name: SEO Flight Schedule
  * Description: Muestra los vuelos de los aeropuertos y aerolineas.
- * Version: 1.0
+ * Version: 2.0
  * Author: Opentech
  * Text Domain: seo-flight-schedule
  */
@@ -510,14 +510,57 @@ function mi_plugin_activate()
         tz_dep varchar(40) DEFAULT '',
         tz_arr varchar(40) DEFAULT '',
         status varchar(20) DEFAULT '',
+        delayed_time int DEFAULT 0,
         PRIMARY KEY (id),
         FOREIGN KEY (schedule_id) REFERENCES {$wpdb->prefix}schedules(id) ON DELETE CASCADE
     ) $charset_collate;";
     dbDelta($sql_schedule_details);
 
+    $sql_delayed = "CREATE TABLE {$wpdb->prefix}delayed (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        iata_code varchar(3) NOT NULL DEFAULT '',
+        icao_code varchar(4) NOT NULL DEFAULT '',
+        airline_iata varchar(3) NOT NULL DEFAULT '',
+        airline_icao varchar(4) NOT NULL DEFAULT '',
+        delayed_type enum('departures', 'arrivals') NOT NULL,
+        delayed_time int DEFAULT 0,
+        offset_value int NOT NULL DEFAULT 0,
+        updated_time datetime NOT NULL DEFAULT current_timestamp(),
+        last_page boolean DEFAULT false,
+        PRIMARY KEY (id),
+        UNIQUE KEY idx_iata_type (iata_code, icao_code, airline_iata, airline_icao, delayed_type, delayed_time, offset_value)
+    ) $charset_collate;";
+    dbDelta($sql_delayed);
+
+    $sql_delayed_details = "CREATE TABLE {$wpdb->prefix}delayed_details (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        delayed_id bigint(20) UNSIGNED NOT NULL,
+        offset_page int NOT NULL DEFAULT 0,
+        flight_iata varchar(7) DEFAULT '',
+        flight_icao varchar(8) DEFAULT '',
+        airline_iata varchar(3) DEFAULT '',
+        airline_icao varchar(4) DEFAULT '',
+        airline_name varchar(255) DEFAULT '',
+        airport varchar(255) DEFAULT '',
+        depart varchar(40) DEFAULT '',
+        arrive varchar(40) DEFAULT '',
+        dep_iata varchar(3) DEFAULT '',
+        dep_icao varchar(4) DEFAULT '',
+        dep_city varchar(40) DEFAULT '',
+        arr_iata varchar(3) DEFAULT '',
+        arr_icao varchar(4) DEFAULT '',
+        arr_city varchar(40) DEFAULT '',
+        tz_dep varchar(40) DEFAULT '',
+        tz_arr varchar(40) DEFAULT '',
+        status varchar(20) DEFAULT '',
+        delayed_time int DEFAULT 0,
+        PRIMARY KEY (id),
+        FOREIGN KEY (delayed_id) REFERENCES {$wpdb->prefix}delayed(id) ON DELETE CASCADE
+    ) $charset_collate;";
+    dbDelta($sql_delayed_details);
+
     // Intenta cargar datos JSON de aeropuertos
     $airportJson = file_get_contents(plugin_dir_path(__FILE__) . 'airports.json');
-
 
     if ($airportJson === false) {
         error_log('Error al leer el archivo de aeropuertos');
@@ -580,7 +623,7 @@ function mi_plugin_activate()
         );
 
         if ($result === false) {
-            error_log('Error al insertar aeropuerto: ' . $wpdb->last_error);
+            error_log('Error al insertar aerolínea: ' . $wpdb->last_error);
         }
     }
 
@@ -628,7 +671,392 @@ add_action('rest_api_init', function () {
         ),
         'permission_callback' => '__return_true'
     ));
+    register_rest_route('mi-plugin/v1', '/fetch-delayed-data', array(
+        'methods' => 'GET',
+        'callback' => 'fetch_delayed_data',
+        'args' => array(
+            'type' => array(
+                'required' => true,
+                'validate_callback' => function ($param, $request, $key) {
+                    return in_array($param, ['departures', 'arrivals', 'flight', 'delayed']);
+                }
+            ),
+            'airportCode' => array('required' => false),
+            'flight' => array('required' => false),
+            'flight_codeType' => array(
+                'required' => false,
+                'validate_callback' => function ($param, $request, $key) {
+                    return in_array($param, ['iata', 'icao']);
+                }
+            ),
+            'airp_codeType' => array(
+                'required' => false,
+                'validate_callback' => function ($param, $request, $key) {
+                    return in_array($param, ['iata', 'icao']);
+                }
+            ),
+            'airlineCode' => array('required' => false),
+            'airl_codeType' => array(
+                'required' => false,
+                'validate_callback' => function ($param, $request, $key) {
+                    return in_array($param, ['iata', 'icao']);
+                }
+            ),
+            'status' => array('required' => false),
+            'offset_value' => array('required' => false),
+            'delayed_time' => array('required' => false),
+            'delayed_type' => array('required' => false),
+        ),
+        'permission_callback' => '__return_true'
+    ));
 });
+
+function fetch_delayed_data($request)
+{
+    global $wpdb;
+    $apiKey = get_option('mi_plugin_api_key');
+    $exp_data = get_option('mi_plugin_data_expiration');
+    $exp_data_seconds = $exp_data * 60;
+
+    if (!$apiKey) {
+        return new WP_Error('api_key_not_set', 'API Key no configurado en el plugin.', ['status' => 500]);
+    }
+
+    $delayed_type = $request->get_param('delayed_type');
+    $delayed_time = $request->get_param('delayed_time');
+    $airportCode = $request->get_param('airportCode');
+    $airp_codeType = $request->get_param('airp_codeType');
+    $airlineCode = $request->get_param('airlineCode');
+    $airl_codeType = $request->get_param('airl_codeType');
+    $offset = $request->get_param('offset_value');
+
+    $apiUrl = 'https://airlabs.co/api/v9/';
+
+    if (empty($airlineCode)) {
+        $airlineCode = 'N/A';
+    }
+    if (empty($airportCode)) {
+        $airportCode = 'N/A';
+    }
+
+    $delayed_schedule = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}delayed
+                    WHERE (iata_code = %s OR icao_code = %s)
+                    AND delayed_type = %s
+                    AND delayed_time = %s
+                    AND (airline_iata = %s OR airline_icao = %s)
+                    AND offset_value = %d",
+        $airportCode,
+        $airportCode,
+        $delayed_type,
+        $delayed_time,
+        $airlineCode,
+        $airlineCode,
+        $offset
+    ), ARRAY_A);
+
+    if ($delayed_schedule && (((strtotime($delayed_schedule['updated_time'])) + $exp_data_seconds) > time()) && !$delayed_schedule['last_page']) {
+        // Buscar detalles asociados en schedule_details
+
+        $query = "SELECT * FROM {$wpdb->prefix}delayed_details WHERE delayed_id = %d AND offset_page = %d";
+
+        $params = [$delayed_schedule['id'], $delayed_schedule['offset_value']];
+
+        $flightDetails = $wpdb->get_results($wpdb->prepare($query, $params), ARRAY_A);
+
+        if (!empty($flightDetails)) {
+            // Formatear los detalles del vuelo para la respuesta
+            $formattedFlights = array_map(function ($flight) {
+                global $wpdb;
+                $arrAirport = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                    $flight['arr_iata'],
+                    $flight['arr_icao']
+                ));
+                $depAirport = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                    $flight['dep_iata'],
+                    $flight['dep_icao']
+                ));
+                // $airlineName = $wpdb->get_var($wpdb->prepare(
+                //     "SELECT name FROM {$wpdb->prefix}airlines WHERE iata_code = %s OR icao_code = %s",
+                //     $flight['airline_iata'], $flight['airline_icao']
+                // ));
+                return [
+                    'flight' => !empty($flight['flight_iata']) ? $flight['flight_iata'] : $flight['flight_icao'],
+                    'airport' => $flight['airport'],
+                    'airline_name' => $flight['airline_name'],
+                    'airline_code' => !empty($flight['airline_iata']) ? $flight['airline_iata'] : $flight['airline_icao'],
+                    'depart' => $flight['depart'],
+                    'arrive' => $flight['arrive'],
+                    'arrAirport' => $arrAirport->name,
+                    'arrAirport_city' => $arrAirport->city,
+                    'arrAirport_state' => $arrAirport->state,
+                    'arrAirport_country' => $arrAirport->country,
+                    'depAirport' => $depAirport->name,
+                    'depAirport_city' => $depAirport->city,
+                    'depAirport_state' => $depAirport->state,
+                    'depAirport_country' => $depAirport->country,
+                    'dep_code' => !empty($flight['dep_iata']) ? $flight['dep_iata'] : $flight['dep_icao'],
+                    'dep_city' => $flight['dep_city'],
+                    'arr_code' => !empty($flight['arr_icao']) ? $flight['arr_iata'] : $flight['arr_icao'],
+                    'arr_city' => $flight['arr_city'],
+                    'tz_dep' => $flight['tz_dep'],
+                    'tz_arr' => $flight['tz_arr'],
+                    'status' => $flight['status'],
+                    'delayed_time' => $flight['delayed_time']
+                ];
+            }, $flightDetails);
+
+            return new WP_REST_Response($formattedFlights, 200);
+        } else {
+            return new WP_REST_Response(['message' => 'No flight details available'], 404);
+        }
+    }
+
+    // if (isset($schedulesData['response'])) {
+    if (!$delayed_schedule) {
+        // Obtener ambos códigos de aeropuertos desde la tabla de aeropuertos
+        if (!empty($airportCode)) {
+            $airpCodeType = $airp_codeType === 'iata' ? 'iata_code' : 'icao_code';
+            $airportData = $wpdb->get_row($wpdb->prepare(
+                "SELECT iata_code, icao_code FROM {$wpdb->prefix}airports WHERE {$airpCodeType} = %s",
+                $airportCode
+            ));
+        }
+        if (!empty($airlineCode)) {
+            $airlCodeType = $airl_codeType === 'iata' ? 'iata_code' : 'icao_code';
+            $airlineData = $wpdb->get_row($wpdb->prepare(
+                "SELECT iata_code, icao_code FROM {$wpdb->prefix}airlines WHERE {$airlCodeType} = %s",
+                $airlineCode
+            ));
+        }
+        // error_log('ERROR_LOG_3: Schedule not found: ' . json_encode($schedule));
+        $wpdb->insert(
+            "{$wpdb->prefix}delayed",
+            [
+                'delayed_type' => $delayed_type,
+                'delayed_time' => $delayed_time,
+                'updated_time' => current_time('mysql', 1),
+                'iata_code' => $airportData->iata_code ?? 'N/A',
+                'icao_code' => $airportData->icao_code ?? 'N/A',
+                'airline_iata' => $airlineData->iata_code ?? 'N/A',
+                'airline_icao' => $airlineData->icao_code ?? 'N/A',
+                'offset_value' => $offset,
+            ],
+            ['%s', '%d', '%s', '%s', '%s', '%s', '%s', '%d']
+        );
+        $delayed_schedule['id'] = $wpdb->insert_id;
+        $delayed_schedule['offset_value'] = $offset;
+    } else {
+        // Obtener el registro actual para comparar el updated_time
+        // error_log('ERROR_LOG_4: Schedule found: ' . json_encode($schedule));
+        if ($delayed_schedule['id'] && (strtotime($delayed_schedule['updated_time']) + $exp_data_seconds) < time()) {
+            // Iniciar transacción
+            $wpdb->query('START TRANSACTION');
+
+            // Actualizar el registro en la tabla schedules
+            $updated = $wpdb->update(
+                "{$wpdb->prefix}delayed",
+                ['updated_time' => current_time('mysql', 1), 'last_page' => false],
+                ['id' => $delayed_schedule['id']],
+                ['%s', '%d'],
+                ['%d']
+            );
+
+            // Verificar si la actualización fue exitosa
+            if ($updated !== false) {
+                // Eliminar los registros asociados en schedule_details
+                $deleted = $wpdb->delete(
+                    "{$wpdb->prefix}delayed_details",
+                    ['delayed_id' => $delayed_schedule['id']],
+                    ['%d']
+                );
+
+                // Verificar si la eliminación fue exitosa
+                if ($deleted !== false) {
+                    // Todo bien, hacer COMMIT de la transacción
+                    $wpdb->query('COMMIT');
+                } else {
+                    // Error al eliminar, hacer ROLLBACK de la transacción
+                    $wpdb->query('ROLLBACK');
+                    error_log('Error al eliminar detalles del horario: ' . $wpdb->last_error);
+                }
+            } else {
+                // Error al actualizar, hacer ROLLBACK de la transacción
+                $wpdb->query('ROLLBACK');
+                error_log('Error al actualizar el horario: ' . $wpdb->last_error);
+            }
+        }
+    }
+
+    // Si no hay información reciente, consulta al API de Airlabs
+    $endpointUrl = "{$apiUrl}delays?delay={$delayed_time}&type={$delayed_type}&api_key={$apiKey}&offset={$offset}";
+
+    if (!empty($airportCode)) {
+        //  . ($delayed_type ==="departures" ? "dep_" : "arr_") . "{$airp_codeType}={$airportCode}
+        // $endpointUrl .= "&airport_" . ($airp_codeType === 'iata' ? 'iata' : 'icao') . "={$airportCode}";
+        $endpointUrl .= ($delayed_type ==="departures" ? "dep_" : "arr_") . "{$airp_codeType}={$airportCode}.";
+    }
+
+    if (!empty($airlineCode)) {
+        $endpointUrl .= "&airline_" . ($airl_codeType === 'iata' ? 'iata' : 'icao') . "={$airlineCode}";
+    }
+
+    $apiResponse = wp_remote_get($endpointUrl);
+
+    if (is_wp_error($apiResponse)) {
+        return new WP_Error('api_fetch_error', 'Error al obtener datos del API de Airlabs.', ['status' => 500]);
+    }
+
+    $delayedData = json_decode(wp_remote_retrieve_body($apiResponse), true);
+
+    if (isset($delayedData['error'])) {
+        // Handle specific error
+        if ($delayedData['error']['code'] === 'month_limit_exceeded') {
+            return new WP_Error('month_limit_exceeded', $delayedData['error']['message'], ['status' => 400]);
+        }
+        return new WP_Error('api_fetch_error', $delayedData['error']['message'], ['status' => 500]);
+    }
+
+    if (empty($delayedData['response'])) {
+        $result = $wpdb->update(
+            "{$wpdb->prefix}delayed",
+            ['last_page' => true],
+            ['id' => $delayed_schedule['id']],
+            ['%d'],
+            ['%d']
+        );
+        if ($result || $delayed_schedule['last_page'] === true) {
+            return new WP_REST_Response(null, 204);
+        } else {
+            return new WP_Error("api_fetch_error", "Error al actualizar el último estado de la página.", ['status' => 500]);
+        }
+    }
+
+    if (isset($delayedData['response'])) {
+        $formattedFlights = [];
+        foreach ($delayedData['response'] as $flightData) {
+
+            $arrCode = !empty($flightData['arr_iata']) ? $flightData['arr_iata'] : $flightData['arr_icao'];
+            $depCode = !empty($flightData['dep_iata']) ? $flightData['dep_iata'] : $flightData['dep_icao'];
+            $airportCodeToCheck = $delayed_type === "departures" ? $arrCode : $depCode;
+
+            $airportName = $wpdb->get_var($wpdb->prepare(
+                "SELECT name FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                $airportCodeToCheck,
+                $airportCodeToCheck
+            ));
+
+            $airline_name = $wpdb->get_var($wpdb->prepare(
+                "SELECT name FROM {$wpdb->prefix}airlines WHERE iata_code = %s OR icao_code = %s",
+                $flightData['airline_iata'],
+                $flightData['airline_icao']
+            ));
+
+            $dep_city = $wpdb->get_var($wpdb->prepare(
+                "SELECT city FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                $flightData['dep_iata'],
+                $flightData['dep_icao']
+            ));
+
+            $arr_city = $wpdb->get_var($wpdb->prepare(
+                "SELECT city FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                $flightData['arr_iata'],
+                $flightData['arr_icao']
+            ));
+
+            $tz_arr = $wpdb->get_var($wpdb->prepare(
+                "SELECT timezone FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                $flightData['arr_iata'],
+                $flightData['arr_icao']
+            ));
+
+            $tz_dep = $wpdb->get_var($wpdb->prepare(
+                "SELECT timezone FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                $flightData['dep_iata'],
+                $flightData['dep_icao']
+            ));
+
+            $insert_result = $wpdb->insert(
+                "{$wpdb->prefix}delayed_details",
+                [
+                    'delayed_id' => $delayed_schedule['id'],
+                    'offset_page' => $offset,
+                    'flight_iata' => $flightData['flight_iata'] ?? '',
+                    'flight_icao' => $flightData['flight_icao'] ?? '',
+                    'airline_iata' => $flightData['airline_iata'] ?? '',
+                    'airline_icao' => $flightData['airline_icao'] ?? '',
+                    'airport' => $airportName ?? '',
+                    'airline_name' => $airline_name ?? '',
+                    'depart' => $flightData['dep_time_utc'] ?? '',
+                    'arrive' => $flightData['arr_time_utc'] ?? '',
+                    'dep_iata' => $flightData['dep_iata'] ?? '',
+                    'dep_icao' => $flightData['dep_icao'] ?? '',
+                    'dep_city' => $dep_city ?? '',
+                    'arr_iata' => $flightData['arr_iata'] ?? '',
+                    'arr_icao' => $flightData['arr_icao'] ?? '',
+                    'arr_city' => $arr_city ?? '',
+                    'tz_dep' => $tz_dep ?? '',
+                    'tz_arr' => $tz_arr ?? '',
+                    'status' => $flightData['status'] ?? '',
+                    'delayed_time' => $flightData['delayed']
+                ],
+                ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d']
+            );
+
+
+            if ($insert_result !== false) {
+                $arrAirport = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                    $flightData['arr_iata'],
+                    $flightData['arr_icao']
+                ));
+
+                $depAirport = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                    $flightData['dep_iata'],
+                    $flightData['dep_icao']
+                ));
+
+                $formattedFlights[] = [
+                    'flight' => !empty($flightData['flight_iata']) ? $flightData['flight_iata'] : $flightData['flight_icao'],
+                    'airport' => $airportName,
+                    'depart' => $flightData['dep_time_utc'] ?? '',
+                    'arrive' => $flightData['arr_time_utc'] ?? '',
+                    'airline_name' => $airline_name,
+                    'airline_code' => !empty($flightData['airline_iata']) ? $flightData['airline_iata'] : $flightData['airline_icao'],
+                    'arrAirport' => $arrAirport->name,
+                    'arrAirport_city' => $arrAirport->city,
+                    'arrAirport_state' => $arrAirport->state,
+                    'arrAirport_country' => $arrAirport->country,
+                    'depAirport' => $depAirport->name,
+                    'depAirport_city' => $depAirport->city,
+                    'depAirport_state' => $depAirport->state,
+                    'depAirport_country' => $depAirport->country,
+                    'dep_code' => !empty($flightData['dep_iata']) ? $flightData['dep_iata'] : $flightData['dep_icao'],
+                    'dep_city' => $dep_city,
+                    'arr_code' => !empty($flightData['arr_iata']) ? $flightData['arr_iata'] : $flightData['arr_icao'],
+                    'arr_city' => $arr_city,
+                    'tz_dep' => $tz_dep,
+                    'tz_arr' => $tz_arr,
+                    'status' => $flightData['status'],
+                    'delayed_time' => $flightData['delayed']
+                ];
+            } else {
+                error_log('Error al insertar en delayed_details: ' . $wpdb->last_error);
+            }
+        }
+        if (!empty($formattedFlights)) {
+            return new WP_REST_Response($formattedFlights, 200);
+        } else {
+            return new WP_Error('api_fetch_error', 'Error en guardar la informacion en la tabla delayed_details', ['status' => 404]);
+        }
+    } else {
+        error_log('' . $wpdb->last_error);
+        return new WP_Error('api_fetch_error', 'Error al obtener datos del API de Airlabs.', ['status' => 500]);
+    }
+}
 
 function mi_plugin_fetch_flight_data($request)
 {
@@ -1212,6 +1640,8 @@ function generar_shortcode_react_app($atts, $content, $tag)
         'status' => '',
         'flight_iata' => '',
         'flight_icao' => '',
+        'delayed_time' => '',
+        'delayed_type' => ''
     ], $atts);
 
     // Validación básica
@@ -1221,8 +1651,12 @@ function generar_shortcode_react_app($atts, $content, $tag)
     if ($tag == 'numero-vuelo' && empty($atts['flight_iata']) && empty($atts['flight_icao'])) {
         return "Por favor, incluye al menos el IATA code o el ICAO code del vuelo para proceder.";
     }
+    if($tag == 'delayed_flights' && (empty($atts['delayed_time']) || empty($atts['delayed_type']))) {
+        return "Por favor, incluye el tiempo de retraso para proceder.";
+    }
 
-    $type = $tag == 'departures_app' ? 'departures' : ($tag == 'arrivals_app' ? 'arrivals' : 'flight'); // Nuevo caso para 'vuelo'
+    $type = $tag == 'departures_app' ? 'departures' : ($tag == 'arrivals_app' ? 'arrivals' : ($tag == 'numero-vuelo' ? 'flight' : 'delayed'));
+    $delayed_type = $atts['delayed_type'];
     $airportCode = !empty($atts['iata_code']) ? $atts['iata_code'] : $atts['icao_code'];
     $airp_codeType = !empty($atts['iata_code']) ? 'iata' : 'icao'; //Definir el tipo de codigo del aeropuerto, iata o icao
     $airlineCode = !empty($atts['airline_iata']) ? $atts['airline_iata'] : $atts['airline_icao'];
@@ -1230,15 +1664,17 @@ function generar_shortcode_react_app($atts, $content, $tag)
     $flightCode = !empty($atts['flight_iata']) ? $atts['flight_iata'] : $atts['flight_icao'];
     $flight_codeType = !empty($atts['flight_iata']) ? 'iata' : 'icao'; //Definir el tipo de codigo del vuelo, iata o icao
     $status = $atts['status'];
+    $delayed_time = $atts['delayed_time'];
 
     // Recuperar los valores guardados en los ajustes del plugin
 
-    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}'></div>";
+    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}' data-delayed-time='{$delayed_time}' data-delayed-type='{$delayed_type}'></div>";
 }
 
 add_shortcode('arrivals_app', 'generar_shortcode_react_app');
 add_shortcode('departures_app', 'generar_shortcode_react_app');
-add_shortcode('numero-vuelo', 'generar_shortcode_react_app'); // Registrar el nuevo shortcode
+add_shortcode('numero-vuelo', 'generar_shortcode_react_app');
+add_shortcode('delayed_flights', 'generar_shortcode_react_app');
 
 // Añadir la página de configuraciones y registrar las opciones
 add_action('admin_menu', 'mi_plugin_menu');

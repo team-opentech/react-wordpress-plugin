@@ -10,7 +10,7 @@ const App = ({ type, size, flight, queryParams }) => {
   const baseUrl = window.location.origin;
   // console.log("flight", flight);
 
-  const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
+  const customEndpointUrl = type === 'delayed' ? `${baseUrl}/wp-json/mi-plugin/v1/fetch-delayed-data?${queryParams}`:`${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
   // console.log("customEndpointUrl", customEndpointUrl);
 
   useEffect(() => {
