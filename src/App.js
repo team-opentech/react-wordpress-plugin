@@ -91,7 +91,7 @@ const App = ({ type, size, flight, queryParams }) => {
               </li>
             ))}
           </ul>
-        </div> */}
+        </div>
       )}
       {/* Mostrar tiempo de carga de la página */}
       {/* {pageLoadTime !== null && (
