@@ -447,6 +447,8 @@ function mi_plugin_activate()
         state varchar(255) DEFAULT '',
         timezone varchar(40),
         country varchar(255) DEFAULT '',
+        latitude DECIMAL(9,6) NOT NULL DEFAULT '0.000000',
+        longitude DECIMAL(9,6) NOT NULL DEFAULT '0.000000',
         PRIMARY KEY (iata_code, icao_code)
     ) $charset_collate;";
     dbDelta($sql_airports);
@@ -475,6 +477,7 @@ function mi_plugin_activate()
     ) $charset_collate;";
     dbDelta($sql_flights);
 
+    // Creación o actualización de la tabla schedules
     $sql_schedules = "CREATE TABLE {$wpdb->prefix}schedules (
         id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         iata_code varchar(3) NOT NULL DEFAULT '',
@@ -490,6 +493,7 @@ function mi_plugin_activate()
     ) $charset_collate;";
     dbDelta($sql_schedules);
 
+    // Creación o actualización de la tabla schedule_details
     $sql_schedule_details = "CREATE TABLE {$wpdb->prefix}schedule_details (
         id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         schedule_id bigint(20) UNSIGNED NOT NULL,
@@ -511,14 +515,45 @@ function mi_plugin_activate()
         tz_dep varchar(40) DEFAULT '',
         tz_arr varchar(40) DEFAULT '',
         status varchar(20) DEFAULT '',
+        arr_terminal varchar(5) DEFAULT '',
+        dep_terminal varchar(5) DEFAULT '',
         PRIMARY KEY (id),
         FOREIGN KEY (schedule_id) REFERENCES {$wpdb->prefix}schedules(id) ON DELETE CASCADE
     ) $charset_collate;";
     dbDelta($sql_schedule_details);
 
+    // Agregar columnas 'latitude' y 'longitude' a la tabla airports si no existen
+    $airports_table = $wpdb->prefix . 'airports';
+
+    // Verificar si la columna 'latitude' existe
+    $latitude_column = $wpdb->get_results("SHOW COLUMNS FROM $airports_table LIKE 'latitude'");
+    if (empty($latitude_column)) {
+        $wpdb->query("ALTER TABLE $airports_table ADD COLUMN latitude DECIMAL(9,6) NOT NULL DEFAULT '0.000000' AFTER country");
+    }
+
+    // Verificar si la columna 'longitude' existe
+    $longitude_column = $wpdb->get_results("SHOW COLUMNS FROM $airports_table LIKE 'longitude'");
+    if (empty($longitude_column)) {
+        $wpdb->query("ALTER TABLE $airports_table ADD COLUMN longitude DECIMAL(9,6) NOT NULL DEFAULT '0.000000' AFTER latitude");
+    }
+
+    // Agregar columnas 'arr_terminal' y 'dep_terminal' a la tabla schedule_details si no existen
+    $schedule_details_table = $wpdb->prefix . 'schedule_details';
+
+    // Verificar si la columna 'arr_terminal' existe
+    $arr_terminal_column = $wpdb->get_results("SHOW COLUMNS FROM $schedule_details_table LIKE 'arr_terminal'");
+    if (empty($arr_terminal_column)) {
+        $wpdb->query("ALTER TABLE $schedule_details_table ADD COLUMN arr_terminal VARCHAR(5) DEFAULT '' AFTER status");
+    }
+
+    // Verificar si la columna 'dep_terminal' existe
+    $dep_terminal_column = $wpdb->get_results("SHOW COLUMNS FROM $schedule_details_table LIKE 'dep_terminal'");
+    if (empty($dep_terminal_column)) {
+        $wpdb->query("ALTER TABLE $schedule_details_table ADD COLUMN dep_terminal VARCHAR(5) DEFAULT '' AFTER arr_terminal");
+    }
+
     // Intenta cargar datos JSON de aeropuertos
     $airportJson = file_get_contents(plugin_dir_path(__FILE__) . 'airports.json');
-
 
     if ($airportJson === false) {
         error_log('Error al leer el archivo de aeropuertos');
@@ -532,25 +567,21 @@ function mi_plugin_activate()
         return;
     }
 
-    $airports_table = $wpdb->prefix . 'airports';
     foreach ($airports['response'] as $airport) {
-        $result = $wpdb->insert(
+        // Actualizar los registros existentes con latitud y longitud
+        $wpdb->update(
             $airports_table,
             [
-                'name' => $airport['name'],
-                'iata_code' => $airport['iata'],
-                'icao_code' => $airport['icao'],
-                'country' => $airport['country'],
-                'city' => $airport['city'],
-                'state' => $airport['state'],
-                'timezone' => $airport['tz']
+                'latitude' => isset($airport['lat']) ? floatval($airport['lat']) : 0.0,
+                'longitude' => isset($airport['lon']) ? floatval($airport['lon']) : 0.0
             ],
-            ['%s', '%s', '%s', '%s', '%s', '%s', '%s']
+            [
+                'iata_code' => $airport['iata'],
+                'icao_code' => $airport['icao']
+            ],
+            ['%f', '%f'],
+            ['%s', '%s']
         );
-
-        if ($result === false) {
-            error_log('Error al insertar aeropuerto: ' . $wpdb->last_error);
-        }
     }
 
     // Intenta cargar datos JSON de aerolíneas
@@ -564,9 +595,10 @@ function mi_plugin_activate()
     $airlines = json_decode($airlineJson, true);
 
     if (!is_array($airlines) || !isset($airlines['response'])) {
-        error_log('Error al decodificar el archivo JSON de aeropuertos o la clave \'response\' no está presente');
+        error_log('Error al decodificar el archivo JSON de aerolíneas o la clave \'response\' no está presente');
         return;
     }
+
     $airlines_table = $wpdb->prefix . 'airlines';
     foreach ($airlines['response'] as $airline) {
         $result = $wpdb->insert(
@@ -581,7 +613,7 @@ function mi_plugin_activate()
         );
 
         if ($result === false) {
-            error_log('Error al insertar aeropuerto: ' . $wpdb->last_error);
+            error_log('Error al insertar aerolínea: ' . $wpdb->last_error);
         }
     }
 
