@@ -790,12 +790,12 @@ function mi_plugin_fetch_flight_data($request)
                             'dep_iata' => $flightData['dep_iata'],
                             'dep_icao' => $flightData['dep_icao'],
                             'dep_gate' => $flightData['dep_gate'],
-                            'dep_time_ts' => $flightData['dep_time_ts'],
+                            'dep_time_ts' => $flightData['dep_time'],
                             'dep_delayed' => $flightData['dep_delayed'],
                             'arr_iata' => $flightData['arr_iata'],
                             'arr_icao' => $flightData['arr_icao'],
                             'arr_gate' => $flightData['arr_gate'],
-                            'arr_time_ts' => $flightData['arr_time_ts'],
+                            'arr_time_ts' => $flightData['arr_time'],
                             'arr_delayed' => $flightData['arr_delayed'],
                             'duration' => $flightData['duration'],
                             'updated_time' => current_time('mysql', 1),
@@ -806,6 +806,13 @@ function mi_plugin_fetch_flight_data($request)
                     $end_time_save = microtime(true);
                     $timings['save'] = ($end_time_save - $start_time_save) * 1000; // tiempo en milisegundos
 
+                    //Buscar timezone de los Aeropuertos de salida y llegada
+                    $airportData = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}airports", ARRAY_A);
+                    $airports = array_column($airportData, null, 'iata_code'); // Create a map using IATA as keys
+
+                    $tz_dep = $airports[$flightData['dep_iata']]['timezone'] ?? '';
+                    $tz_arr = $airports[$flightData['arr_iata']]['timezone'] ?? '';
+
                     $formatedData = [
                         'airlineLogo' => $airlineLogoUrl,
                         'flightIata' => $flightData['flight_iata'],
@@ -814,11 +821,11 @@ function mi_plugin_fetch_flight_data($request)
                         'status' => $flightData['status'],
                         'depIata' => $flightData['dep_iata'],
                         'depGate' => $flightData['dep_gate'],
-                        'depTimeTs' => $flightData['dep_time_ts'],
+                        'depTimeTs' => $flightData['dep_time'],
                         'depDelayed' => $flightData['dep_delayed'],
                         'arrIata' => $flightData['arr_iata'],
                         'arrGate' => $flightData['arr_gate'],
-                        'arrTimeTs' => $flightData['arr_time_ts'],
+                        'arrTimeTs' => $flightData['arr_time'],
                         'arrDelayed' => $flightData['arr_delayed'],
                         'duration' => $flightData['duration'],
                         'airlineName' => $flightData['airline_name'],
@@ -826,6 +833,8 @@ function mi_plugin_fetch_flight_data($request)
                         'depCity' => $flightData['dep_city'],
                         'arrAirportName' => $flightData['arr_name'],
                         'arrCity' => $flightData['arr_city'],
+                        'tz_dep' => $tz_dep,
+                        'tz_arr' => $tz_arr,
                     ];
 
                     // Añadir encabezado Server-Timing
@@ -1115,8 +1124,8 @@ function mi_plugin_fetch_flight_data($request)
                         $flightData['airline_icao'] ?? '',
                         $airportName ?? '',
                         $airline_name ?? '',
-                        $flightData['dep_time_utc'] ?? '',
-                        $flightData['arr_time_utc'] ?? '',
+                        $flightData['dep_estimated'] ?? $flightData['dep_time'],
+                        $flightData['arr_estimated'] ?? $flightData['arr_time'],
                         $flightData['dep_iata'] ?? '',
                         $flightData['dep_icao'] ?? '',
                         $dep_city ?? '',
@@ -1135,8 +1144,8 @@ function mi_plugin_fetch_flight_data($request)
                     $formattedFlights[] = [
                         'flight' => !empty($flightData['flight_iata']) ? $flightData['flight_iata'] : $flightData['flight_icao'],
                         'airport' => $airportName,
-                        'depart' => $flightData['dep_time_utc'] ?? '',
-                        'arrive' => $flightData['arr_time_utc'] ?? '',
+                        'depart' => $flightData['dep_estimated'] ?? $flightData['dep_time'],
+                        'arrive' => $flightData['arr_estimated'] ?? $flightData['arr_time'],
                         'airline_name' => $airline_name,
                         'airline_code' => !empty($flightData['airline_iata']) ? $flightData['airline_iata'] : $flightData['airline_icao'],
                         'arrAirport' => $airports[$flightData['arr_iata']]['name'] ?? '', // Access from $airports

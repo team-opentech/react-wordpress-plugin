@@ -83,8 +83,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
               : item.arrAirport_country,
           city: type === "arrivals" ? item.dep_city : item.arr_city,
           airline_name: `${item.airline_name} (${item.airline_code})`,
-          depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
-          arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
+          depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
+          arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
           status: item.status,
           dep_code: item.dep_code,
           arr_code: item.arr_code,
@@ -107,8 +107,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
             type === "arrivals"
               ? item.depAirport_country
               : item.arrAirport_country,
-          depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
-          arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
+          depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
+          arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
           status: item.status,
           dep_code: item.dep_code,
           arr_code: item.arr_code,
@@ -564,8 +564,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
             city: type === "arrivals" ? item.dep_city : item.arr_city,
             airline_name: `${item.airline_name} (${item.airline_code})`,
             status: item.status,
-            depart: moment.tz(item.depart, item.tz_dep).format("hh:mm z"),
-            arrive: moment.tz(item.arrive, item.tz_arr).format("hh:mm z"),
+            depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
+            arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
           }));
           // Concatena los nuevos datos con los existentes
           setRowData((prevRowData) => [...prevRowData, ...formattedData]);

@@ -8,6 +8,7 @@ import {
   getElapsedTime,
   getRemainingTime,
 } from "./helper.js";
+import moment, { min } from "moment-timezone";
 
 const FlightCard = ({ data, loadingData }) => {
   // console.log("FlightCard data", data);
@@ -98,21 +99,24 @@ const FlightCard = ({ data, loadingData }) => {
                   {data?.depAirportName || ""} - {data?.depIata || ""}
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
-                  {formatDate(parseInt(data?.depTimeTs || null))}
+                  {/* {formatDate(parseInt(data?.depTimeTs || null))} */}
+                  {moment.tz(data?.depTimeTs, data?.tz_dep).format("HH:mm z") || null}
                 </p>
-                {data?.depDelayed === null ? (
+                {/* {data?.depDelayed === null ? (
                   <p className="text-sm text-[#7794B0] capitalize">
-                    {formatTimeWithAMPM(parseInt(data?.depTimeTs || null))}{" "}
-                    {/* <span className="text-customGreen">(On time)</span> */}
+                    {/* {formatTimeWithAMPM(parseInt(data?.depTimeTs || null))}{" "} }
+                    {moment.tz(data?.depTimeTs, data?.tz_dep).format("HH:mm z") || null}
+                    {/* <span className="text-customGreen">(On time)</span> }
                   </p>
                 ) : (
                   <p className="text-sm text-[#7794B0] capitalize">
-                    {formatTimeWithAMPM(parseInt(data?.depTimeTs || null))}{" "}
+                    {/* {formatTimeWithAMPM(parseInt(data?.depTimeTs || null))}{" "} }
+                    {moment.tz(data?.depTimeTs, data?.tz_dep).format("HH:mm z") || null}
                     {/* <span className="text-customGreen">
                       ({data.depDelayed} minutes later)
-                    </span> */}
+                    </span> }
                   </p>
-                )}
+                )} */}
                 <p className="font-light text-sm text-[#7794B0] pt-1">
                   left{" "}
                   <span className="font-semibold text-base text-[#013877]">
@@ -137,21 +141,24 @@ const FlightCard = ({ data, loadingData }) => {
                   {data?.arrAirportName || ""} - {data?.arrIata || ""}
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
-                  {formatDate(parseInt(data?.arrTimeTs || null))}
+                  {/* {formatDate(parseInt(data?.arrTimeTs || null))} */}
+                  {moment.tz(data?.arrTimeTs, data?.tz_arr).format("HH:mm z") || null}
                 </p>
-                {data?.arrDelayed === null ? (
+                {/* {data?.arrDelayed === null ? (
                   <p className="text-sm text-[#7794B0] capitalize">
-                    {formatTimeWithAMPM(parseInt(data?.arrTimeTs || null))}{" "}
-                    {/* <span className="text-orange-600">(On time)</span> */}
+                    {/* {formatTimeWithAMPM(parseInt(data?.arrTimeTs || null))}{" "} }
+                    {moment.tz(data?.arrTimeTs, data?.tz_arr).format("HH:mm z") || null}
+                    {/* <span className="text-orange-600">(On time)</span> }
                   </p>
                 ) : (
                   <p className="text-sm text-[#7794B0] capitalize">
-                    {formatTimeWithAMPM(parseInt(data?.arrTimeTs || null))}{" "}
+                    {/* {formatTimeWithAMPM(parseInt(data?.arrTimeTs || null))}{" "} }
+                    {moment.tz(data?.arrTimeTs, data?.tz_arr).format("HH:mm z") || null}
                     {/* <span className="text-orange-600">
                       ({data.arrDelayed} minutes later)
-                    </span> */}
+                    </span> }
                   </p>
-                )}
+                )} */}
                 <p className="font-light text-sm text-[#7794B0] pt-1">
                   Arriving at{" "}
                   <span className="font-semibold text-base text-[#013877]">
