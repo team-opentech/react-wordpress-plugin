@@ -661,7 +661,107 @@ add_action('rest_api_init', function () {
         ),
         'permission_callback' => '__return_true'
     ));
+    register_rest_route('mi-plugin/v1', '/local-time', array(
+        'methods' => 'GET',
+        'callback' => 'monitor_flight_get_local_time',
+        'permission_callback' => '__return_true', // Ajustar según los permisos que desees
+        'args' => array(
+            'type' => array(
+                'required' => true,
+                'validate_callback' => function($param, $request, $key) {
+                    return in_array($param, ['departures', 'arrivals', 'flight']);
+                }
+            ),
+            'airportCode' => array(
+                'required' => true,
+                'validate_callback' => function($param, $request, $key) {
+                    return is_string($param) && !empty($param);
+                }
+            ),
+            'airp_codeType' => array(
+                'required' => true,
+                'validate_callback' => function($param, $request, $key) {
+                    return in_array($param, array('iata', 'icao'));
+                }
+            ),
+        ),
+    ));
 });
+
+function monitor_flight_get_local_time($request) {
+    // Obtener los parámetros de la solicitud
+    $type = $request->get_param('type');
+    $airport_code = $request->get_param('airportCode');
+    $airp_codeType = $request->get_param('airp_codeType');
+
+    // Verificar que los parámetros necesarios se han proporcionado
+    if (!$type || !$airport_code || !$airp_codeType) {
+        return new WP_Error('missing_parameters', 'Missing required query parameters', array('status' => 400));
+    }
+
+    // Si el tipo es "flight", no se necesita obtener la hora local
+    if ($type === 'flight') {
+        return new WP_REST_Response(array(
+            'message' => 'Flight type does not require local time retrieval',
+        ), 200);
+    }
+
+    global $wpdb;
+
+    // Determinar la columna a utilizar para la búsqueda según el tipo de código
+    $column = ($airp_codeType === 'icao') ? 'icao_code' : 'iata_code';
+
+    // Buscar el aeropuerto en la base de datos
+    $airport = $wpdb->get_row($wpdb->prepare(
+        "SELECT latitude, longitude FROM {$wpdb->prefix}airports WHERE $column = %s",
+        $airport_code
+    ));
+
+    if (!$airport) {
+        return new WP_Error('no_airport_found', 'No airport found for the given code', array('status' => 404));
+    }
+
+    $latitude = $airport->latitude;
+    $longitude = $airport->longitude;
+
+    // Aquí puedes elegir la API que prefieras usar
+    $api_key = 'JJZRH6UUL8VT'; // Reemplaza con tu clave de API real
+
+    // Ejemplo con Google Time Zone API
+    $timestamp = time();
+    // $url = "https://maps.googleapis.com/maps/api/timezone/json?location={$latitude},{$longitude}&timestamp={$timestamp}&key={$api_key}";
+
+    // Ejemplo con TimeZoneDB API
+    $url = "http://api.timezonedb.com/v2.1/get-time-zone?key={$api_key}&format=json&by=position&lat={$latitude}&lng={$longitude}";
+
+    // Realizar la solicitud a la API externa
+    $response = wp_remote_get($url);
+
+    if (is_wp_error($response)) {
+        return new WP_Error('api_error', 'Failed to retrieve data from the API', array('status' => 500));
+    }
+
+    $data = json_decode(wp_remote_retrieve_body($response), true);
+
+    // Manejo de la respuesta de la API
+    if (isset($data['timeZoneId'])) {
+        // Para Google Time Zone API
+        $timeZoneId = $data['timeZoneId'];
+        $local_time = new DateTime("now", new DateTimeZone($timeZoneId));
+    } elseif (isset($data['formatted'])) {
+        // Para TimeZoneDB API
+        $local_time = new DateTime($data['formatted']);
+    } else {
+        return new WP_Error('invalid_api_response', 'The API response did not contain valid time data', array('status' => 500));
+    }
+
+    return array(
+        'type' => $type,
+        'airport_code' => $airport_code,
+        'local_time' => $local_time->format('Y-m-d H:i:s'),
+        'timezone' => $timeZoneId ?? $data['zoneName'] ?? null,
+    );
+}
 
 function mi_plugin_fetch_flight_data($request)
 {
