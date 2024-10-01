@@ -11,6 +11,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
   const [gridApi, setGridApi] = useState(null);
   const [gridColumnApi, setGridColumnApi] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [globalData, setGlobalData] = useState(data);
   const [rowData, setRowData] = useState([]);
   let [offset, setOffset] = useState(0);
   const [dataFromApi, setdataFromApi] = useState(true);
@@ -201,10 +202,6 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         const rangeEndMoment = localTimeMoment
           .clone()
           .add(time_range, "minutes");
-
-        console.log("Local Time Moment:", localTimeMoment.format("HH:mm:ss"));
-        console.log("Range End Moment:", rangeEndMoment.format("HH:mm:ss"));
-
         // Filter the flight data
         filteredData = data.filter((item) => {
           // Parse the flight time
@@ -233,62 +230,34 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
             );
           }
         });
-
-        console.log("Filtered Data:", filteredData); // Log the filtered data
       }
-
-      // Format the filtered data for display
-      if (window.innerWidth > 768) {
-        // Desktop view formatting
-        const formattedData = filteredData.map((item) => ({
-          flight: item.flight.toLowerCase(),
-          airport: `${item.airport} (${
-            type === "arrivals" ? item.dep_code : item.arr_code
-          })`,
-          airport_city:
-            type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
-          airport_state:
-            type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
-          airport_country:
-            type === "arrivals"
-              ? item.depAirport_country
-              : item.arrAirport_country,
-          city: type === "arrivals" ? item.dep_city : item.arr_city,
-          airline_name: `${item.airline_name} (${item.airline_code})`,
-          depart: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
-          arrive: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
-          status: item.status,
-          dep_code: item.dep_code,
-          arr_code: item.arr_code,
-          airline_code: item.airline_code,
-        }));
-        setRowData(formattedData);
-      } else {
-        // Mobile view formatting
-        const formattedData = filteredData.map((item) => ({
-          flight: item.flight.toLowerCase(),
-          city:
-            type === "arrivals"
-              ? `${item.dep_city}/(${item.dep_code})`
-              : `${item.arr_city}/(${item.arr_code})`,
-          airline_name: `${item.airline_name} (${item.airline_code})`,
-          airport_city:
-            type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
-          airport_state:
-            type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
-          airport_country:
-            type === "arrivals"
-              ? item.depAirport_country
-              : item.arrAirport_country,
-          depart: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
-          arrive: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
-          status: item.status,
-          dep_code: item.dep_code,
-          arr_code: item.arr_code,
-          airline_code: item.airline_code,
-        }));
-        setRowData(formattedData);
-      }
+      console.log("Filtered Data:", filteredData);
+      const formattedData = filteredData.map((item) => ({
+        flight: item.flight.toLowerCase(),
+        city:
+          type === "arrivals"
+            ? `${item.dep_city}/(${item.dep_code})`
+            : `${item.arr_city}/(${item.arr_code})`,
+        airline_name: `${item.airline_name} (${item.airline_code})`,
+        airport_city:
+          type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
+        airport_state:
+          type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
+        airport_country:
+          type === "arrivals"
+            ? item.depAirport_country
+            : item.arrAirport_country,
+        depart: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
+        arrive: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
+        dep_date: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD"), // Format date only
+        arr_date: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD"), // Format date only
+        airline_name: `${item.airline_name} (${item.airline_code})`,
+        status: item.status,
+        dep_code: item.dep_code,
+        arr_code: item.arr_code,
+        airline_code: item.airline_code,
+      }));
+      setRowData(formattedData);
     }
   }, [data, type]);
 
@@ -471,8 +440,48 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
       },
     },
     {
+       headerName: "Depart Date",
+      field: "dep_date",
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
+      minWidth: 120,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
+    },
+    {
       headerName: "Arrive",
       field: "arrive",
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
+      minWidth: 120,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
+    },
+        {
+       headerName: "Arrival Date",
+      field: "arr_date",
       cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
       minWidth: 120,
       headerComponentParams: {
@@ -658,10 +667,50 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           "</div>",
       },
     },
+        {
+       headerName: "Depart Date",
+      field: "dep_date",
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
+      minWidth: 120,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
+    },
     {
       headerName: "Arrive",
       field: "arrive",
       cellStyle: { wordBreak: "break-all", flexWrap: "wrap" },
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
+    },
+        {
+       headerName: "Arrive Date",
+      field: "arr_date",
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
+      minWidth: 120,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -715,7 +764,56 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           throw new Error("Network response was not ok");
         })
         .then((data) => {
-          const formattedData = data.map((item) => ({
+          setGlobalData((prevData) => [...prevData, ...data]);
+          if (data && data.length > 0) {
+            let filteredData = globalData;
+            if (time_range && time_range > 0) {
+              // Convert localDateTime to a moment object
+              const localTimeMoment = moment(
+                localDateTime,
+                "YYYY-MM-DD HH:mm:ss"
+              );
+
+              // Calculate the end of the time range
+              const rangeEndMoment = localTimeMoment
+                .clone()
+                .add(time_range, "minutes");
+
+              // Filter the flight data
+              filteredData = globalData.filter((item) => {
+                // Parse the flight time
+                const flightTime =
+                  type === "arrivals" ? item.arrive : item.depart;
+                const flightTimeMoment = moment(
+                  flightTime,
+                  "YYYY-MM-DD HH:mm:ss"
+                );
+
+                console.log(
+                  "Flight Time Moment:",
+                  flightTimeMoment.format("HH:mm:ss")
+                );
+
+                // Case 1: The rangeEndMoment is after the localTimeMoment (same-day comparison)
+                if (rangeEndMoment.isAfter(localTimeMoment)) {
+                  return flightTimeMoment.isBetween(
+                    localTimeMoment,
+                    rangeEndMoment,
+                    null,
+                    "[]"
+                  );
+                }
+                // Case 2: The rangeEndMoment crosses over midnight (next-day comparison)
+                else {
+                  return (
+                    flightTimeMoment.isAfter(localTimeMoment) || // Flights later the same day
+                    flightTimeMoment.isBefore(rangeEndMoment) // Flights early the next day
+                  );
+                }
+              });
+            }
+          }
+          const formattedData = filteredData.map((item) => ({
             flight: item.flight,
             airport: `${item.airport} (${
               type === "arrivals" ? item.dep_code : item.arr_code
@@ -738,6 +836,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
             status: item.status,
             depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
             arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
+            dep_date: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD"), // Format date only
+            arr_date: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD"), // Format date only
           }));
           // Concatena los nuevos datos con los existentes
           setRowData((prevRowData) => [...prevRowData, ...formattedData]);
