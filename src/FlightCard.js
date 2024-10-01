@@ -100,7 +100,7 @@ const FlightCard = ({ data, loadingData }) => {
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
                   {/* {formatDate(parseInt(data?.depTimeTs || null))} */}
-                  {moment.tz(data?.depTimeTs, data?.tz_dep).format("HH:mm z") || null}
+                  {moment(data?.depTimeTs).format("HH:mm z") || null}
                 </p>
                 {/* {data?.depDelayed === null ? (
                   <p className="text-sm text-[#7794B0] capitalize">
@@ -142,7 +142,7 @@ const FlightCard = ({ data, loadingData }) => {
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
                   {/* {formatDate(parseInt(data?.arrTimeTs || null))} */}
-                  {moment.tz(data?.arrTimeTs, data?.tz_arr).format("HH:mm z") || null}
+                  {moment(data?.arrTimeTs).format("HH:mm z") || null}
                 </p>
                 {/* {data?.arrDelayed === null ? (
                   <p className="text-sm text-[#7794B0] capitalize">

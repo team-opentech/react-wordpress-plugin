@@ -19,9 +19,11 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
   const [params, setParams] = useState(queryParams);
   const [nextClicked, setNextClicked] = useState(false);
   const [localTime, setLocalTime] = useState(null); // Estado para almacenar la hora local del aeropuerto
+  const [localDate, setLocalDate] = useState(null); // Estado para almacenar la fecha local del aeropuerto
+  const [incrementedTime, setIncrementedTime] = useState(null); // Estado para la hora incrementada
+  const [localDateTime, setLocalDateTime] = useState(null);
+  const time_range = queryParams.get("time_range");
   const baseUrl = window.location.origin;
-  console.log("Query Params", queryParams);
-  console.log("Local time 1:", localTime);
 
   const fetchLocalTime = () => {
     const localTimeUrl = `${baseUrl}/wp-json/mi-plugin/v1/local-time?${queryParams}`;
@@ -33,8 +35,14 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         return response.json();
       })
       .then((data) => {
-        setLocalTime(data.local_time); // Guardar la hora local obtenida
-        console.log("Local time 2:", data);
+        const localDateTime = data.local_time; // Store the full datetime string
+        const localDate = localDateTime.split(" ")[0]; // Extract only the date part
+        const localTime = localDateTime.split(" ")[1]; // Extract only the time part
+        setLocalTime(localTime); // Set only the time part if needed elsewhere
+        setLocalDate(localDate); // Set only the date part if needed elsewhere
+        setIncrementedTime(localTime); // Initialize the incremented time with only the time
+        setLocalDateTime(localDateTime); // Store the full datetime string in a new state variable
+        console.log("Local time 2:", localDateTime);
       })
       .catch((error) => {
         console.error("Error fetching local time:", error);
@@ -46,6 +54,41 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
       fetchLocalTime(); // Solo llamar si el tipo no es "flight"
     }
   }, []);
+
+  useEffect(() => {
+    if (localTime) {
+      const intervalId = setInterval(() => {
+        setIncrementedTime((prevTime) => {
+          if (!prevTime) return prevTime;
+
+          // Split the time part into hours, minutes, and seconds
+          let [hours, minutes, seconds] = prevTime.split(":").map(Number);
+
+          // Increment the seconds
+          seconds += 1;
+          if (seconds >= 60) {
+            seconds = 0;
+            minutes += 1;
+          }
+          if (minutes >= 60) {
+            minutes = 0;
+            hours += 1;
+          }
+          if (hours >= 24) {
+            hours = 0;
+          }
+
+          // Return the new time string with the updated time
+          return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+            2,
+            "0"
+          )}:${String(seconds).padStart(2, "0")}`;
+        });
+      }, 1000);
+
+      return () => clearInterval(intervalId);
+    }
+  }, [localTime]);
 
   const handleNextClick = () => {
     if (!loading && !lastPage) {
@@ -91,10 +134,113 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     type: window.innerWidth > 768 ? "fitGridWidth" : "fitCellContents",
   };
 
+  // useEffect(() => {
+  //   if (data && data.length > 0) {
+  //     if (window.innerWidth > 768) {
+  //       const formattedData = data.map((item) => ({
+  //         flight: item.flight.toLowerCase(),
+  //         airport: `${item.airport} (${
+  //           type === "arrivals" ? item.dep_code : item.arr_code
+  //         })`,
+  //         airport_city:
+  //           type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
+  //         airport_state:
+  //           type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
+  //         airport_country:
+  //           type === "arrivals"
+  //             ? item.depAirport_country
+  //             : item.arrAirport_country,
+  //         city: type === "arrivals" ? item.dep_city : item.arr_city,
+  //         airline_name: `${item.airline_name} (${item.airline_code})`,
+  //         depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
+  //         arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
+  //         status: item.status,
+  //         dep_code: item.dep_code,
+  //         arr_code: item.arr_code,
+  //         airline_code: item.airline_code,
+  //       }));
+  //       setRowData(formattedData);
+  //     } else {
+  //       const formattedData = data.map((item) => ({
+  //         flight: item.flight.toLowerCase(),
+  //         city:
+  //           type === "arrivals"
+  //             ? `${item.dep_city}/(${item.dep_code})`
+  //             : `${item.arr_city}/(${item.arr_code})`,
+  //         airline_name: `${item.airline_name} (${item.airline_code})`,
+  //         airport_city:
+  //           type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
+  //         airport_state:
+  //           type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
+  //         airport_country:
+  //           type === "arrivals"
+  //             ? item.depAirport_country
+  //             : item.arrAirport_country,
+  //         depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
+  //         arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
+  //         status: item.status,
+  //         dep_code: item.dep_code,
+  //         arr_code: item.arr_code,
+  //         airline_code: item.airline_code,
+  //       }));
+  //       setRowData(formattedData);
+  //     }
+  //   } else {
+  //     setRowData([]);
+  //   }
+  // }, [data, type]);
+
   useEffect(() => {
     if (data && data.length > 0) {
+      let filteredData = data;
+      if (time_range && time_range > 0) {
+        // Convert localDateTime to a moment object
+        const localTimeMoment = moment(localDateTime, "YYYY-MM-DD HH:mm:ss");
+
+        // Calculate the end of the time range
+        const rangeEndMoment = localTimeMoment
+          .clone()
+          .add(time_range, "minutes");
+
+        console.log("Local Time Moment:", localTimeMoment.format("HH:mm:ss"));
+        console.log("Range End Moment:", rangeEndMoment.format("HH:mm:ss"));
+
+        // Filter the flight data
+        filteredData = data.filter((item) => {
+          // Parse the flight time
+          const flightTime = type === "arrivals" ? item.arrive : item.depart;
+          const flightTimeMoment = moment(flightTime, "YYYY-MM-DD HH:mm:ss");
+
+          console.log(
+            "Flight Time Moment:",
+            flightTimeMoment.format("HH:mm:ss")
+          );
+
+          // Case 1: The rangeEndMoment is after the localTimeMoment (same-day comparison)
+          if (rangeEndMoment.isAfter(localTimeMoment)) {
+            return flightTimeMoment.isBetween(
+              localTimeMoment,
+              rangeEndMoment,
+              null,
+              "[]"
+            );
+          }
+          // Case 2: The rangeEndMoment crosses over midnight (next-day comparison)
+          else {
+            return (
+              flightTimeMoment.isAfter(localTimeMoment) || // Flights later the same day
+              flightTimeMoment.isBefore(rangeEndMoment) // Flights early the next day
+            );
+          }
+        });
+
+        console.log("Filtered Data:", filteredData); // Log the filtered data
+      }
+
+      // Format the filtered data for display
       if (window.innerWidth > 768) {
-        const formattedData = data.map((item) => ({
+        // Desktop view formatting
+        const formattedData = filteredData.map((item) => ({
           flight: item.flight.toLowerCase(),
           airport: `${item.airport} (${
             type === "arrivals" ? item.dep_code : item.arr_code
@@ -109,8 +255,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
               : item.arrAirport_country,
           city: type === "arrivals" ? item.dep_city : item.arr_city,
           airline_name: `${item.airline_name} (${item.airline_code})`,
-          depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
-          arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
+          depart: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
+          arrive: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
           status: item.status,
           dep_code: item.dep_code,
           arr_code: item.arr_code,
@@ -118,7 +264,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         }));
         setRowData(formattedData);
       } else {
-        const formattedData = data.map((item) => ({
+        // Mobile view formatting
+        const formattedData = filteredData.map((item) => ({
           flight: item.flight.toLowerCase(),
           city:
             type === "arrivals"
@@ -133,8 +280,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
             type === "arrivals"
               ? item.depAirport_country
               : item.arrAirport_country,
-          depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
-          arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
+          depart: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
+          arrive: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
           status: item.status,
           dep_code: item.dep_code,
           arr_code: item.arr_code,
@@ -142,8 +289,6 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         }));
         setRowData(formattedData);
       }
-    } else {
-      setRowData([]);
     }
   }, [data, type]);
 
@@ -180,20 +325,21 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
       <div className="flex flex-wrap h-auto w-full text-white bg-[#013877] items-center justify-center py-[1%] uppercase space-x-4">
         {status && <StatusIcon />}
         {!status && <ScheduledIcon />}
-        <h2 className="text-white font-semibold font-sans">
-          {!status
-            ? `${
-                type === "arrivals" && !status
-                  ? "Arrival schedule"
-                  : "Departures schedule"
-              }`
-            : ""}{" "}
-          {status ? `${status} flights` : ""}
-        </h2>
-        <br/>
-        <h2 className="text-white font-bold font-sans">
-          {airport} {localTime ? `(${localTime})` : ""}{" "}
-        </h2>
+        <div classNAme="flex flex-col flex-wrap justify-center">
+          <h2 className="flex text-white font-semibold font-sans">
+            {!status
+              ? `${
+                  type === "arrivals" && !status
+                    ? "Arrival schedule"
+                    : "Departures schedule"
+                }`
+              : ""}
+            {status ? `${status} flights` : ""} {airport}
+          </h2>
+          <h2 className="flex text-white font-bold font-sans mt-2">
+            {incrementedTime ? `Local Time: ${incrementedTime}` : ""}
+          </h2>
+        </div>
       </div>
     );
   };

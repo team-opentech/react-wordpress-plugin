@@ -13,6 +13,7 @@ document.querySelectorAll(".react-app-container").forEach((container) => {
   const airlineCode = container.getAttribute("data-airline") || "";
   const airl_codeType = container.getAttribute("data-airl-codetype") || "";
   const status = container.getAttribute("data-status") || "";
+  const time_range = container.getAttribute("data-time-range") || "";
 
   // const baseUrl = window.location.origin;
   let queryParams = new URLSearchParams({
@@ -37,13 +38,13 @@ document.querySelectorAll(".react-app-container").forEach((container) => {
     queryParams.append("airl_codeType", airl_codeType);
   }
   if (status !== "") queryParams.append("status", status);
+  if (time_range !== "") queryParams.append("time_range", time_range);
 
   const root = ReactDOM.createRoot(container); // Usar createRoot
   root.render(
     <App
       type={type}
       size={size}
-      flight={flight}
       queryParams={queryParams}
     />
   );

@@ -3,7 +3,7 @@ import TablaAGGrid from "./TablaAGGrid";
 import FlightInfo from "./FlightInfo"; // Asegúrate de tener este componente.
 import "./style.css";
 
-const App = ({ type, size, flight, queryParams }) => {
+const App = ({ type, size, queryParams }) => {
   const [data, setData] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState(null);
@@ -54,7 +54,11 @@ const App = ({ type, size, flight, queryParams }) => {
       const [pageLoad] = performance.getEntriesByType("navigation");
       if (pageLoad) {
         setPageLoadTime(pageLoad.loadEventEnd - pageLoad.startTime);
-        console.log("Page Load Time:", pageLoad.loadEventEnd - pageLoad.startTime, "ms");
+        console.log(
+          "Page Load Time:",
+          pageLoad.loadEventEnd - pageLoad.startTime,
+          "ms"
+        );
       }
     };
 
@@ -69,14 +73,17 @@ const App = ({ type, size, flight, queryParams }) => {
   return (
     <div className="main-container">
       {type === "flight" && (
-        <FlightInfo data={data.length === 0 ? null : data} loadingData={loadingData} />
+        <FlightInfo
+          data={data.length === 0 ? null : data}
+          loadingData={loadingData}
+        />
       )}
       {type !== "flight" && (
         <TablaAGGrid
           loadingData={loadingData}
           type={type}
           size={parseInt(size, 10)}
-          data={data.length === 0 ? null : data}
+          data={data && data.length ? data : null}
           queryParams={queryParams}
         />
       )}

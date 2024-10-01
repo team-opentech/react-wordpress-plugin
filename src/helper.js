@@ -1,8 +1,10 @@
 import { DateTime } from "luxon";
+import moment, { min } from "moment-timezone";
+import { unix } from "moment";
 
 export function getElapsedTime(flightInfo) {
   if (!flightInfo) return;
-  const departureTime = Number(flightInfo.depTimeTs);
+  const departureTime = Number(moment(flightInfo.depTimeTs).unix());
   if (isNaN(departureTime)) throw new Error("Invalid departure timestamp.");
 
   const currentTime = DateTime.now().toSeconds();
@@ -21,7 +23,7 @@ export function getRemainingTime(flightInfo) {
 
 export function getRemainingTimeToDepart(flightInfo) {
   if (!flightInfo) return;
-  const departureTime = Number(flightInfo.depTimeTs);
+  const departureTime = Number(moment(flightInfo.depTimeTs).unix());
   if (isNaN(departureTime)) throw new Error("Invalid departure timestamp.");
 
   const currentTime = DateTime.now().toSeconds();

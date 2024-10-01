@@ -668,19 +668,19 @@ add_action('rest_api_init', function () {
         'args' => array(
             'type' => array(
                 'required' => true,
-                'validate_callback' => function($param, $request, $key) {
+                'validate_callback' => function ($param, $request, $key) {
                     return in_array($param, ['departures', 'arrivals', 'flight']);
                 }
             ),
             'airportCode' => array(
                 'required' => true,
-                'validate_callback' => function($param, $request, $key) {
+                'validate_callback' => function ($param, $request, $key) {
                     return is_string($param) && !empty($param);
                 }
             ),
             'airp_codeType' => array(
                 'required' => true,
-                'validate_callback' => function($param, $request, $key) {
+                'validate_callback' => function ($param, $request, $key) {
                     return in_array($param, array('iata', 'icao'));
                 }
             ),
@@ -688,7 +688,8 @@ add_action('rest_api_init', function () {
     ));
 });
 
-function monitor_flight_get_local_time($request) {
+function monitor_flight_get_local_time($request)
+{
     // Obtener los parámetros de la solicitud
     $type = $request->get_param('type');
     $airport_code = $request->get_param('airportCode');
@@ -1321,15 +1322,10 @@ function mi_plugin_fetch_flight_data($request)
                     $timing_header = rtrim($timing_header, ', ');
                     header($timing_header);
 
-                    // return new WP_REST_Response($formattedFlights, 200);
+                    return new WP_REST_Response($formattedFlights, 200);
                 } else {
                     return new WP_Error('api_fetch_error', 'Error en guardar la informacion en la tabla schedule_details', ['status' => 404]);
                 }
-            }
-            if (!empty($formattedFlights)) {
-                return new WP_REST_Response($formattedFlights, 200);
-            } else {
-                return new WP_Error('api_fetch_error', 'Error en guardar la informacion en la tabla schedule_details', ['status' => 404]);
             }
 
         default:
@@ -1370,6 +1366,7 @@ function generar_shortcode_react_app($atts, $content, $tag)
         'status' => '',
         'flight_iata' => '',
         'flight_icao' => '',
+        'time_range' => '',
     ], $atts);
 
     // Validación básica
@@ -1388,10 +1385,11 @@ function generar_shortcode_react_app($atts, $content, $tag)
     $flightCode = !empty($atts['flight_iata']) ? $atts['flight_iata'] : $atts['flight_icao'];
     $flight_codeType = !empty($atts['flight_iata']) ? 'iata' : 'icao'; //Definir el tipo de codigo del vuelo, iata o icao
     $status = $atts['status'];
+    $time_range = $atts['time_range'];
 
     // Recuperar los valores guardados en los ajustes del plugin
 
-    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}'></div>";
+    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}' data-time-range='{$time_range}'></div>";
 }
 
 add_shortcode('arrivals_app', 'generar_shortcode_react_app');
