@@ -652,6 +652,7 @@ add_action('rest_api_init', function () {
                 }
             ),
             'status' => array('required' => false),
+            'terminal' => array('required' => false),
             'offset_value' => array('required' => false),
         ),
         'permission_callback' => '__return_true'
@@ -683,7 +684,8 @@ add_action('rest_api_init', function () {
     ));
 });
 
-function monitor_flight_get_local_time($request) {
+function monitor_flight_get_local_time($request)
+{
     // Get parameters
     $type = $request->get_param('type');
     $airport_code = $request->get_param('airportCode');
@@ -777,6 +779,7 @@ function mi_plugin_fetch_flight_data($request)
     $airlineCode = $request->get_param('airlineCode');
     $airl_codeType = $request->get_param('airl_codeType');
     $status = $request->get_param('status');
+    $terminal = $request->get_param('terminal');
     $offset = $request->get_param('offset_value');
 
     // Tablas de la base de datos
@@ -982,6 +985,7 @@ function mi_plugin_fetch_flight_data($request)
             $isDepartures = $type === 'departures';
             $scheduleType = $isDepartures ? 'departure' : 'arrival';
             $filter = !empty($status) ? $status : '';
+            $filter_terminal = !empty($terminal) ? $terminal : '';
 
             // Medición de tiempo de consulta a la base de datos
             $start_time_db = microtime(true);
@@ -1038,6 +1042,18 @@ function mi_plugin_fetch_flight_data($request)
                 if (!empty($filter)) {
                     $query .= " AND status = %s";
                     $params[] = $filter;
+                }
+
+                // Añadir filtro por terminal si está presente
+                if (!empty($filter_terminal)) {
+                    if ($type === 'departures') {
+                        // Check dep_terminal for departures
+                        $query .= " AND dep_terminal = %s";
+                    } elseif ($type === 'arrivals') {
+                        // Check arr_terminal for arrivals
+                        $query .= " AND arr_terminal = %s";
+                    }
+                    $params[] = $filter_terminal; // Add the terminal filter to the parameters
                 }
 
                 $flightDetails = $wpdb->get_results($wpdb->prepare($query, $params), ARRAY_A);
@@ -1242,7 +1258,7 @@ function mi_plugin_fetch_flight_data($request)
                     $tz_arr = $airports[$flightData['arr_iata']]['timezone'] ?? '';
 
                     $insert_data[] = $wpdb->prepare(
-                        "(%d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        "(%d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                         $schedule['id'],
                         $offset,
                         $flightData['flight_iata'] ?? '',
@@ -1258,6 +1274,8 @@ function mi_plugin_fetch_flight_data($request)
                         $dep_city ?? '',
                         $flightData['arr_iata'] ?? '',
                         $flightData['arr_icao'] ?? '',
+                        $arr_terminal['arr_terminal'] ?? '',
+                        $dep_terminal['dep_terminal'] ?? '',
                         $arr_city ?? '',
                         $tz_dep ?? '',
                         $tz_arr ?? '',
@@ -1268,6 +1286,16 @@ function mi_plugin_fetch_flight_data($request)
                     if (!empty($filter) && $flightData['status'] !== $filter) {
                         continue;
                     }
+                    // Terminal filter logic
+                    if (!empty($filter_terminal)) {
+                        if ($type === 'departures' && (!isset($flightData['dep_terminal']) || $flightData['dep_terminal'] !== $filter_terminal)) {
+                            continue;
+                        }
+                        if ($type === 'arrivals' && (!isset($flightData['arr_terminal']) || $flightData['arr_terminal'] !== $filter_terminal)) {
+                            continue;
+                        }
+                    }
+
                     $formattedFlights[] = [
                         'flight' => !empty($flightData['flight_iata']) ? $flightData['flight_iata'] : $flightData['flight_icao'],
                         'airport' => $airportName,
@@ -1295,14 +1323,15 @@ function mi_plugin_fetch_flight_data($request)
                 // Execute the batch insert
                 if (!empty($insert_data)) {
                     $query = "INSERT INTO {$wpdb->prefix}schedule_details 
-                (`schedule_id`, `offset_page`, `flight_iata`, `flight_icao`, `airline_iata`, 
-                 `airline_icao`, `airport`, `airline_name`, `depart`, `arrive`, `dep_iata`, 
-                 `dep_icao`, `dep_city`, `arr_iata`, `arr_icao`, `arr_city`, `tz_dep`, 
-                 `tz_arr`, `status`) 
-                VALUES " . implode(', ', $insert_data);
+                        (`schedule_id`, `offset_page`, `flight_iata`, `flight_icao`, `airline_iata`, 
+                         `airline_icao`, `airport`, `airline_name`, `depart`, `arrive`, `dep_iata`, 
+                         `dep_icao`, `dep_city`, `arr_iata`, `arr_icao`, `arr_city`, `tz_dep`, 
+                         `tz_arr`, `status`, `dep_terminal`, `arr_terminal`) 
+                        VALUES " . implode(', ', $insert_data);
 
                     $wpdb->query($query);
                 }
+
 
                 $end_time_save = microtime(true);
                 $timings['save'] = ($end_time_save - $start_time_save) * 1000; // tiempo en milisegundos
@@ -1361,6 +1390,7 @@ function generar_shortcode_react_app($atts, $content, $tag)
         'flight_iata' => '',
         'flight_icao' => '',
         'time_range' => '',
+        'terminal' => '' // New parameter for terminal filtering
     ], $atts);
 
     // Validación básica
@@ -1380,10 +1410,10 @@ function generar_shortcode_react_app($atts, $content, $tag)
     $flight_codeType = !empty($atts['flight_iata']) ? 'iata' : 'icao'; //Definir el tipo de codigo del vuelo, iata o icao
     $status = $atts['status'];
     $time_range = $atts['time_range'];
+    $terminal = $atts['terminal']; // Recuperar el valor del terminal
 
     // Recuperar los valores guardados en los ajustes del plugin
-
-    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}' data-time-range='{$time_range}'></div>";
+    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}' data-time-range='{$time_range}' data-terminal='{$terminal}'></div>";
 }
 
 add_shortcode('arrivals_app', 'generar_shortcode_react_app');
@@ -1447,6 +1477,7 @@ function mi_plugin_docs_page()
             <li><strong>airline_icao</strong>: Filtrar por código ICAO de la aerolínea. (opcional)</li>
             <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
             <li><strong>time_range</strong>: Establece un rango de tiempo en minutos para mostrar vuelos. Los vuelos que estén dentro del tiempo actual local del aeropuerto más el valor de `time_range` serán mostrados. (opcional)</li>
+            <li><strong>terminal</strong>: Filtrar por terminal de llegada. (opcional)</li> <!-- New terminal parameter -->
         </ul>
         <p>
             <strong>Ejemplos:</strong>
@@ -1456,6 +1487,7 @@ function mi_plugin_docs_page()
             <li><code>[arrivals_app icao_code="KMIA" size="15" status="cancelled"]</code></li>
             <li><code>[arrivals_app iata_code="JFK" size="5" time_range="60"]</code> - Muestra vuelos de llegada a JFK en el próximo rango de 60 minutos.</li>
             <li><code>[arrivals_app iata_code="LAX" size="10" airline_iata="AA" time_range="30"]</code> - Muestra vuelos de llegada de American Airlines (AA) en los próximos 30 minutos.</li>
+            <li><code>[arrivals_app iata_code="LAX" size="10" terminal="A"]</code> - Filtra por vuelos que lleguen a la terminal A de LAX.</li> <!-- New example using terminal -->
         </ul>
         </p>
 
@@ -1470,6 +1502,7 @@ function mi_plugin_docs_page()
             <li><strong>airline_icao</strong>: Filtrar por código ICAO de la aerolínea. (opcional)</li>
             <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
             <li><strong>time_range</strong>: Establece un rango de tiempo en minutos para mostrar vuelos. Los vuelos que estén dentro del tiempo actual local del aeropuerto más el valor de `time_range` serán mostrados. (opcional)</li>
+            <li><strong>terminal</strong>: Filtrar por terminal de salida. (opcional)</li> <!-- New terminal parameter -->
         </ul>
         <p>
             <strong>Ejemplos:</strong>
@@ -1479,6 +1512,7 @@ function mi_plugin_docs_page()
             <li><code>[departures_app icao_code="KMIA" size="15" status="landed"]</code></li>
             <li><code>[departures_app iata_code="LAX" size="10" time_range="45"]</code> - Muestra vuelos de salida de LAX en el próximo rango de 45 minutos.</li>
             <li><code>[departures_app iata_code="LAX" size="10" airline_iata="AA" time_range="60"]</code> - Muestra vuelos de salida de American Airlines (AA) en los próximos 60 minutos.</li>
+            <li><code>[departures_app iata_code="LAX" size="10" terminal="2"]</code> - Filtra por vuelos que salen de la terminal 2 de LAX.</li> <!-- New example using terminal -->
         </ul>
         </p>
 
@@ -1639,7 +1673,6 @@ function mi_plugin_docs_page()
     </script>
 <?php
 }
-
 
 
 // Hook para inicializar la configuración

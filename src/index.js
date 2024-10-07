@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom/client"; // Actualizado para usar createRoot
+import ReactDOM from "react-dom/client"; // Updated to use createRoot
 import App from "./App";
 import "./style.css";
 
@@ -14,17 +14,16 @@ document.querySelectorAll(".react-app-container").forEach((container) => {
   const airl_codeType = container.getAttribute("data-airl-codetype") || "";
   const status = container.getAttribute("data-status") || "";
   const time_range = container.getAttribute("data-time-range") || "";
+  const terminal = container.getAttribute("data-terminal") || ""; // New terminal parameter
 
-  // const baseUrl = window.location.origin;
+  // Initialize query parameters
   let queryParams = new URLSearchParams({
     type,
     size,
     offset_value: 0,
   });
-  // console.log("flight", flight);
-  // console.log("flight_codeType", flight_codeType);
-  // console.log("type", type);
 
+  // Append parameters conditionally
   if (airportCode !== "") {
     queryParams.append("airportCode", airportCode);
     queryParams.append("airp_codeType", airp_codeType);
@@ -39,8 +38,10 @@ document.querySelectorAll(".react-app-container").forEach((container) => {
   }
   if (status !== "") queryParams.append("status", status);
   if (time_range !== "") queryParams.append("time_range", time_range);
+  if (terminal !== "") queryParams.append("terminal", terminal); // Append terminal if available
 
-  const root = ReactDOM.createRoot(container); // Usar createRoot
+  // Initialize the React root and render the App component
+  const root = ReactDOM.createRoot(container); // Use createRoot
   root.render(
     <App
       type={type}
