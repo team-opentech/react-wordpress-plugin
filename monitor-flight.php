@@ -726,14 +726,15 @@ function monitor_flight_get_local_time($request)
     $longitude = $airport->longitude;
 
     // Aquí puedes elegir la API que prefieras usar
-    $api_key = 'JJZRH6UUL8VT'; // Reemplaza con tu clave de API real
+    $timezone_db_key = get_option('mi_plugin_timezone_db_key') || 'JJZRH6UUL8VT'; // Retrieve the stored TimezoneDB API key
+    // $timezone_db_key = 'JJZRH6UUL8VT'; // Reemplaza con tu clave de API real
 
     // Ejemplo con Google Time Zone API
     $timestamp = time();
-    // $url = "https://maps.googleapis.com/maps/api/timezone/json?location={$latitude},{$longitude}&timestamp={$timestamp}&key={$api_key}";
+    // $url = "https://maps.googleapis.com/maps/api/timezone/json?location={$latitude},{$longitude}&timestamp={$timestamp}&key={$timezone_db_key}";
 
     // Ejemplo con TimeZoneDB API
-    $url = "http://api.timezonedb.com/v2.1/get-time-zone?key={$api_key}&format=json&by=position&lat={$latitude}&lng={$longitude}";
+    $url = "http://api.timezonedb.com/v2.1/get-time-zone?key={$timezone_db_key}&format=json&by=position&lat={$latitude}&lng={$longitude}";
 
     // Realizar la solicitud a la API externa
     $response = wp_remote_get($url);
@@ -1429,7 +1430,15 @@ function mi_plugin_docs_page()
         <!-- Uso Básico -->
         <h3>Uso Básico</h3>
         <p>Para comenzar rápidamente con nuestro plugin, simplemente inserta uno de los siguientes shortcodes en cualquier página o entrada para mostrar información en tiempo real sobre vuelos.</p>
-
+        
+        <!-- New API Key section -->
+        <h3>Configuración de API</h3>
+        <p>El plugin requiere la API de AirLabs y la API de TimezoneDB para obtener la información de vuelos y las zonas horarias respectivamente.</p>
+        <ul>
+            <li><strong>API Key de AirLabs</strong>: Necesario para obtener información en tiempo real sobre los vuelos. Puedes conseguirlo en <a href="https://airlabs.co/">AirLabs</a>.</li>
+            <li><strong>API Key de TimezoneDB</strong>: Necesario para obtener la hora local del aeropuerto. Puedes obtenerlo en <a href="https://timezonedb.com/">TimezoneDB</a>.</li>
+        </ul>
+        
         <!-- Shortcodes -->
         <h3>Shortcodes Disponibles</h3>
 
@@ -1443,6 +1452,7 @@ function mi_plugin_docs_page()
             <li><strong>airline_iata</strong>: Filtrar por código IATA de la aerolínea. (opcional)</li>
             <li><strong>airline_icao</strong>: Filtrar por código ICAO de la aerolínea. (opcional)</li>
             <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
+            <li><strong>time_range</strong>: Establece un rango de tiempo en minutos para mostrar vuelos. Los vuelos que estén dentro del tiempo actual local del aeropuerto más el valor de `time_range` serán mostrados. (opcional)</li>
         </ul>
         <p>
             <strong>Ejemplos:</strong>
@@ -1450,6 +1460,8 @@ function mi_plugin_docs_page()
             <li><code>[arrivals_app iata_code="JFK" size="5"]</code></li>
             <li><code>[arrivals_app iata_code="LAX" size="10" airline_iata="AA"]</code></li>
             <li><code>[arrivals_app icao_code="KMIA" size="15" status="cancelled"]</code></li>
+            <li><code>[arrivals_app iata_code="JFK" size="5" time_range="60"]</code> - Muestra vuelos de llegada a JFK en el próximo rango de 60 minutos.</li>
+            <li><code>[arrivals_app iata_code="LAX" size="10" airline_iata="AA" time_range="30"]</code> - Muestra vuelos de llegada de American Airlines (AA) en los próximos 30 minutos.</li>
         </ul>
         </p>
 
@@ -1463,6 +1475,7 @@ function mi_plugin_docs_page()
             <li><strong>airline_iata</strong>: Filtrar por código IATA de la aerolínea. (opcional)</li>
             <li><strong>airline_icao</strong>: Filtrar por código ICAO de la aerolínea. (opcional)</li>
             <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
+            <li><strong>time_range</strong>: Establece un rango de tiempo en minutos para mostrar vuelos. Los vuelos que estén dentro del tiempo actual local del aeropuerto más el valor de `time_range` serán mostrados. (opcional)</li>
         </ul>
         <p>
             <strong>Ejemplos:</strong>
@@ -1470,6 +1483,8 @@ function mi_plugin_docs_page()
             <li><code>[departures_app iata_code="LAX" size="10"]</code></li>
             <li><code>[departures_app iata_code="LAX" size="10" airline_iata="AA"]</code></li>
             <li><code>[departures_app icao_code="KMIA" size="15" status="landed"]</code></li>
+            <li><code>[departures_app iata_code="LAX" size="10" time_range="45"]</code> - Muestra vuelos de salida de LAX en el próximo rango de 45 minutos.</li>
+            <li><code>[departures_app iata_code="LAX" size="10" airline_iata="AA" time_range="60"]</code> - Muestra vuelos de salida de American Airlines (AA) en los próximos 60 minutos.</li>
         </ul>
         </p>
 
@@ -1638,17 +1653,17 @@ add_action('admin_init', 'mi_plugin_settings_init');
 
 function mi_plugin_settings_init()
 {
-    // Registro de las configuraciones del plugin
+    // Existing settings registration
     register_setting('mi-plugin-settings-group', 'mi_plugin_api_key');
-    // register_setting('mi-plugin-settings-group', 'mi_plugin_path');
+    register_setting('mi-plugin-settings-group', 'mi_plugin_timezone_db_key'); // New API key for TimezoneDB
     register_setting('mi-plugin-settings-group', 'mi_plugin_data_expiration');
 
-    // Añadir sección de configuración
+    // Existing settings section
     add_settings_section('mi-plugin-settings-section', 'Ajustes del API', 'mi_plugin_settings_section_callback', 'mi-plugin-settings');
 
-    // Añadir campos de configuración
+    // Existing fields
     add_settings_field('mi-plugin-api-key', 'API Key de AirLabs', 'mi_plugin_api_key_callback', 'mi-plugin-settings', 'mi-plugin-settings-section');
-    // add_settings_field('mi-plugin-path', 'Path para Consultas', 'mi_plugin_path_callback', 'mi-plugin-settings', 'mi-plugin-settings-section');
+    add_settings_field('mi-plugin-timezone-db-key', 'API Key de TimezoneDB', 'mi_plugin_timezone_db_key_callback', 'mi-plugin-settings', 'mi-plugin-settings-section'); // New field for TimezoneDB
     add_settings_field('mi-plugin-data-expiration', 'Tiempo de Expiración de Datos (minutos)', 'mi_plugin_data_expiration_callback', 'mi-plugin-settings', 'mi-plugin-settings-section');
 }
 
@@ -1661,6 +1676,8 @@ function mi_plugin_api_key_callback()
 {
     $api_key = get_option('mi_plugin_api_key');
     echo "<input type='text' id='mi_plugin_api_key' name='mi_plugin_api_key' value='" . esc_attr($api_key) . "' />";
+    $timezone_db_key = get_option('mi_plugin_timezone_db_key');
+    echo "<input type='text' id='mi_plugin_timezone_db_key' name='mi_plugin_timezone_db_key' value='" . esc_attr($timezone_db_key) . "' />";
 }
 
 // function mi_plugin_path_callback() {

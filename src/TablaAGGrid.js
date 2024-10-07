@@ -43,7 +43,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         setLocalDate(localDate); // Set only the date part if needed elsewhere
         setIncrementedTime(localTime); // Initialize the incremented time with only the time
         setLocalDateTime(localDateTime); // Store the full datetime string in a new state variable
-        console.log("Local time 2:", localDateTime);
+        // console.log("Local time 2:", localDateTime);
       })
       .catch((error) => {
         console.error("Error fetching local time:", error);
@@ -208,10 +208,10 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           const flightTime = type === "arrivals" ? item.arrive : item.depart;
           const flightTimeMoment = moment(flightTime, "YYYY-MM-DD HH:mm:ss");
 
-          console.log(
-            "Flight Time Moment:",
-            flightTimeMoment.format("HH:mm:ss")
-          );
+          // console.log(
+          //   "Flight Time Moment:",
+          //   flightTimeMoment.format("HH:mm:ss")
+          // );
 
           // Case 1: The rangeEndMoment is after the localTimeMoment (same-day comparison)
           if (rangeEndMoment.isAfter(localTimeMoment)) {
@@ -231,7 +231,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           }
         });
       }
-      console.log("Filtered Data:", filteredData);
+      // console.log("Filtered Data:", filteredData);
       const formattedData = filteredData.map((item) => ({
         flight: item.flight.toLowerCase(),
         city:
@@ -789,10 +789,10 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
                   "YYYY-MM-DD HH:mm:ss"
                 );
 
-                console.log(
-                  "Flight Time Moment:",
-                  flightTimeMoment.format("HH:mm:ss")
-                );
+                // console.log(
+                //   "Flight Time Moment:",
+                //   flightTimeMoment.format("HH:mm:ss")
+                // );
 
                 // Case 1: The rangeEndMoment is after the localTimeMoment (same-day comparison)
                 if (rangeEndMoment.isAfter(localTimeMoment)) {
