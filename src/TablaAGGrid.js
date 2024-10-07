@@ -36,6 +36,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         return response.json();
       })
       .then((data) => {
+        console.log("Data Local Time: ", data);
         const localDateTime = data.local_time; // Store the full datetime string
         const localDate = localDateTime.split(" ")[0]; // Extract only the date part
         const localTime = localDateTime.split(" ")[1]; // Extract only the time part
@@ -43,7 +44,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         setLocalDate(localDate); // Set only the date part if needed elsewhere
         setIncrementedTime(localTime); // Initialize the incremented time with only the time
         setLocalDateTime(localDateTime); // Store the full datetime string in a new state variable
-        // console.log("Local time 2:", localDateTime);
+        console.log("Local time 2:", localDateTime);
       })
       .catch((error) => {
         console.error("Error fetching local time:", error);

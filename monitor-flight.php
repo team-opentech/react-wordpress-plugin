@@ -447,8 +447,8 @@ function mi_plugin_activate()
         state varchar(255) DEFAULT '',
         timezone varchar(40),
         country varchar(255) DEFAULT '',
-        latitude DECIMAL(9,6) NOT NULL DEFAULT '0.000000',
-        longitude DECIMAL(9,6) NOT NULL DEFAULT '0.000000',
+        latitude DECIMAL(15,10) NOT NULL DEFAULT '0.0000000000',
+        longitude DECIMAL(16,10) NOT NULL DEFAULT '0.0000000000',
         PRIMARY KEY (iata_code, icao_code)
     ) $charset_collate;";
     dbDelta($sql_airports);
@@ -525,17 +525,9 @@ function mi_plugin_activate()
     // Agregar columnas 'latitude' y 'longitude' a la tabla airports si no existen
     $airports_table = $wpdb->prefix . 'airports';
 
-    // Verificar si la columna 'latitude' existe
-    $latitude_column = $wpdb->get_results("SHOW COLUMNS FROM $airports_table LIKE 'latitude'");
-    if (empty($latitude_column)) {
-        $wpdb->query("ALTER TABLE $airports_table ADD COLUMN latitude DECIMAL(9,6) NOT NULL DEFAULT '0.000000' AFTER country");
-    }
+    $wpdb->query("ALTER TABLE $airports_table ADD COLUMN latitude DECIMAL(15,10) NOT NULL DEFAULT '0.0000000000' AFTER country");
 
-    // Verificar si la columna 'longitude' existe
-    $longitude_column = $wpdb->get_results("SHOW COLUMNS FROM $airports_table LIKE 'longitude'");
-    if (empty($longitude_column)) {
-        $wpdb->query("ALTER TABLE $airports_table ADD COLUMN longitude DECIMAL(9,6) NOT NULL DEFAULT '0.000000' AFTER latitude");
-    }
+    $wpdb->query("ALTER TABLE $airports_table ADD COLUMN longitude DECIMAL(16,10) NOT NULL DEFAULT '0.0000000000' AFTER latitude");
 
     // Agregar columnas 'arr_terminal' y 'dep_terminal' a la tabla schedule_details si no existen
     $schedule_details_table = $wpdb->prefix . 'schedule_details';
@@ -568,21 +560,24 @@ function mi_plugin_activate()
     }
 
     foreach ($airports['response'] as $airport) {
-        // Actualizar los registros existentes con latitud y longitud
-        $wpdb->update(
+        // Ensure we are updating all relevant fields
+        $wpdb->replace(
             $airports_table,
             [
-                'latitude' => isset($airport['lat']) ? floatval($airport['lat']) : 0.0,
-                'longitude' => isset($airport['lon']) ? floatval($airport['lon']) : 0.0
+                'name' => isset($airport['name']) ? $airport['name'] : '',
+                'iata_code' => isset($airport['iata']) ? $airport['iata'] : '',
+                'icao_code' => isset($airport['icao']) ? $airport['icao'] : '',
+                'country' => isset($airport['country']) ? $airport['country'] : '',
+                'city' => isset($airport['city']) ? $airport['city'] : '',
+                'state' => isset($airport['state']) ? $airport['state'] : '',
+                'timezone' => isset($airport['tz']) ? $airport['tz'] : '',
+                'latitude' => isset($airport['lat']) ? (string)$airport['lat'] : '0.0000000000',
+                'longitude' => isset($airport['lon']) ? (string)$airport['lon'] : '0.0000000000'
             ],
-            [
-                'iata_code' => $airport['iata'],
-                'icao_code' => $airport['icao']
-            ],
-            ['%f', '%f'],
-            ['%s', '%s']
+            ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f'], // Format for each field
         );
     }
+
 
     // Intenta cargar datos JSON de aerolíneas
     $airlineJson = file_get_contents(plugin_dir_path(__FILE__) . 'airlines.json');
@@ -688,19 +683,22 @@ add_action('rest_api_init', function () {
     ));
 });
 
-function monitor_flight_get_local_time($request)
-{
-    // Obtener los parámetros de la solicitud
+function monitor_flight_get_local_time($request) {
+    // Get parameters
     $type = $request->get_param('type');
     $airport_code = $request->get_param('airportCode');
     $airp_codeType = $request->get_param('airp_codeType');
 
-    // Verificar que los parámetros necesarios se han proporcionado
+    // Check if parameters are missing
     if (!$type || !$airport_code || !$airp_codeType) {
+        error_log('Missing required query parameters.');
         return new WP_Error('missing_parameters', 'Missing required query parameters', array('status' => 400));
     }
 
-    // Si el tipo es "flight", no se necesita obtener la hora local
+    // Log parameters for debugging
+    // error_log("Request Params: Type: $type, Airport Code: $airport_code, Code Type: $airp_codeType");
+
+    // If 'flight' type, skip local time retrieval
     if ($type === 'flight') {
         return new WP_REST_Response(array(
             'message' => 'Flight type does not require local time retrieval',
@@ -709,61 +707,56 @@ function monitor_flight_get_local_time($request)
 
     global $wpdb;
 
-    // Determinar la columna a utilizar para la búsqueda según el tipo de código
+    // Fetch airport info
     $column = ($airp_codeType === 'icao') ? 'icao_code' : 'iata_code';
-
-    // Buscar el aeropuerto en la base de datos
     $airport = $wpdb->get_row($wpdb->prepare(
         "SELECT latitude, longitude FROM {$wpdb->prefix}airports WHERE $column = %s",
         $airport_code
     ));
 
     if (!$airport) {
+        error_log("No airport found for the given code: $airport_code");
         return new WP_Error('no_airport_found', 'No airport found for the given code', array('status' => 404));
     }
 
     $latitude = $airport->latitude;
     $longitude = $airport->longitude;
 
-    // Aquí puedes elegir la API que prefieras usar
-    $timezone_db_key = get_option('mi_plugin_timezone_db_key') || 'JJZRH6UUL8VT'; // Retrieve the stored TimezoneDB API key
-    // $timezone_db_key = 'JJZRH6UUL8VT'; // Reemplaza con tu clave de API real
+    // Log latitude and longitude for debugging
+    // error_log("Latitude: $latitude, Longitude: $longitude");
 
-    // Ejemplo con Google Time Zone API
-    $timestamp = time();
-    // $url = "https://maps.googleapis.com/maps/api/timezone/json?location={$latitude},{$longitude}&timestamp={$timestamp}&key={$timezone_db_key}";
-
-    // Ejemplo con TimeZoneDB API
+    // Use TimeZoneDB API
+    $timezone_db_key = get_option('mi_plugin_timezone_db_key');
     $url = "http://api.timezonedb.com/v2.1/get-time-zone?key={$timezone_db_key}&format=json&by=position&lat={$latitude}&lng={$longitude}";
 
-    // Realizar la solicitud a la API externa
     $response = wp_remote_get($url);
 
     if (is_wp_error($response)) {
+        error_log('Failed to retrieve data from TimeZoneDB API: ' . $response->get_error_message());
         return new WP_Error('api_error', 'Failed to retrieve data from the API', array('status' => 500));
     }
 
     $data = json_decode(wp_remote_retrieve_body($response), true);
 
-    // Manejo de la respuesta de la API
-    if (isset($data['timeZoneId'])) {
-        // Para Google Time Zone API
-        $timeZoneId = $data['timeZoneId'];
-        $local_time = new DateTime("now", new DateTimeZone($timeZoneId));
-    } elseif (isset($data['formatted'])) {
-        // Para TimeZoneDB API
-        $local_time = new DateTime($data['formatted']);
+    if (isset($data['zoneName'])) {
+        // Use the 'zoneName' and 'formatted' data from TimeZoneDB
+        $timeZoneId = $data['zoneName'];
+        $local_time = new DateTime($data['formatted'], new DateTimeZone($timeZoneId));
     } else {
+        error_log('Invalid API response. Missing zoneName or formatted time.');
         return new WP_Error('invalid_api_response', 'The API response did not contain valid time data', array('status' => 500));
     }
+
+    // Log the local time before returning
+    error_log("Local time: " . $local_time->format('Y-m-d H:i:s'));
 
     return array(
         'type' => $type,
         'airport_code' => $airport_code,
         'local_time' => $local_time->format('Y-m-d H:i:s'),
-        'timezone' => $timeZoneId ?? $data['zoneName'] ?? null,
     );
 }
+
 
 function mi_plugin_fetch_flight_data($request)
 {
@@ -1420,6 +1413,7 @@ function mi_plugin_settings_page()
     </div>
 <?php
 }
+
 function mi_plugin_docs_page()
 {
 ?>
@@ -1430,7 +1424,7 @@ function mi_plugin_docs_page()
         <!-- Uso Básico -->
         <h3>Uso Básico</h3>
         <p>Para comenzar rápidamente con nuestro plugin, simplemente inserta uno de los siguientes shortcodes en cualquier página o entrada para mostrar información en tiempo real sobre vuelos.</p>
-        
+
         <!-- New API Key section -->
         <h3>Configuración de API</h3>
         <p>El plugin requiere la API de AirLabs y la API de TimezoneDB para obtener la información de vuelos y las zonas horarias respectivamente.</p>
@@ -1438,7 +1432,7 @@ function mi_plugin_docs_page()
             <li><strong>API Key de AirLabs</strong>: Necesario para obtener información en tiempo real sobre los vuelos. Puedes conseguirlo en <a href="https://airlabs.co/">AirLabs</a>.</li>
             <li><strong>API Key de TimezoneDB</strong>: Necesario para obtener la hora local del aeropuerto. Puedes obtenerlo en <a href="https://timezonedb.com/">TimezoneDB</a>.</li>
         </ul>
-        
+
         <!-- Shortcodes -->
         <h3>Shortcodes Disponibles</h3>
 
@@ -1653,15 +1647,15 @@ add_action('admin_init', 'mi_plugin_settings_init');
 
 function mi_plugin_settings_init()
 {
-    // Existing settings registration
+    // Registro de las configuraciones del plugin
     register_setting('mi-plugin-settings-group', 'mi_plugin_api_key');
     register_setting('mi-plugin-settings-group', 'mi_plugin_timezone_db_key'); // New API key for TimezoneDB
     register_setting('mi-plugin-settings-group', 'mi_plugin_data_expiration');
 
-    // Existing settings section
+    // Añadir sección de configuración
     add_settings_section('mi-plugin-settings-section', 'Ajustes del API', 'mi_plugin_settings_section_callback', 'mi-plugin-settings');
 
-    // Existing fields
+    // Añadir campos de configuración
     add_settings_field('mi-plugin-api-key', 'API Key de AirLabs', 'mi_plugin_api_key_callback', 'mi-plugin-settings', 'mi-plugin-settings-section');
     add_settings_field('mi-plugin-timezone-db-key', 'API Key de TimezoneDB', 'mi_plugin_timezone_db_key_callback', 'mi-plugin-settings', 'mi-plugin-settings-section'); // New field for TimezoneDB
     add_settings_field('mi-plugin-data-expiration', 'Tiempo de Expiración de Datos (minutos)', 'mi_plugin_data_expiration_callback', 'mi-plugin-settings', 'mi-plugin-settings-section');
@@ -1669,21 +1663,20 @@ function mi_plugin_settings_init()
 
 function mi_plugin_settings_section_callback()
 {
-    echo 'Ingresa tu API Key y el tiempo de expiración de los datos almacenados.';
+    echo 'Ingresa tus API Keys y el tiempo de expiración de los datos almacenados.';
 }
 
 function mi_plugin_api_key_callback()
 {
     $api_key = get_option('mi_plugin_api_key');
     echo "<input type='text' id='mi_plugin_api_key' name='mi_plugin_api_key' value='" . esc_attr($api_key) . "' />";
+}
+
+function mi_plugin_timezone_db_key_callback()
+{
     $timezone_db_key = get_option('mi_plugin_timezone_db_key');
     echo "<input type='text' id='mi_plugin_timezone_db_key' name='mi_plugin_timezone_db_key' value='" . esc_attr($timezone_db_key) . "' />";
 }
-
-// function mi_plugin_path_callback() {
-//     $path = get_option('mi_plugin_path');
-//     echo "<input type='text' id='mi_plugin_path' name='mi_plugin_path' value='" . esc_attr($path) . "' />";
-// }
 
 function mi_plugin_data_expiration_callback()
 {
