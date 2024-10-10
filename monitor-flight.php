@@ -14,30 +14,6 @@ defined('ABSPATH') or die('¡Acceso directo no permitido!');
 // Register Custom Post Type
 function register_my_custom_post_types()
 {
-
-    // $labels = array(
-    //     'name'              => _x('Locations', 'taxonomy general name', 'seo-flight-schedule'),
-    //     'singular_name'     => _x('Location', 'taxonomy singular name', 'seo-flight-schedule'),
-    //     'search_items'      => __('Search Locations', 'seo-flight-schedule'),
-    //     'all_items'         => __('All Locations', 'seo-flight-schedule'),
-    //     'parent_item'       => __('Parent Location', 'seo-flight-schedule'),
-    //     'parent_item_colon' => __('Parent Location:', 'seo-flight-schedule'),
-    //     'edit_item'         => __('Edit Location', 'seo-flight-schedule'),
-    //     'update_item'       => __('Update Location', 'seo-flight-schedule'),
-    //     'add_new_item'      => __('Add New Location', 'seo-flight-schedule'),
-    //     'new_item_name'     => __('New Location Name', 'seo-flight-schedule'),
-    //     'menu_name'         => __('Location', 'seo-flight-schedule'),
-    // );
-    // $args = array(
-    //     'hierarchical'      => true, // make it hierarchical (like categories)
-    //     'labels'            => $labels,
-    //     'show_ui'           => true,
-    //     'show_admin_column' => true,
-    //     'query_var'         => true,
-    //     'rewrite'           => array('slug' => 'location', 'with_front' => true, 'hierarchical' => true),
-    // );
-    // register_taxonomy('location', array('airport', 'airline', 'flight', 'post', 'page'), $args);
-
     // Register Custom Taxonomy Country
     $labels = array(
         'name'              => _x('Countries Taxonomies', 'taxonomy general name', 'seo-flight-schedule'),
@@ -60,7 +36,7 @@ function register_my_custom_post_types()
         'query_var'         => true,
         'rewrite'           => array('slug' => 'country-taxonomy', 'with_front' => true, 'hierarchical' => true),
     );
-    register_taxonomy('country-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+    register_taxonomy('country-taxonomy', array('airport', 'airline', 'flight', 'delayed-flight'), $args);
 
     // Register Custom Taxonomy State
     $labels = array(
@@ -84,7 +60,7 @@ function register_my_custom_post_types()
         'query_var'         => true,
         'rewrite'           => array('slug' => 'state-taxonomy', 'with_front' => true, 'hierarchical' => true),
     );
-    register_taxonomy('state-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+    register_taxonomy('state-taxonomy', array('airport', 'airline', 'flight', 'delayed-flight'), $args);
 
     // Register Custom Taxonomy City
     $labels = array(
@@ -108,7 +84,7 @@ function register_my_custom_post_types()
         'query_var'         => true,
         'rewrite'           => array('slug' => 'city-taxonomy', 'with_front' => true, 'hierarchical' => true),
     );
-    register_taxonomy('city-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+    register_taxonomy('city-taxonomy', array('airport', 'airline', 'flight', 'delayed-flight'), $args);
 
     //Register custom taxonomy Airports
     $labels = array(
@@ -132,7 +108,7 @@ function register_my_custom_post_types()
         'query_var'         => true,
         'rewrite'           => array('slug' => 'airport-taxonomy', 'with_front' => true, 'hierarchical' => true),
     );
-    register_taxonomy('airport-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+    register_taxonomy('airport-taxonomy', array('airport', 'airline', 'flight', 'delayed-flight'), $args);
 
     //Register custom taxonomy Airlines
     $labels = array(
@@ -156,7 +132,70 @@ function register_my_custom_post_types()
         'query_var'         => true,
         'rewrite'           => array('slug' => 'airline-taxonomy', 'with_front' => true, 'hierarchical' => true),
     );
-    register_taxonomy('airline-taxonomy', array('airport', 'airline', 'flight', 'post', 'page'), $args);
+    register_taxonomy('airline-taxonomy', array('airport', 'airline', 'flight', 'delayed-flight'), $args);
+
+    // Register Custom Post Type Delayed Flights
+    $labels = array(
+        'name'                  => _x('Delayed Flights', 'Post Type General Name', 'seo-flight-schedule'),
+        'singular_name'         => _x('Delayed Flight', 'Post Type Singular Name', 'seo-flight-schedule'),
+        'menu_name'             => __('Delayed Flights', 'seo-flight-schedule'),
+        'name_admin_bar'        => __('Delayed Flights', 'seo-flight-schedule'),
+        'archives'              => __('Delayed Flight Archives', 'seo-flight-schedule'),
+        'attributes'            => __('Delayed Flight Attributes', 'seo-flight-schedule'),
+        'parent_item_colon'     => __('Parent Delayed Flight:', 'seo-flight-schedule'),
+        'all_items'             => __('All Delayed Flights', 'seo-flight-schedule'),
+        'add_new_item'          => __('Add New Delayed Flight', 'seo-flight-schedule'),
+        'add_new'               => __('Add Delayed Flight', 'seo-flight-schedule'),
+        'new_item'              => __('New Delayed Flight', 'seo-flight-schedule'),
+        'edit_item'             => __('Edit Delayed Flight', 'seo-flight-schedule'),
+        'update_item'           => __('Update Delayed Flight', 'seo-flight-schedule'),
+        'view_item'             => __('View Delayed Flight', 'seo-flight-schedule'),
+        'view_items'            => __('View Delayed Flights', 'seo-flight-schedule'),
+        'search_items'          => __('Search Delayed Flights', 'seo-flight-schedule'),
+        'not_found'             => __('Delayed Flight Not found', 'seo-flight-schedule'),
+        'not_found_in_trash'    => __('Delayed Flight Not found in Trash', 'seo-flight-schedule'),
+        'featured_image'        => __('Featured Image', 'seo-flight-schedule'),
+        'set_featured_image'    => __('Set featured image', 'seo-flight-schedule'),
+        'remove_featured_image' => __('Remove featured image', 'seo-flight-schedule'),
+        'use_featured_image'    => __('Use as featured image', 'seo-flight-schedule'),
+        'insert_into_item'      => __('Insert into item', 'seo-flight-schedule'),
+        'uploaded_to_this_item' => __('Uploaded to this item', 'seo-flight-schedule'),
+        'items_list'            => __('Delayed Flights list', 'seo-flight-schedule'),
+        'items_list_navigation' => __('Delayed Flights list navigation', 'seo-flight-schedule'),
+        'filter_items_list'     => __('Filter Delayed Flights list', 'seo-flight-schedule'),
+    );
+
+    $rewrite = array(
+        'slug'                  => 'delayed-flight',
+        'with_front'            => true,
+        'pages'                 => true,
+        'feeds'                 => false,
+    );
+
+    $args = array(
+        'label'                 => __('Delayed Flight', 'seo-flight-schedule'),
+        'description'           => __('Post type for Delayed Flights', 'seo-flight-schedule'),
+        'labels'                => $labels,
+        'supports'              => array('title', 'editor', 'trackbacks', 'custom-fields', 'page-attributes', 'post-formats'),
+        'taxonomies'            => array('country-taxonomy', 'state-taxonomy', 'city-taxonomy', 'airport-taxonomy', 'airline-taxonomy'),
+        'hierarchical'          => true,
+        'public'                => true,
+        'show_ui'               => true,
+        'show_in_menu'          => 'seo-flight-schedule',  // Add directly to the menu
+        'menu_position'         => 5,
+        'menu_icon'             => 'dashicons-airplane',
+        'show_in_admin_bar'     => true,
+        'show_in_nav_menus'     => true,
+        'can_export'            => true,
+        'has_archive'           => true,
+        'exclude_from_search'   => false,
+        'publicly_queryable'    => true,
+        'rewrite'               => $rewrite,
+        'capability_type'       => 'post',
+    );
+
+    register_post_type('delayed_flight', $args);  // Corrected the post type slug
+
 
     // Register Custom Post Type Airports
     $labels = array(
@@ -340,15 +379,22 @@ add_action('init', 'register_my_custom_post_types');
 function add_seo_flight_scheduling_menu()
 {
     add_menu_page(
-        'SEO Flight Scheduling',
-        'SEO Flight Scheduling',
-        'manage_options',
-        'seo-flight-schedule',
-        '',
-        'dashicons-airplane',
-        6
+        'SEO Flight Scheduling',       // Page title
+        'SEO Flight Scheduling',       // Menu title
+        'manage_options',              // Capability
+        'seo-flight-schedule',         // Menu slug
+        'seo_flight_scheduling_page',  // Callback function (content of the main page)
+        'dashicons-airplane',          // Icon
+        6                              // Menu position
     );
 }
+
+function seo_flight_scheduling_page()
+{
+    echo '<h1>SEO Flight Scheduling</h1>';
+    echo '<p>Welcome to the SEO Flight Scheduling plugin. Use the submenus to manage flights, delayed flights, and taxonomies.</p>';
+}
+
 add_action('admin_menu', 'add_seo_flight_scheduling_menu');
 
 function add_taxonomies_to_menu()
@@ -522,6 +568,52 @@ function mi_plugin_activate()
     ) $charset_collate;";
     dbDelta($sql_schedule_details);
 
+    // Creación o actualización de la tabla delayed schedules
+    $sql_delayed_schedules = "CREATE TABLE {$wpdb->prefix}delayed_schedules (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        iata_code varchar(3) NOT NULL DEFAULT '',
+        icao_code varchar(4) NOT NULL DEFAULT '',
+        airline_iata varchar(3) NOT NULL DEFAULT '',
+        airline_icao varchar(4) NOT NULL DEFAULT '',
+        schedule_type enum('departures', 'arrivals') NOT NULL,
+        offset_value int NOT NULL DEFAULT 0,
+        updated_time datetime NOT NULL DEFAULT current_timestamp(),
+        last_page boolean DEFAULT false,
+        PRIMARY KEY (id),
+        UNIQUE KEY idx_iata_type (iata_code, icao_code, airline_iata, airline_icao, schedule_type, offset_value)
+    ) $charset_collate;";
+    dbDelta($sql_delayed_schedules);
+
+    // Creación o actualización de la tabla schedule_details
+    $sql_delayed_schedule_details = "CREATE TABLE {$wpdb->prefix}delayed_schedule_details (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        schedule_id bigint(20) UNSIGNED NOT NULL,
+        offset_page int NOT NULL DEFAULT 0,
+        flight_iata varchar(7) DEFAULT '',
+        flight_icao varchar(8) DEFAULT '',
+        airline_iata varchar(3) DEFAULT '',
+        airline_icao varchar(4) DEFAULT '',
+        airline_name varchar(255) DEFAULT '',
+        airport varchar(255) DEFAULT '',
+        depart varchar(40) DEFAULT '',
+        arrive varchar(40) DEFAULT '',
+        dep_iata varchar(3) DEFAULT '',
+        dep_icao varchar(4) DEFAULT '',
+        dep_city varchar(40) DEFAULT '',
+        arr_iata varchar(3) DEFAULT '',
+        arr_icao varchar(4) DEFAULT '',
+        arr_city varchar(40) DEFAULT '',
+        tz_dep varchar(40) DEFAULT '',
+        tz_arr varchar(40) DEFAULT '',
+        status varchar(20) DEFAULT '',
+        arr_terminal varchar(5) DEFAULT '',
+        dep_terminal varchar(5) DEFAULT '',
+        delayed_time bigint DEFAULT 0,
+        PRIMARY KEY (id),
+        FOREIGN KEY (schedule_id) REFERENCES {$wpdb->prefix}delayed_schedules(id) ON DELETE CASCADE
+    ) $charset_collate;";
+    dbDelta($sql_delayed_schedule_details);
+
     // Agregar columnas 'latitude' y 'longitude' a la tabla airports si no existen
     $airports_table = $wpdb->prefix . 'airports';
 
@@ -662,12 +754,6 @@ add_action('rest_api_init', function () {
         'callback' => 'monitor_flight_get_local_time',
         'permission_callback' => '__return_true', // Ajustar según los permisos que desees
         'args' => array(
-            'type' => array(
-                'required' => true,
-                'validate_callback' => function ($param, $request, $key) {
-                    return in_array($param, ['departures', 'arrivals', 'flight']);
-                }
-            ),
             'airportCode' => array(
                 'required' => true,
                 'validate_callback' => function ($param, $request, $key) {
@@ -682,17 +768,40 @@ add_action('rest_api_init', function () {
             ),
         ),
     ));
+    register_rest_route('mi-plugin/v1', '/fetch-delayed-data', array(
+        'methods' => 'GET',
+        'callback' => 'fetch_delayed_flights',
+        'permission_callback' => '__return_true',
+        'args' => array(
+            'airportCode' => array('required' => true),
+            'airp_codeType' => array(
+                'required' => false,
+                'validate_callback' => function ($param, $request, $key) {
+                    return in_array($param, ['iata', 'icao']);
+                }
+            ),
+            'airlineCode' => array('required' => false),
+            'airl_codeType' => array(
+                'required' => false,
+                'validate_callback' => function ($param, $request, $key) {
+                    return in_array($param, ['iata', 'icao']);
+                }
+            ),
+            'delayed_type' => array('required' => true),
+            'delayed_time' => array('requiered' => true),
+            'offset_value' => array('required' => false),
+        ),
+    ));
 });
 
 function monitor_flight_get_local_time($request)
 {
     // Get parameters
-    $type = $request->get_param('type');
     $airport_code = $request->get_param('airportCode');
     $airp_codeType = $request->get_param('airp_codeType');
 
     // Check if parameters are missing
-    if (!$type || !$airport_code || !$airp_codeType) {
+    if (!$airport_code || !$airp_codeType) {
         error_log('Missing required query parameters.');
         return new WP_Error('missing_parameters', 'Missing required query parameters', array('status' => 400));
     }
@@ -700,12 +809,6 @@ function monitor_flight_get_local_time($request)
     // Log parameters for debugging
     // error_log("Request Params: Type: $type, Airport Code: $airport_code, Code Type: $airp_codeType");
 
-    // If 'flight' type, skip local time retrieval
-    if ($type === 'flight') {
-        return new WP_REST_Response(array(
-            'message' => 'Flight type does not require local time retrieval',
-        ), 200);
-    }
 
     global $wpdb;
 
@@ -753,11 +856,372 @@ function monitor_flight_get_local_time($request)
     error_log("Local time: " . $local_time->format('Y-m-d H:i:s'));
 
     return array(
-        'type' => $type,
         'airport_code' => $airport_code,
         'local_time' => $local_time->format('Y-m-d H:i:s'),
     );
 }
+
+//Function to fetch Delayed flight data
+function fetch_delayed_flights(WP_REST_Request $request)
+{
+    global $wpdb;
+
+    // Expiration time in seconds (for example, 30 minutes)
+    $exp_data = get_option('mi_plugin_data_expiration');
+    $expiration_seconds = $exp_data * 60;
+
+    // Retrieve the query parameters from the request
+    $airportCode = $request->get_param('airportCode');
+    $airp_codeType = $request->get_param('airp_codeType'); // Default to 'iata' if not provided
+    $airlineCode = $request->get_param('airlineCode');
+    $airl_codeType = $request->get_param('airl_codeType'); // Default to 'iata' if not provided
+    $delayed_type = $request->get_param('delayed_type');
+    $delayed_time = $request->get_param('delayed_time');
+    $status = $request->get_param('status');
+    $terminal = $request->get_param('terminal');
+    $offset_value = $request->get_param('offset_value') ?: 0;
+
+    // Check if valid data exists in the database
+    if (!empty($airlineCode)) {
+        // Consulta cuando airline_iata o airline_icao están presentes
+        $schedule = $wpdb->get_row($wpdb->prepare(
+            "SELECT id, updated_time, offset_value, last_page FROM {$wpdb->prefix}delayed_schedules
+                    WHERE (iata_code = %s OR icao_code = %s)
+                    AND schedule_type = %s
+                    AND (airline_iata = %s OR airline_icao = %s)
+                    AND offset_value = %d",
+            $airportCode,
+            $airportCode,
+            $delayed_type,
+            $airlineCode,
+            $airlineCode,
+            $offset_value
+        ), ARRAY_A);
+    } else {
+        // Consulta cuando airline_iata y airline_icao están vacíos
+        $schedule = $wpdb->get_row($wpdb->prepare(
+            "SELECT id, updated_time, offset_value, last_page FROM {$wpdb->prefix}delayed_schedules
+                    WHERE (iata_code = %s OR icao_code = %s)
+                    AND schedule_type = %s
+                    AND airline_iata = 'N/A'
+                    AND airline_icao = 'N/A'
+                    AND offset_value = %d",
+            $airportCode,
+            $airportCode,
+            $delayed_type,
+            $offset_value
+        ), ARRAY_A);
+    }
+
+    if ($schedule && (((strtotime($schedule['updated_time'])) + $expiration_seconds) > time()) && !$schedule['last_page']) {
+
+        // Buscar detalles asociados en schedule_details
+        $query = "SELECT * FROM {$wpdb->prefix}delayed_schedule_details WHERE schedule_id = %d AND offset_page = %d";
+        $params = [$schedule['id'], $schedule['offset_value']];
+
+        // Añadir filtro por airlineCode si está presente
+        if (!empty($airlineCode)) {
+            $query .= " AND " . ($airl_codeType === 'iata' ? 'airline_iata' : 'airline_icao') . " = %s";
+            $params[] = $airlineCode;
+        }
+
+        // Añadir filtro por status si está presente
+        if (!empty($filter)) {
+            $query .= " AND status = %s";
+            $params[] = $filter;
+        }
+
+        // Añadir filtro por terminal si está presente
+        if (!empty($filter_terminal)) {
+            if ($delayed_type === 'departures') {
+                // Check dep_terminal for departures
+                $query .= " AND dep_terminal = %s";
+            } elseif ($delayed_type === 'arrivals') {
+                // Check arr_terminal for arrivals
+                $query .= " AND arr_terminal = %s";
+            }
+            $params[] = $filter_terminal; // Add the terminal filter to the parameters
+        }
+
+        $flightDetails = $wpdb->get_results($wpdb->prepare($query, $params), ARRAY_A);
+
+        if (!empty($flightDetails)) {
+            // Formatear los detalles del vuelo para la respuesta
+            $formattedFlights = array_map(function ($flight) {
+                global $wpdb;
+                $arrAirport = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                    $flight['arr_iata'],
+                    $flight['arr_icao']
+                ));
+                $depAirport = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM {$wpdb->prefix}airports WHERE iata_code = %s OR icao_code = %s",
+                    $flight['dep_iata'],
+                    $flight['dep_icao']
+                ));
+
+                return [
+                    'flight' => !empty($flight['flight_iata']) ? $flight['flight_iata'] : $flight['flight_icao'],
+                    'airport' => $flight['airport'],
+                    'airline_name' => $flight['airline_name'],
+                    'airline_code' => !empty($flight['airline_iata']) ? $flight['airline_iata'] : $flight['airline_icao'],
+                    'depart' => $flight['depart'],
+                    'arrive' => $flight['arrive'],
+                    'arrAirport' => $arrAirport->name,
+                    'arrAirport_city' => $arrAirport->city,
+                    'arrAirport_state' => $arrAirport->state,
+                    'arrAirport_country' => $arrAirport->country,
+                    'depAirport' => $depAirport->name,
+                    'depAirport_city' => $depAirport->city,
+                    'depAirport_state' => $depAirport->state,
+                    'depAirport_country' => $depAirport->country,
+                    'dep_code' => !empty($flight['dep_iata']) ? $flight['dep_iata'] : $flight['dep_icao'],
+                    'dep_city' => $flight['dep_city'],
+                    'arr_code' => !empty($flight['arr_icao']) ? $flight['arr_iata'] : $flight['arr_icao'],
+                    'arr_city' => $flight['arr_city'],
+                    'tz_dep' => $flight['tz_dep'],
+                    'tz_arr' => $flight['tz_arr'],
+                    'status' => $flight['status'],
+                    'delayed' => $flight['delayed'],
+                ];
+            }, $flightDetails);
+
+            return new WP_REST_Response($formattedFlights, 200);
+        } else if (empty($flightDetails) && $status) {
+            return new WP_REST_Response([], 200);
+        } else {
+            return new WP_REST_Response(['message' => 'No flight details available'], 404);
+        }
+    }
+    if (!$schedule) {
+        // Airport and airline lookup
+        $airpCodeType = $airp_codeType === 'iata' ? 'iata_code' : 'icao_code';
+        $airportData = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT iata_code, icao_code FROM {$wpdb->prefix}airports WHERE {$airpCodeType} = %s",
+                $airportCode
+            )
+        );
+
+        if (!empty($airlineCode)) {
+            $airlCodeType = $airl_codeType === 'iata' ? 'iata_code' : 'icao_code';
+            $airlineData = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT iata_code, icao_code FROM {$wpdb->prefix}airlines WHERE {$airlCodeType} = %s",
+                    $airlineCode
+                )
+            );
+        }
+
+        // Insert new schedule
+        $wpdb->insert(
+            "{$wpdb->prefix}delayed_schedules",
+            [
+                'schedule_type' => $delayed_type,
+                'updated_time' => current_time('mysql', 1),
+                'iata_code' => $airportData->iata_code,
+                'icao_code' => $airportData->icao_code,
+                'airline_iata' => $airlineData->iata_code ?? 'N/A',
+                'airline_icao' => $airlineData->icao_code ?? 'N/A',
+                'offset_value' => $offset_value,
+            ],
+            ['%s', '%s', '%s', '%s', '%s', '%d']
+        );
+
+        $schedule['id'] = $wpdb->insert_id;
+        $schedule['offset_value'] = $offset_value;
+    } else {
+        // If the data has expired, update the schedule and delete the details
+        if (strtotime($schedule['updated_time']) + $expiration_seconds < time()) {
+            // Begin transaction
+            $wpdb->query('START TRANSACTION');
+
+            // Update the schedule's updated_time and reset last_page
+            $updated = $wpdb->update(
+                "{$wpdb->prefix}delayed_schedules",
+                ['updated_time' => current_time('mysql', 1), 'last_page' => false],
+                ['id' => $schedule['id']],
+                ['%s', '%d'],
+                ['%d']
+            );
+
+            if ($updated !== false) {
+                // Delete existing flight details
+                $deleted = $wpdb->delete(
+                    "{$wpdb->prefix}delayed_schedule_details",
+                    ['schedule_id' => $schedule['id']],
+                    ['%d']
+                );
+
+                if ($deleted !== false) {
+                    // Commit transaction
+                    $wpdb->query('COMMIT');
+                } else {
+                    // Rollback if deletion failed
+                    $wpdb->query('ROLLBACK');
+                    return new WP_Error('db_delete_error', 'Error deleting schedule details.', ['status' => 500]);
+                }
+            } else {
+                // Rollback if update failed
+                $wpdb->query('ROLLBACK');
+                return new WP_Error('db_update_error', 'Error updating schedule.', ['status' => 500]);
+            }
+        }
+    }
+
+    // Get the AirLabs API key from WordPress options (make sure it's stored there)
+    $apiKey = get_option('mi_plugin_api_key');
+    if (!$apiKey) {
+        return new WP_Error('api_key_missing', 'The AirLabs API key is not configured in the plugin settings.', array('status' => 500));
+    }
+
+    // Build the API request URL based on the parameters provided
+    $apiUrl = 'https://airlabs.co/api/v9/delays?api_key=' . $apiKey;
+
+    if (!empty($airp_codeType) && !empty($airportCode)) {
+        // Determine the prefix based on delayed_type
+        $airportPrefix = $delayed_type === 'departures' ? 'dep_' : 'arr_';
+        // Append the airport code with the appropriate prefix
+        $apiUrl .= '&' . $airportPrefix . $airp_codeType . '=' . urlencode($airportCode);
+    }
+
+
+    if (!empty($airlineCode)) {
+        // Determine the prefix based on the airline code type (IATA or ICAO)
+        $airlinePrefix = $airl_codeType === 'iata' ? 'airline_iata' : 'airline_icao';
+
+        // Append the airline code with the appropriate prefix
+        $apiUrl .= '&' . $airlinePrefix . '=' . urlencode($airlineCode);
+    }
+
+
+    $apiUrl .= '&type=' . urlencode($delayed_type); // Add the delayed type (arrival/departure)
+    $apiUrl .= '&delay=' . urlencode($delayed_time); // Add the delayed time (in minutes)
+
+    // Optional parameters
+    if ($offset_value) {
+        $apiUrl .= '&offset=' . urlencode($offset_value); // Add pagination or offset if provided
+    }
+
+    // Make the API request to AirLabs
+    $response = wp_remote_get($apiUrl);
+    if (is_wp_error($response)) {
+        return new WP_Error('api_error', 'Error fetching data from AirLabs.', array('status' => 500));
+    }
+
+    $schedulesData = json_decode(wp_remote_retrieve_body($response), true);
+
+    // If no data returned, log an error
+    if (empty($schedulesData['response'])) {
+        return new WP_Error('no_flight_data', 'No flight data available.', array('status' => 404));
+    }
+
+    if (empty($schedulesData['response'])) {
+        $result = $wpdb->update(
+            "{$wpdb->prefix}delayed_schedules",
+            ['last_page' => true],
+            ['id' => $schedule['id']],
+            ['%d'],
+            ['%d']
+        );
+        if ($result || $schedule['last_page'] === true) {
+            return new WP_REST_Response(null, 204);
+        } else {
+            return new WP_Error("api_fetch_error", "Error updating last page status.", ['status' => 500]);
+        }
+    }
+
+    $airportData = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}airports", ARRAY_A);
+    $airports = array_column($airportData, null, 'iata_code'); // Create a map using IATA as keys
+
+    // 2. Fetch all required airline data in ONE query
+    $airlineData = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}airlines", ARRAY_A);
+    $airlines = array_column($airlineData, null, 'iata_code');  // Create a map using IATA as keys
+
+    // Prepare and insert flight details
+    $insert_data = [];
+    $formattedFlights = []; // Array to store the formatted flights for the response
+
+    foreach ($schedulesData['response'] as $flight) {
+        $arrCode = !empty($flight['arr_iata']) ? $flight['arr_iata'] : $flight['arr_icao'];
+        $depCode = !empty($flight['dep_iata']) ? $flight['dep_iata'] : $flight['dep_icao'];
+
+        // Access data from the pre-fetched arrays/maps
+        $airportName = $airports[$arrCode]['name'] ?? '';
+        $airline_name = $airlines[$flight['airline_iata']]['name'] ?? '';
+        $dep_city = $airports[$depCode]['city'] ?? '';
+        $arr_city = $airports[$arrCode]['city'] ?? '';
+        $tz_dep = $airports[$depCode]['timezone'] ?? '';
+        $tz_arr = $airports[$arrCode]['timezone'] ?? '';
+
+        // Prepare formatted flight data for response
+        $formattedFlights[] = [
+            'flight' => !empty($flight['flight_iata']) ? $flight['flight_iata'] : $flight['flight_icao'],
+            'airport' => $airportName,
+            'depart' => $flight['dep_estimated'] ?? $flight['dep_time'],
+            'arrive' => $flight['arr_estimated'] ?? $flight['arr_time'],
+            'airline_name' => $airline_name,
+            'airline_code' => !empty($flight['airline_iata']) ? $flight['airline_iata'] : $flight['airline_icao'],
+            'arrAirport' => $airports[$arrCode]['name'] ?? '',
+            'arrAirport_city' => $arr_city,
+            'arrAirport_state' => $airports[$arrCode]['state'] ?? '',
+            'arrAirport_country' => $airports[$arrCode]['country'] ?? '',
+            'depAirport' => $airports[$depCode]['name'] ?? '',
+            'depAirport_city' => $dep_city,
+            'depAirport_state' => $airports[$depCode]['state'] ?? '',
+            'depAirport_country' => $airports[$depCode]['country'] ?? '',
+            'dep_code' => $depCode,
+            'dep_city' => $dep_city,
+            'arr_code' => $arrCode,
+            'arr_city' => $arr_city,
+            'tz_dep' => $tz_dep,
+            'tz_arr' => $tz_arr,
+            'status' => $flight['status'],
+            'delayed' => $flight['delayed'],
+        ];
+
+        $insert_data[] = $wpdb->prepare(
+            "(%d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %d)",
+            $schedule['id'],
+            $offset_value,
+            $flight['flight_iata'] ?? '',
+            $flight['flight_icao'] ?? '',
+            $flight['airline_iata'] ?? '',
+            $flight['airline_icao'] ?? '',
+            $airportName ?? '',
+            $airline_name ?? '',
+            $flight['dep_estimated'] ?? $flight['dep_time'],
+            $flight['arr_estimated'] ?? $flight['arr_time'],
+            $depCode,
+            $flight['dep_icao'] ?? '',
+            $dep_city,
+            $arrCode,
+            $flight['arr_icao'] ?? '',
+            $arr_city,
+            $tz_dep,
+            $tz_arr,
+            $flight['status'] ?? '',
+            $flight['dep_terminal'] ?? '',
+            $flight['arr_terminal'] ?? '',
+            $flight['delayed'] ?? ''
+        );
+    }
+
+    // Insert into the `delayed_schedule_details` table
+    if (!empty($insert_data)) {
+        $query = "INSERT INTO {$wpdb->prefix}delayed_schedule_details
+            (`schedule_id`, `offset_page`, `flight_iata`, `flight_icao`, `airline_iata`, `airline_icao`, `airline_name`,
+             `airport`, `depart`, `arrive`, `dep_iata`, `dep_icao`, `dep_city`, `arr_iata`, `arr_icao`,
+             `arr_city`, `tz_dep`, `tz_arr`, `status`, `dep_terminal`, `arr_terminal`, `delayed`) 
+            VALUES " . implode(', ', $insert_data);
+
+        $wpdb->query($query);
+    }
+
+    // Return the flight data as a response
+    return new WP_REST_Response($formattedFlights, 200);
+}
+
 
 
 function mi_plugin_fetch_flight_data($request)
@@ -1390,7 +1854,9 @@ function generar_shortcode_react_app($atts, $content, $tag)
         'flight_iata' => '',
         'flight_icao' => '',
         'time_range' => '',
-        'terminal' => '' // New parameter for terminal filtering
+        'terminal' => '', // New parameter for terminal filtering
+        'delayed_time' => '',
+        'delayed_type' => ''
     ], $atts);
 
     // Validación básica
@@ -1401,7 +1867,11 @@ function generar_shortcode_react_app($atts, $content, $tag)
         return "Por favor, incluye al menos el IATA code o el ICAO code del vuelo para proceder.";
     }
 
-    $type = $tag == 'departures_app' ? 'departures' : ($tag == 'arrivals_app' ? 'arrivals' : 'flight'); // Nuevo caso para 'vuelo'
+    if ($tag == 'delayed_flights' && empty($atts['delayed_time']) && empty($atts['delayed_type'])) {
+        return "Por favor, incluye ambos parametros delayed_type y delayed_time para los delayed_flights";
+    }
+
+    $type = $tag == 'departures_app' ? 'departures' : ($tag == 'arrivals_app' ? 'arrivals' : ($tag == 'delayed_flights' ? 'delayed_flights' : 'flight'));
     $airportCode = !empty($atts['iata_code']) ? $atts['iata_code'] : $atts['icao_code'];
     $airp_codeType = !empty($atts['iata_code']) ? 'iata' : 'icao'; //Definir el tipo de codigo del aeropuerto, iata o icao
     $airlineCode = !empty($atts['airline_iata']) ? $atts['airline_iata'] : $atts['airline_icao'];
@@ -1411,14 +1881,17 @@ function generar_shortcode_react_app($atts, $content, $tag)
     $status = $atts['status'];
     $time_range = $atts['time_range'];
     $terminal = $atts['terminal']; // Recuperar el valor del terminal
+    $delayed_time = $atts['delayed_time'];
+    $delayed_type = $atts['delayed_type'];
 
     // Recuperar los valores guardados en los ajustes del plugin
-    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}' data-time-range='{$time_range}' data-terminal='{$terminal}'></div>";
+    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}' data-time-range='{$time_range}' data-terminal='{$terminal}' data-delayed-time='{$delayed_time}' data-delayed-type='{$delayed_type}'></div>";
 }
 
 add_shortcode('arrivals_app', 'generar_shortcode_react_app');
 add_shortcode('departures_app', 'generar_shortcode_react_app');
 add_shortcode('numero-vuelo', 'generar_shortcode_react_app'); // Registrar el nuevo shortcode
+add_shortcode('delayed_flights', 'generar_shortcode_react_app');
 
 // Añadir la página de configuraciones y registrar las opciones
 add_action('admin_menu', 'mi_plugin_menu');

@@ -10,8 +10,12 @@ const App = ({ type, size, queryParams }) => {
   const [serverTimings, setServerTimings] = useState([]); // Estado para almacenar tiempos del servidor
   const [pageLoadTime, setPageLoadTime] = useState(null); // Estado para almacenar el tiempo de carga de la página
   const baseUrl = window.location.origin;
-
-  const customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams}`;
+  let customEndpointUrl;
+  if (type === "delayed_flights") {
+    customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-delayed-data?${queryParams.toString()}`;
+  } else {
+    customEndpointUrl = `${baseUrl}/wp-json/mi-plugin/v1/fetch-flight-data?${queryParams.toString()}`;
+  }
 
   useEffect(() => {
     fetch(customEndpointUrl)
