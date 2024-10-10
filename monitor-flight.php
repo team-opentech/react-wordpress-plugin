@@ -1998,6 +1998,26 @@ function mi_plugin_docs_page()
         </ul>
         <p><strong>Ejemplo:</strong> <code>[numero-vuelo flight_iata="AA123"]</code></p>
 
+        <!-- New Section for Delayed Flights -->
+        <h4>Vuelos Retrasados [delayed_flights]</h4>
+        <p>Este shortcode muestra información sobre vuelos retrasados en un aeropuerto específico. Utiliza los siguientes parámetros para personalizar la salida:</p>
+        <ul>
+            <li><strong>airportCode</strong>: Código IATA o ICAO del aeropuerto. (opcional si se proporciona el tipo de código)</li>
+            <li><strong>airp_codeType</strong>: Tipo de código del aeropuerto (opciones: `iata` o `icao`).</li>
+            <li><strong>airlineCode</strong>: Código IATA o ICAO de la aerolínea (opcional).</li>
+            <li><strong>airl_codeType</strong>: Tipo de código de la aerolínea (opciones: `iata` o `icao`).</li>
+            <li><strong>delayed_type</strong>: Tipo de retraso (opciones: `arrivals` o `departures`).</li>
+            <li><strong>delayed_time</strong>: Tiempo de retraso en minutos.</li>
+            <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
+            <li><strong>terminal</strong>: Filtrar por terminal del vuelo. (opcional)</li>
+        </ul>
+
+        <p><strong>Ejemplos:</strong></p>
+        <ul>
+            <li><code>[delayed_flights airportCode="LAX" airp_codeType="iata" delayed_type="departures" delayed_time="30"]</code> - Muestra vuelos de salida retrasados en LAX con retrasos de al menos 30 minutos.</li>
+            <li><code>[delayed_flights airportCode="JFK" airp_codeType="icao" airlineCode="AA" airl_codeType="iata" delayed_type="arrivals" delayed_time="60"]</code> - Muestra vuelos de llegada retrasados de American Airlines (AA) a JFK con retrasos de al menos 60 minutos.</li>
+        </ul>
+
         <!-- Configuración -->
         <h3>Configuración</h3>
         <p>Si deseas configurar manualmente los permalinks a su gusto, debes descargar el plugin Permalink Manager.</p>
