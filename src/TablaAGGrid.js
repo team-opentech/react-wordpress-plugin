@@ -253,12 +253,17 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           airline_name: `${item.airline_name} (${item.airline_code})`,
           depart: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
           arrive: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
-          dep_date: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD"), // Format date only
-          arr_date: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD"), // Format date only
+          dep_date: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format(
+            "YYYY-MM-DD"
+          ), // Format date only
+          arr_date: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format(
+            "YYYY-MM-DD"
+          ), // Format date only
           status: item.status,
           dep_code: item.dep_code,
           arr_code: item.arr_code,
           airline_code: item.airline_code,
+          delayed_time: item.delayed_time,
         }));
         setRowData(formattedData);
       } else {
@@ -280,12 +285,17 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
               : item.arrAirport_country,
           depart: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
           arrive: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("HH:mm"), // Format time only
-          dep_date: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD"), // Format date only
-          arr_date: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD"), // Format date only
+          dep_date: moment(item.depart, "YYYY-MM-DD HH:mm:ss").format(
+            "YYYY-MM-DD"
+          ), // Format date only
+          arr_date: moment(item.arrive, "YYYY-MM-DD HH:mm:ss").format(
+            "YYYY-MM-DD"
+          ), // Format date only
           status: item.status,
           dep_code: item.dep_code,
           arr_code: item.arr_code,
           airline_code: item.airline_code,
+          delayed_time: item.delayed_time,
         }));
         setRowData(formattedData);
       }
@@ -342,6 +352,12 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         </div>
       </div>
     );
+  };
+
+  const formatDelayedTime = (minutes) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h > 0 ? h + "h " : ""}${m}m`;
   };
 
   const columnDefsDesktop = [
@@ -563,6 +579,33 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           "</div>",
       },
     },
+    {
+      headerName: "Delayed",
+      field: "delayed_time",
+      cellStyle: {
+        wordBreak: "break-all",
+        flexWrap: "wrap",
+        minWidth: 120,
+      },
+      minWidth: 120,
+      valueFormatter: (params) => {
+        return params.value ? formatDelayedTime(params.value) : "0m";
+      }, // Apply the time format here
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
+    },
   ];
 
   const columnDefsMobile = [
@@ -742,6 +785,33 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
       field: "arr_date",
       cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
       minWidth: 120,
+      headerComponentParams: {
+        template:
+          '<div class="ag-cell-label-container" role="presentation">' +
+          '  <h3 ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></h3>' +
+          '  <div ref="eLabel" class="ag-header-cell-label" role="presentation">' +
+          '    <h3 ref="eSortOrder" class="ag-header-icon ag-sort-order" ></h3>' +
+          '    <h3 ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></h3>' +
+          '    <h3 ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></h3>' +
+          '    <h3 ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></h3>' +
+          '    <h3 ref="eText" class="ag-header-cell-text" role="columnheader"></h3>' +
+          '    <h3 ref="eFilter" class="ag-header-icon ag-filter-icon"></h3>' +
+          "  </div>" +
+          "</div>",
+      },
+    },
+    {
+      headerName: "Delayed",
+      field: "delayed_time",
+      cellStyle: {
+        wordBreak: "break-all",
+        flexWrap: "wrap",
+        minWidth: 120,
+      },
+      minWidth: 120,
+      valueFormatter: (params) => {
+        return params.value ? formatDelayedTime(params.value) : "0m";
+      }, // Apply the time format here
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +

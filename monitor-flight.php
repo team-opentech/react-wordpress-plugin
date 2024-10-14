@@ -563,6 +563,7 @@ function mi_plugin_activate()
         status varchar(20) DEFAULT '',
         arr_terminal varchar(5) DEFAULT '',
         dep_terminal varchar(5) DEFAULT '',
+        delayed_time bigint DEFAULT 0,
         PRIMARY KEY (id),
         FOREIGN KEY (schedule_id) REFERENCES {$wpdb->prefix}schedules(id) ON DELETE CASCADE
     ) $charset_collate;";
@@ -616,24 +617,37 @@ function mi_plugin_activate()
 
     // Agregar columnas 'latitude' y 'longitude' a la tabla airports si no existen
     $airports_table = $wpdb->prefix . 'airports';
-
-    $wpdb->query("ALTER TABLE $airports_table ADD COLUMN latitude DECIMAL(15,10) NOT NULL DEFAULT '0.0000000000' AFTER country");
-
-    $wpdb->query("ALTER TABLE $airports_table ADD COLUMN longitude DECIMAL(16,10) NOT NULL DEFAULT '0.0000000000' AFTER latitude");
-
     // Agregar columnas 'arr_terminal' y 'dep_terminal' a la tabla schedule_details si no existen
     $schedule_details_table = $wpdb->prefix . 'schedule_details';
 
-    // Verificar si la columna 'arr_terminal' existe
+    // Check and add 'latitude' column to airports table
+    $latitude_column = $wpdb->get_results("SHOW COLUMNS FROM $airports_table LIKE 'latitude'");
+    if (empty($latitude_column)) {
+        $wpdb->query("ALTER TABLE $airports_table ADD COLUMN latitude DECIMAL(15,10) NOT NULL DEFAULT '0.0000000000' AFTER country");
+    }
+
+    // Check and add 'longitude' column to airports table
+    $longitude_column = $wpdb->get_results("SHOW COLUMNS FROM $airports_table LIKE 'longitude'");
+    if (empty($longitude_column)) {
+        $wpdb->query("ALTER TABLE $airports_table ADD COLUMN longitude DECIMAL(16,10) NOT NULL DEFAULT '0.0000000000' AFTER latitude");
+    }
+
+    // Check and add 'arr_terminal' column to schedule_details table
     $arr_terminal_column = $wpdb->get_results("SHOW COLUMNS FROM $schedule_details_table LIKE 'arr_terminal'");
     if (empty($arr_terminal_column)) {
         $wpdb->query("ALTER TABLE $schedule_details_table ADD COLUMN arr_terminal VARCHAR(5) DEFAULT '' AFTER status");
     }
 
-    // Verificar si la columna 'dep_terminal' existe
+    // Check and add 'dep_terminal' column to schedule_details table
     $dep_terminal_column = $wpdb->get_results("SHOW COLUMNS FROM $schedule_details_table LIKE 'dep_terminal'");
     if (empty($dep_terminal_column)) {
         $wpdb->query("ALTER TABLE $schedule_details_table ADD COLUMN dep_terminal VARCHAR(5) DEFAULT '' AFTER arr_terminal");
+    }
+
+    // Check and add 'delayed_time' column to schedule_details table
+    $delayed_time_column = $wpdb->get_results("SHOW COLUMNS FROM $schedule_details_table LIKE 'delayed_time'");
+    if (empty($delayed_time_column)) {
+        $wpdb->query("ALTER TABLE $schedule_details_table ADD COLUMN delayed_time BIGINT DEFAULT 0 AFTER dep_terminal");
     }
 
     // Intenta cargar datos JSON de aeropuertos
@@ -982,7 +996,7 @@ function fetch_delayed_flights(WP_REST_Request $request)
                     'tz_dep' => $flight['tz_dep'],
                     'tz_arr' => $flight['tz_arr'],
                     'status' => $flight['status'],
-                    'delayed' => $flight['delayed'],
+                    'delayed_time' => $flight['delayed_time'],
                 ];
             }, $flightDetails);
 
@@ -1177,7 +1191,7 @@ function fetch_delayed_flights(WP_REST_Request $request)
             'tz_dep' => $tz_dep,
             'tz_arr' => $tz_arr,
             'status' => $flight['status'],
-            'delayed' => $flight['delayed'],
+            'delayed_time' => $flight['delayed'],
         ];
 
         $insert_data[] = $wpdb->prepare(
@@ -1212,7 +1226,7 @@ function fetch_delayed_flights(WP_REST_Request $request)
         $query = "INSERT INTO {$wpdb->prefix}delayed_schedule_details
             (`schedule_id`, `offset_page`, `flight_iata`, `flight_icao`, `airline_iata`, `airline_icao`, `airline_name`,
              `airport`, `depart`, `arrive`, `dep_iata`, `dep_icao`, `dep_city`, `arr_iata`, `arr_icao`,
-             `arr_city`, `tz_dep`, `tz_arr`, `status`, `dep_terminal`, `arr_terminal`, `delayed`) 
+             `arr_city`, `tz_dep`, `tz_arr`, `status`, `dep_terminal`, `arr_terminal`, `delayed_time`) 
             VALUES " . implode(', ', $insert_data);
 
         $wpdb->query($query);
@@ -1315,11 +1329,11 @@ function mi_plugin_fetch_flight_data($request)
                     'status' => $flightData['status'],
                     'depIata' => $flightData['dep_iata'],
                     'depGate' => $flightData['dep_gate'],
-                    'depTimeTs' => $flightData['dep_time_ts'],
+                    'depTimeTs' => $flightData['dep_estimated'] ? $flightData['dep_estimated'] : $flightData['dep_time'],
                     'depDelayed' => $flightData['dep_delayed'],
                     'arrIata' => $flightData['arr_iata'],
                     'arrGate' => $flightData['arr_gate'],
-                    'arrTimeTs' => $flightData['arr_time_ts'],
+                    'arrTimeTs' => $flightData['arr_estimated'] ? $flightData['arr_estimated'] : $flightData['arr_time'],
                     'arrDelayed' => $flightData['arr_delayed'],
                     'duration' => $flightData['duration'],
                     'airlineName' => $airlineData['name'],
@@ -1384,12 +1398,12 @@ function mi_plugin_fetch_flight_data($request)
                             'dep_iata' => $flightData['dep_iata'],
                             'dep_icao' => $flightData['dep_icao'],
                             'dep_gate' => $flightData['dep_gate'],
-                            'dep_time_ts' => $flightData['dep_time'],
+                            'dep_time_ts' => $flightData['dep_estimated'] ?? $flightData['dep_time'],
                             'dep_delayed' => $flightData['dep_delayed'],
                             'arr_iata' => $flightData['arr_iata'],
                             'arr_icao' => $flightData['arr_icao'],
                             'arr_gate' => $flightData['arr_gate'],
-                            'arr_time_ts' => $flightData['arr_time'],
+                            'arr_time_ts' => $flightData['arr_estimated'] ?? $flightData['arr_time'],
                             'arr_delayed' => $flightData['arr_delayed'],
                             'duration' => $flightData['duration'],
                             'updated_time' => current_time('mysql', 1),
@@ -1415,11 +1429,11 @@ function mi_plugin_fetch_flight_data($request)
                         'status' => $flightData['status'],
                         'depIata' => $flightData['dep_iata'],
                         'depGate' => $flightData['dep_gate'],
-                        'depTimeTs' => $flightData['dep_time'],
+                        'depTimeTs' => $flightData['dep_estimated'] ?? $flightData['dep_time'],
                         'depDelayed' => $flightData['dep_delayed'],
                         'arrIata' => $flightData['arr_iata'],
                         'arrGate' => $flightData['arr_gate'],
-                        'arrTimeTs' => $flightData['arr_time'],
+                        'arrTimeTs' => $flightData['arr_estimated'] ?? $flightData['arr_time'],
                         'arrDelayed' => $flightData['arr_delayed'],
                         'duration' => $flightData['duration'],
                         'airlineName' => $flightData['airline_name'],
@@ -1444,6 +1458,7 @@ function mi_plugin_fetch_flight_data($request)
             }
             break;
 
+            //Case for schedules in departures and arrivals
         case 'departures':
         case 'arrivals':
             $isDepartures = $type === 'departures';
@@ -1562,6 +1577,7 @@ function mi_plugin_fetch_flight_data($request)
                             'tz_dep' => $flight['tz_dep'],
                             'tz_arr' => $flight['tz_arr'],
                             'status' => $flight['status'],
+                            'delayed_time' => $flight['delayed_time'],
                         ];
                     }, $flightDetails);
 
@@ -1722,7 +1738,7 @@ function mi_plugin_fetch_flight_data($request)
                     $tz_arr = $airports[$flightData['arr_iata']]['timezone'] ?? '';
 
                     $insert_data[] = $wpdb->prepare(
-                        "(%d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        "(%d, %d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %d)",
                         $schedule['id'],
                         $offset,
                         $flightData['flight_iata'] ?? '',
@@ -1738,12 +1754,13 @@ function mi_plugin_fetch_flight_data($request)
                         $dep_city ?? '',
                         $flightData['arr_iata'] ?? '',
                         $flightData['arr_icao'] ?? '',
-                        $arr_terminal['arr_terminal'] ?? '',
-                        $dep_terminal['dep_terminal'] ?? '',
                         $arr_city ?? '',
                         $tz_dep ?? '',
                         $tz_arr ?? '',
-                        $flightData['status'] ?? ''
+                        $flightData['status'] ?? '',
+                        $arr_terminal['arr_terminal'] ?? '',
+                        $dep_terminal['dep_terminal'] ?? '',
+                        $flightData['delayed']
                     );
 
                     // if ($insert_result !== false) {
@@ -1782,6 +1799,7 @@ function mi_plugin_fetch_flight_data($request)
                         'tz_dep' => $tz_dep,
                         'tz_arr' => $tz_arr,
                         'status' => $flightData['status'],
+                        'delayed_time' => $flightData['delayed']
                     ];
                 }
                 // Execute the batch insert
@@ -1790,7 +1808,7 @@ function mi_plugin_fetch_flight_data($request)
                         (`schedule_id`, `offset_page`, `flight_iata`, `flight_icao`, `airline_iata`, 
                          `airline_icao`, `airport`, `airline_name`, `depart`, `arrive`, `dep_iata`, 
                          `dep_icao`, `dep_city`, `arr_iata`, `arr_icao`, `arr_city`, `tz_dep`, 
-                         `tz_arr`, `status`, `dep_terminal`, `arr_terminal`) 
+                         `tz_arr`, `status`, `dep_terminal`, `arr_terminal`, `delayed_time`) 
                         VALUES " . implode(', ', $insert_data);
 
                     $wpdb->query($query);

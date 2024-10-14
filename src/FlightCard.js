@@ -8,6 +8,7 @@ import {
   getElapsedTime,
   getRemainingTime,
 } from "./helper.js";
+import { DateTime } from "luxon";
 import moment, { min } from "moment-timezone";
 
 const FlightCard = ({ data, loadingData }) => {
@@ -16,45 +17,99 @@ const FlightCard = ({ data, loadingData }) => {
     if (data === null) return;
     if (data?.status === "landed") return 100;
     if (data?.status === "scheduled") return 0;
-    if ((getElapsedTime(data) / (data.duration * 60)) * 100 > 100) {
+    const elapsedTime = getElapsedTime(data);
+    const totalDurationSeconds = data.duration * 60;
+
+    if ((elapsedTime / totalDurationSeconds) * 100 > 100) {
       return 100;
     } else {
-      return (getElapsedTime(data) / (data.duration * 60)) * 100;
+      return (elapsedTime / totalDurationSeconds) * 100;
     }
   };
-
+  // const getWidth = (data) => {
+  //   if (data === null) return;
+  //   if (data?.status === "landed") return 100;
+  //   if (data?.status === "scheduled") return 0;
+  //   if ((getElapsedTime(data) / (data.duration * 60)) * 100 > 100) {
+  //     return 100;
+  //   } else {
+  //     return (getElapsedTime(data) / (data.duration * 60)) * 100;
+  //   }
+  // };
   const renderFlightStatus = (data) => {
     if (data === null) return;
-    if (data?.status === "landed")
+    const remainingTime = getRemainingTime(data);
+    const elapsedTime = getElapsedTime(data);
+
+    if (data?.status === "landed") {
       return (
         <p className="text-sm text-[#7794B0]">
           Landed {minutesToHours(data.duration)} ago
         </p>
       );
-    if (data.status === "scheduled")
+    }
+
+    if (data?.status === "scheduled") {
       return (
         <p className="text-sm text-[#7794B0]">
-          Expected to depart in {secondsToHours(getRemainingTime(data))}
+          Expected to depart in {secondsToHours(remainingTime)}
         </p>
       );
+    }
+
     return (
       <p className="text-sm text-[#7794B0]">
-        Arriving in {secondsToHours(getRemainingTime(data))}
+        Arriving in {secondsToHours(remainingTime)}
       </p>
     );
   };
+
+  // const renderFlightStatus = (data) => {
+  //   if (data === null) return;
+  //   if (data?.status === "landed")
+  //     return (
+  //       <p className="text-sm text-[#7794B0]">
+  //         Landed {minutesToHours(data.duration)} ago
+  //       </p>
+  //     );
+  //   if (data.status === "scheduled")
+  //     return (
+  //       <p className="text-sm text-[#7794B0]">
+  //         Expected to depart in {secondsToHours(getRemainingTime(data))}
+  //       </p>
+  //     );
+  //   return (
+  //     <p className="text-sm text-[#7794B0]">
+  //       Arriving in {secondsToHours(getRemainingTime(data))}
+  //     </p>
+  //   );
+  // };
+
+  // Function to format time and show delay if exists
+  const formatTimeWithDelay = (time, delay) => {
+    const formattedTime = moment(time).format("HH:mm");
+    const formattedDate = moment(time).format("YYYY-MM-DD");
+
+    if (delay && delay > 0) {
+      const delayText = `Delayed by ${minutesToHours(delay)}`;
+      return `${formattedTime} - ${formattedDate} (${delayText})`;
+    }
+
+    return `${formattedTime} - ${formattedDate}`;
+  };
+
   return (
     <section className="container mx-auto my-8">
       <div className="px-4 flex flex-col items-center justify-center sm:px-16">
-      {loadingData && (
-        <div
-          className="ag-custom-loading-cell"
-          style={{ padding: "15px", lineHeight: "25px", fontSize: "24px" }}
-        >
-          <i className="fas fa-spinner fa-pulse"></i>{" "}
-          <span> Loading data, one moment please...</span>
-        </div>
-      )}
+        {loadingData && (
+          <div
+            className="ag-custom-loading-cell"
+            style={{ padding: "15px", lineHeight: "25px", fontSize: "24px" }}
+          >
+            <i className="fas fa-spinner fa-pulse"></i>{" "}
+            <span> Loading data, one moment please...</span>
+          </div>
+        )}
         <div className="bg-lightBlue-500 rounded-xl w-full p-4 sm:p-8 md:p-12 shadow-sm">
           <div className="bg-white w-full h-full rounded-xl shadow-sm flex flex-col">
             <div className="w-full flex flex-row items-center p-4 lg:px-8">
@@ -100,7 +155,8 @@ const FlightCard = ({ data, loadingData }) => {
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
                   {/* {formatDate(parseInt(data?.depTimeTs || null))} */}
-                  {moment(data?.depTimeTs).format("HH:mm z") || null}
+                  {/* {moment(data?.depTimeTs).format("HH:mm z") || null} */}
+                  {formatTimeWithDelay(data?.depTimeTs, data?.depDelayed)}
                 </p>
                 {/* {data?.depDelayed === null ? (
                   <p className="text-sm text-[#7794B0] capitalize">
@@ -142,7 +198,8 @@ const FlightCard = ({ data, loadingData }) => {
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
                   {/* {formatDate(parseInt(data?.arrTimeTs || null))} */}
-                  {moment(data?.arrTimeTs).format("HH:mm z") || null}
+                  {/* {moment(data?.arrTimeTs).format("HH:mm z") || null} */}
+                  {formatTimeWithDelay(data?.arrTimeTs, data?.arrDelayed)}
                 </p>
                 {/* {data?.arrDelayed === null ? (
                   <p className="text-sm text-[#7794B0] capitalize">
