@@ -17,8 +17,9 @@ document.querySelectorAll(".react-app-container").forEach((container) => {
   const terminal = container.getAttribute("data-terminal") || ""; // New terminal parameter
   const delayed_type = container.getAttribute("data-delayed-type") || "";
   const delayed_time = container.getAttribute("data-delayed-time") || "";
+  const title = container.getAttribute("data-title") || "";
 
-  console.log("Shortcode data: ", type, airportCode, airp_codeType, delayed_type, delayed_time);
+  // console.log("Shortcode data: ", type, airportCode, airp_codeType, delayed_type, delayed_time);
 
   // Initialize query parameters
   let queryParams = new URLSearchParams({
@@ -47,7 +48,8 @@ document.querySelectorAll(".react-app-container").forEach((container) => {
     queryParams.append("delayed_type", delayed_type);
     queryParams.append("delayed_time", delayed_time);
   }
-  console.log("Delayed details: ", delayed_time, delayed_type, type);
+  if (title !== "") queryParams.append("title", title)
+  // console.log("Delayed details: ", delayed_time, delayed_type, type);
 
   // Initialize the React root and render the App component
   const root = ReactDOM.createRoot(container); // Use createRoot

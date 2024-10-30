@@ -133,64 +133,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
 
   const autoSizeStrategy = {
     autoSizeAllColumns: true,
-    type: window.innerWidth > 768 ? "fitGridWidth" : "fitCellContents",
+    type: window.innerWidth > 768 ? "fitGridWidth" : "fitGridWidth",
   };
-
-  // useEffect(() => {
-  //   if (data && data.length > 0) {
-  //     if (window.innerWidth > 768) {
-  //       const formattedData = data.map((item) => ({
-  //         flight: item.flight.toLowerCase(),
-  //         airport: `${item.airport} (${
-  //           type === "arrivals" ? item.dep_code : item.arr_code
-  //         })`,
-  //         airport_city:
-  //           type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
-  //         airport_state:
-  //           type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
-  //         airport_country:
-  //           type === "arrivals"
-  //             ? item.depAirport_country
-  //             : item.arrAirport_country,
-  //         city: type === "arrivals" ? item.dep_city : item.arr_city,
-  //         airline_name: `${item.airline_name} (${item.airline_code})`,
-  //         depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
-  //         arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
-  //         status: item.status,
-  //         dep_code: item.dep_code,
-  //         arr_code: item.arr_code,
-  //         airline_code: item.airline_code,
-  //       }));
-  //       setRowData(formattedData);
-  //     } else {
-  //       const formattedData = data.map((item) => ({
-  //         flight: item.flight.toLowerCase(),
-  //         city:
-  //           type === "arrivals"
-  //             ? `${item.dep_city}/(${item.dep_code})`
-  //             : `${item.arr_city}/(${item.arr_code})`,
-  //         airline_name: `${item.airline_name} (${item.airline_code})`,
-  //         airport_city:
-  //           type === "arrivals" ? item.depAirport_city : item.arrAirport_city,
-  //         airport_state:
-  //           type === "arrivals" ? item.depAirport_state : item.arrAirport_state,
-  //         airport_country:
-  //           type === "arrivals"
-  //             ? item.depAirport_country
-  //             : item.arrAirport_country,
-  //         depart: moment.tz(item.depart, item.tz_dep).format("HH:mm z"),
-  //         arrive: moment.tz(item.arrive, item.tz_arr).format("HH:mm z"),
-  //         status: item.status,
-  //         dep_code: item.dep_code,
-  //         arr_code: item.arr_code,
-  //         airline_code: item.airline_code,
-  //       }));
-  //       setRowData(formattedData);
-  //     }
-  //   } else {
-  //     setRowData([]);
-  //   }
-  // }, [data, type]);
 
   useEffect(() => {
     if (data && data.length > 0) {
@@ -305,6 +249,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
   const tableName = () => {
     const status = queryParams.get("status");
     const airline = queryParams.get("airlineCode") ? data[0].airline : "";
+    const title = queryParams.get("title");
     const airport =
       data && data.length > 0 && type === "arrivals"
         ? data[0].arrAirport
@@ -331,11 +276,13 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
       }
     };
 
-    return (
-      <div className="flex flex-wrap h-auto w-full text-white bg-[#013877] items-center justify-center py-[1%] uppercase space-x-4">
-        {status && <StatusIcon />}
-        {!status && <ScheduledIcon />}
-        <div classNAme="flex flex-col flex-wrap justify-center">
+    const TableTitle = () => {
+      if (title) {
+        return (
+          <h2 className="flex text-white font-semibold font-sans">{title}</h2>
+        );
+      } else {
+        return (
           <h2 className="flex text-white font-semibold font-sans">
             {!status
               ? `${
@@ -346,6 +293,16 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
               : ""}
             {status ? `${status} flights` : ""} {airport}
           </h2>
+        );
+      }
+    };
+
+    return (
+      <div className="flex flex-wrap h-auto w-full text-white bg-[#013877] items-center justify-center py-[1%] uppercase space-x-4">
+        {status && <StatusIcon />}
+        {!status && <ScheduledIcon />}
+        <div classNAme="flex flex-col flex-wrap justify-center">
+          {TableTitle()}
           <h2 className="flex text-white font-bold font-sans mt-2">
             {incrementedTime ? `Local Time: ${incrementedTime}` : ""}
           </h2>
@@ -370,9 +327,9 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         cursor: "pointer",
         wordBreak: "break-all",
         flexWrap: "wrap",
-        minWidth: 120,
+        minWidth: 80,
       },
-      minWidth: 120,
+      minWidth: 80,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -469,8 +426,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     {
       headerName: "Depart",
       field: "depart",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
-      minWidth: 120,
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 80 },
+      minWidth: 80,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -489,8 +446,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     {
       headerName: "Depart Date",
       field: "dep_date",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
-      minWidth: 120,
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 110 },
+      minWidth: 110,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -509,8 +466,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     {
       headerName: "Arrive",
       field: "arrive",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
-      minWidth: 120,
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 80 },
+      minWidth: 80,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -529,8 +486,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     {
       headerName: "Arrival Date",
       field: "arr_date",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
-      minWidth: 120,
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 110 },
+      minWidth: 110,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -563,7 +520,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           return { color: "blue" };
         }
       },
-      minWidth: 120,
+      minWidth: 80,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -585,9 +542,9 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
       cellStyle: {
         wordBreak: "break-all",
         flexWrap: "wrap",
-        minWidth: 120,
+        minWidth: 90,
       },
-      minWidth: 120,
+      minWidth: 90,
       valueFormatter: (params) => {
         return params.value ? formatDelayedTime(params.value) : "0m";
       }, // Apply the time format here
@@ -618,7 +575,9 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         cursor: "pointer",
         wordBreak: "break-all",
         flexWrap: "wrap",
+        minWidth: 80,
       },
+      minWidth: 80,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -650,6 +609,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           return { wordBreak: "break-all", flexWrap: "wrap" };
         }
       },
+      minWidth: 100,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -682,6 +642,7 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
           return { color: "blue" };
         }
       },
+      minWidth: 80,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -706,7 +667,9 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
         cursor: "pointer",
         wordBreak: "break-all",
         flexWrap: "wrap",
+        minWidth: 150,
       },
+      minWidth: 150,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -725,7 +688,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     {
       headerName: "Depart",
       field: "depart",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap" },
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 80 },
+      minWidth: 80,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -744,8 +708,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     {
       headerName: "Depart Date",
       field: "dep_date",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
-      minWidth: 120,
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 110 },
+      minWidth: 110,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -764,7 +728,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     {
       headerName: "Arrive",
       field: "arrive",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap" },
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 80 },
+      minWidth: 80,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -783,8 +748,8 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
     {
       headerName: "Arrive Date",
       field: "arr_date",
-      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 120 },
-      minWidth: 120,
+      cellStyle: { wordBreak: "break-all", flexWrap: "wrap", minWidth: 110 },
+      minWidth: 110,
       headerComponentParams: {
         template:
           '<div class="ag-cell-label-container" role="presentation">' +
@@ -806,9 +771,9 @@ const TablaAGGrid = ({ type, size, queryParams, data, loadingData }) => {
       cellStyle: {
         wordBreak: "break-all",
         flexWrap: "wrap",
-        minWidth: 120,
+        minWidth: 90,
       },
-      minWidth: 120,
+      minWidth: 90,
       valueFormatter: (params) => {
         return params.value ? formatDelayedTime(params.value) : "0m";
       }, // Apply the time format here

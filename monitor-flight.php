@@ -3,7 +3,7 @@
 /**
  * Plugin Name: SEO Flight Schedule
  * Description: Muestra los vuelos de los aeropuertos y aerolineas.
- * Version: 2.0
+ * Version: 2.2
  * Author: Opentech
  * Text Domain: seo-flight-schedule
  * Last Updated: 2024-08-09
@@ -1874,7 +1874,8 @@ function generar_shortcode_react_app($atts, $content, $tag)
         'time_range' => '',
         'terminal' => '', // New parameter for terminal filtering
         'delayed_time' => '',
-        'delayed_type' => ''
+        'delayed_type' => '',
+        'title' => ''
     ], $atts);
 
     // Validación básica
@@ -1901,9 +1902,10 @@ function generar_shortcode_react_app($atts, $content, $tag)
     $terminal = $atts['terminal']; // Recuperar el valor del terminal
     $delayed_time = $atts['delayed_time'];
     $delayed_type = $atts['delayed_type'];
+    $title = $atts['title'];
 
     // Recuperar los valores guardados en los ajustes del plugin
-    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}' data-time-range='{$time_range}' data-terminal='{$terminal}' data-delayed-time='{$delayed_time}' data-delayed-type='{$delayed_type}'></div>";
+    return "<div class='react-app-container' data-react-app='mi-react-app' data-flight='{$flightCode}' data-flight-codetype='{$flight_codeType}' data-airport-code='{$airportCode}' data-airp-codetype='{$airp_codeType}' data-type='{$type}' data-size='{$atts['size']}' data-airline='{$airlineCode}' data-airl-codetype='{$airl_codeType}' data-status='{$status}' data-time-range='{$time_range}' data-terminal='{$terminal}' data-delayed-time='{$delayed_time}' data-delayed-type='{$delayed_type}' data-title='{$title}'></div>";
 }
 
 add_shortcode('arrivals_app', 'generar_shortcode_react_app');
@@ -1969,6 +1971,7 @@ function mi_plugin_docs_page()
             <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
             <li><strong>time_range</strong>: Establece un rango de tiempo en minutos para mostrar vuelos. Los vuelos que estén dentro del tiempo actual local del aeropuerto más el valor de `time_range` serán mostrados. (opcional)</li>
             <li><strong>terminal</strong>: Filtrar por terminal de llegada. (opcional)</li> <!-- New terminal parameter -->
+            <li><strong>title</strong>: Ingresar titulo personalizado para la tabla. (opcional)</li> <!-- New title parameter -->
         </ul>
         <p>
             <strong>Ejemplos:</strong>
@@ -1979,6 +1982,7 @@ function mi_plugin_docs_page()
             <li><code>[arrivals_app iata_code="JFK" size="5" time_range="60"]</code> - Muestra vuelos de llegada a JFK en el próximo rango de 60 minutos.</li>
             <li><code>[arrivals_app iata_code="LAX" size="10" airline_iata="AA" time_range="30"]</code> - Muestra vuelos de llegada de American Airlines (AA) en los próximos 30 minutos.</li>
             <li><code>[arrivals_app iata_code="LAX" size="10" terminal="A"]</code> - Filtra por vuelos que lleguen a la terminal A de LAX.</li> <!-- New example using terminal -->
+            <li><code>[arrivals_app iata_code="LAX" size="10" terminal="A" title="Aeropuerto de Los Angeles"]</code> - Filtra por vuelos que lleguen a la terminal A de LAX con el titulo Aeropuerto de Los Angeles.</li> <!-- New example using terminal -->
         </ul>
         </p>
 
@@ -1994,6 +1998,7 @@ function mi_plugin_docs_page()
             <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
             <li><strong>time_range</strong>: Establece un rango de tiempo en minutos para mostrar vuelos. Los vuelos que estén dentro del tiempo actual local del aeropuerto más el valor de `time_range` serán mostrados. (opcional)</li>
             <li><strong>terminal</strong>: Filtrar por terminal de salida. (opcional)</li> <!-- New terminal parameter -->
+            <li><strong>title</strong>: Ingresar titulo personalizado para la tabla. (opcional)</li> <!-- New title parameter -->
         </ul>
         <p>
             <strong>Ejemplos:</strong>
@@ -2003,7 +2008,7 @@ function mi_plugin_docs_page()
             <li><code>[departures_app icao_code="KMIA" size="15" status="landed"]</code></li>
             <li><code>[departures_app iata_code="LAX" size="10" time_range="45"]</code> - Muestra vuelos de salida de LAX en el próximo rango de 45 minutos.</li>
             <li><code>[departures_app iata_code="LAX" size="10" airline_iata="AA" time_range="60"]</code> - Muestra vuelos de salida de American Airlines (AA) en los próximos 60 minutos.</li>
-            <li><code>[departures_app iata_code="LAX" size="10" terminal="2"]</code> - Filtra por vuelos que salen de la terminal 2 de LAX.</li> <!-- New example using terminal -->
+            <li><code>[departures_app iata_code="LAX" size="10" terminal="2" title="Aeropuerto de Los Angeles"]</code> - Filtra por vuelos que salen de la terminal 2 de LAX con el titulo Aeropuerto de Los Angeles.</li> <!-- New example using terminal -->
         </ul>
         </p>
 
@@ -2020,20 +2025,23 @@ function mi_plugin_docs_page()
         <h4>Vuelos Retrasados [delayed_flights]</h4>
         <p>Este shortcode muestra información sobre vuelos retrasados en un aeropuerto específico. Utiliza los siguientes parámetros para personalizar la salida:</p>
         <ul>
-            <li><strong>airportCode</strong>: Código IATA o ICAO del aeropuerto. (opcional si se proporciona el tipo de código)</li>
-            <li><strong>airp_codeType</strong>: Tipo de código del aeropuerto (opciones: `iata` o `icao`).</li>
-            <li><strong>airlineCode</strong>: Código IATA o ICAO de la aerolínea (opcional).</li>
-            <li><strong>airl_codeType</strong>: Tipo de código de la aerolínea (opciones: `iata` o `icao`).</li>
+            <li><strong>iata_code</strong>: Código IATA del aeropuerto. (opcional si se proporciona `icao_code`)</li>
+            <li><strong>icao_code</strong>: Código ICAO del aeropuerto. (opcional si se proporciona `iata_code`)</li>
+            <li><strong>size</strong>: Número de vuelos a mostrar.</li>
+            <li><strong>airline_iata</strong>: Filtrar por código IATA de la aerolínea. (opcional)</li>
+            <li><strong>airline_icao</strong>: Filtrar por código ICAO de la aerolínea. (opcional)</li>
+            <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
+            <li><strong>time_range</strong>: Establece un rango de tiempo en minutos para mostrar vuelos. Los vuelos que estén dentro del tiempo actual local del aeropuerto más el valor de `time_range` serán mostrados. (opcional)</li>
+            <li><strong>terminal</strong>: Filtrar por terminal de llegada. (opcional)</li> <!-- New terminal parameter -->
             <li><strong>delayed_type</strong>: Tipo de retraso (opciones: `arrivals` o `departures`).</li>
             <li><strong>delayed_time</strong>: Tiempo de retraso en minutos.</li>
-            <li><strong>status</strong>: Filtrar vuelos por estado. (opcional) Valores posibles: 'scheduled', 'cancelled', 'active', 'landed'.</li>
-            <li><strong>terminal</strong>: Filtrar por terminal del vuelo. (opcional)</li>
+            <li><strong>title</strong>: Ingresar titulo personalizado para la tabla. (opcional)</li> <!-- New title parameter -->
         </ul>
 
         <p><strong>Ejemplos:</strong></p>
         <ul>
-            <li><code>[delayed_flights airportCode="LAX" airp_codeType="iata" delayed_type="departures" delayed_time="30"]</code> - Muestra vuelos de salida retrasados en LAX con retrasos de al menos 30 minutos.</li>
-            <li><code>[delayed_flights airportCode="JFK" airp_codeType="icao" airlineCode="AA" airl_codeType="iata" delayed_type="arrivals" delayed_time="60"]</code> - Muestra vuelos de llegada retrasados de American Airlines (AA) a JFK con retrasos de al menos 60 minutos.</li>
+            <li><code>[delayed_flights iata_code="LAX" delayed_type="departures" delayed_time="30"]</code> - Muestra vuelos de salida retrasados en LAX con retrasos de al menos 30 minutos.</li>
+            <li><code>[delayed_flights icao_code="JFK" airline_iata="AA" delayed_type="arrivals" delayed_time="60"]</code> - Muestra vuelos de llegada retrasados de American Airlines (AA) a JFK con retrasos de al menos 60 minutos.</li>
         </ul>
 
         <!-- Configuración -->
