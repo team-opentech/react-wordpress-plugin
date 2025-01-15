@@ -1047,7 +1047,7 @@ export const Arrival_Airplane = () => {
       height="52"
       viewBox="0 0 61 52"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      xmlns="https://www.w3.org/2000/svg"
     >
       <path
         d="M20.1401 30.3972L14.47 35.3015C13.8819 35.8089 14.1342 36.7734 14.8965 36.9295L17.3249 37.4266C17.5177 37.4661 17.7193 37.4442 17.8988 37.3623L35.0598 29.6258"
@@ -1147,7 +1147,7 @@ export const Cancelled_Flight = () => {
       height="70"
       viewBox="0 0 70 70"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      xmlns="https://www.w3.org/2000/svg"
     >
       <path
         d="M48.4375 37H48.25"
@@ -1233,7 +1233,7 @@ export const Departure_Airplane = () => {
       height="51"
       viewBox="0 0 57 51"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      xmlns="https://www.w3.org/2000/svg"
     >
       <path
         d="M1 30.8303L8.11563 28.5128"
@@ -1365,7 +1365,7 @@ export const Active_Flight = () => {
       height="53"
       viewBox="0 0 57 53"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      xmlns="https://www.w3.org/2000/svg"
     >
       <path
         d="M19.8569 27.2988L15.2856 33.2406C14.8113 33.8556 15.2519 34.75 16.03 34.75H18.5088C18.7056 34.75 18.8988 34.6881 19.0581 34.5719L34.3188 23.5506"
@@ -1496,7 +1496,7 @@ export const Landed_Flight = () => {
       height="34"
       viewBox="0 0 57 34"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      xmlns="https://www.w3.org/2000/svg"
     >
       <path
         d="M47.0899 16H34.3586L23.3899 1.375C23.2211 1.12938 22.9399 1 22.6399 1H19.6211C19.0211 1 18.5711 1.58312 18.7211 2.1625L22.1711 16H10.1149C8.85863 16 7.69613 15.3812 7.00238 14.3312L4.63988 10.7875C4.47113 10.525 4.17113 10.375 3.85238 10.375H1.93988C1.28363 10.375 0.833634 11.0125 1.05863 11.6313L3.06488 17.275C4.41488 21.0063 7.93988 23.5 11.8961 23.5H52.5461C53.8961 23.5 54.9836 22.4125 54.9836 21.0625C54.9836 20.2375 54.5711 19.4875 53.8961 19.0187L51.2524 17.2563C50.0149 16.4313 48.5711 16 47.0899 16Z"
@@ -1588,7 +1588,7 @@ export const Scheduled_Flight = () => {
       height="61"
       viewBox="0 0 61 61"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      xmlns="https://www.w3.org/2000/svg"
     >
       <path
         d="M40.3593 42.8783H40.2148"

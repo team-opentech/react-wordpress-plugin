@@ -1,31 +1,108 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   formatDate,
   formatTimeWithAMPM,
-  secondsToHours,
+  // secondsToHours,
   minutesToHours,
-  getElapsedTime,
-  getRemainingTime,
+  // getElapsedTime,
+  // getRemainingTime,
 } from "./helper.js";
 import { DateTime } from "luxon";
 import moment, { min } from "moment-timezone";
 
 const FlightCard = ({ data, loadingData }) => {
+  const [localTime, setLocalTime] = useState(null); // Estado para almacenar la hora local del aeropuerto de salida
+  const [localArrTime, setLocalArrTime] = useState(null); // Estado para almacenar la hora local del aeropuerto de llegada
+  const baseUrl = window.location.origin;
   // console.log("FlightCard data", data);
-  const getWidth = (data) => {
-    if (data === null) return;
-    if (data?.status === "landed") return 100;
-    if (data?.status === "scheduled") return 0;
-    const elapsedTime = getElapsedTime(data);
-    const totalDurationSeconds = data.duration * 60;
 
-    if ((elapsedTime / totalDurationSeconds) * 100 > 100) {
-      return 100;
-    } else {
-      return (elapsedTime / totalDurationSeconds) * 100;
-    }
+  const fetchLocalTime = (data) => {
+    // Construct queryParams dynamically using the values from `data`
+    const queryParamsDep = `airportCode=${data?.depIata}&airp_codeType=iata`;
+    const queryParamsArr = `airportCode=${data?.arrIata}&airp_codeType=iata`;
+
+    const localTimeDepUrl = `${baseUrl}/wp-json/mi-plugin/v1/local-time?${queryParamsDep}`;
+    const localTimeArrUrl = `${baseUrl}/wp-json/mi-plugin/v1/local-time?${queryParamsArr}`;
+
+    fetch(localTimeDepUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error fetching local time");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const localDateTime = data.local_time; // Store the full datetime string
+        const localTime = localDateTime.split(" ")[1]; // Extract only the time part
+
+        setLocalTime(localDateTime); // Set only the time part if needed elsewhere
+      })
+      .catch((error) => {
+        console.error("Error fetching local time:", error);
+      });
+    fetch(localTimeArrUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error fetching local time");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const localDateTime = data.local_time; // Store the full datetime string
+        const localTime = localDateTime.split(" ")[1]; // Extract only the time part
+
+        setLocalArrTime(localDateTime); // Set only the time part if needed elsewhere
+      })
+      .catch((error) => {
+        console.error("Error fetching local time:", error);
+      });
   };
+
+  useEffect(() => {
+    // Check if data and data.depIata are available before fetching
+    if (data && data.depIata && data.arrIata) {
+      fetchLocalTime(data);
+    }
+  }, [data]);
+
+  const getElapsedTime = (data) => {
+    if (!data?.depTimeTs) return 0;
+
+    const departureTime = new Date(data.depTimeTs.replace(" ", "T")).getTime(); // Normalize to ISO format
+    const currentTime = new Date().getTime(); // Current time in milliseconds
+
+    const elapsedTime = (currentTime - departureTime) / 1000; // Time elapsed in seconds
+    return Math.max(elapsedTime, 0); // Ensure elapsed time is not negative
+  };
+
+  const getWidth = (data) => {
+    if (!data) return 0;
+
+    if (data.status === "landed") return 100; // Full progress if the flight has landed
+    if (data.status === "scheduled" || data.status === "cancelled") return 0; // No progress for scheduled or cancelled flights
+
+    const elapsedTime = getElapsedTime(data); // Get elapsed time in seconds
+    const totalDurationSeconds = data.duration * 60; // Convert duration from minutes to seconds
+
+    // Calculate the progress percentage
+    const progressPercentage = (elapsedTime / totalDurationSeconds) * 100;
+    return Math.min(progressPercentage, 100); // Ensure the progress does not exceed 100%
+  };
+
+  // const getWidth = (data) => {
+  //   if (data === null) return;
+  //   if (data?.status === "landed") return 100;
+  //   if (data?.status === "scheduled") return 0;
+  //   const elapsedTime = getElapsedTime(data);
+  //   const totalDurationSeconds = data.duration * 60;
+
+  //   if ((elapsedTime / totalDurationSeconds) * 100 > 100) {
+  //     return 100;
+  //   } else {
+  //     return (elapsedTime / totalDurationSeconds) * 100;
+  //   }
+  // };
   // const getWidth = (data) => {
   //   if (data === null) return;
   //   if (data?.status === "landed") return 100;
@@ -36,33 +113,125 @@ const FlightCard = ({ data, loadingData }) => {
   //     return (getElapsedTime(data) / (data.duration * 60)) * 100;
   //   }
   // };
-  const renderFlightStatus = (data) => {
-    if (data === null) return;
-    const remainingTime = getRemainingTime(data);
-    const elapsedTime = getElapsedTime(data);
 
-    if (data?.status === "landed") {
-      return (
-        <p className="text-sm text-[#7794B0]">
-          Landed {minutesToHours(data.duration)} ago
-        </p>
-      );
-    }
+  // Helper function to calculate remaining time in seconds
+  const getRemainingTime = (targetTime, currentTime) => {
+    if (!targetTime || !currentTime) return 0; // Fallback if either time is missing
 
-    if (data?.status === "scheduled") {
-      return (
-        <p className="text-sm text-[#7794B0]">
-          Expected to depart in {secondsToHours(remainingTime)}
-        </p>
-      );
-    }
+    // Ensure both targetTime and currentTime have the same date and format
+    const normalizeTime = (time, baseTime) => {
+      if (time.length <= 8) {
+        // If time is in HH:mm:ss or HH:mm, prepend the date from baseTime
+        const currentDate = new Date(baseTime.replace(" ", "T"))
+          .toISOString()
+          .split("T")[0]; // Extract YYYY-MM-DD
+        return `${currentDate} ${time}`; // Combine date and time
+      }
+      return time; // Return full datetime as-is
+    };
 
-    return (
-      <p className="text-sm text-[#7794B0]">
-        Arriving in {secondsToHours(remainingTime)}
-      </p>
+    const normalizedTarget = normalizeTime(targetTime, currentTime).replace(
+      " ",
+      "T"
     );
+    const normalizedCurrent = currentTime.replace(" ", "T");
+
+    const target = new Date(normalizedTarget).getTime(); // Convert normalized target time to timestamp
+    const current = new Date(normalizedCurrent).getTime(); // Convert normalized current time to timestamp
+
+    if (isNaN(target) || isNaN(current)) {
+      console.error("Invalid date format:", { targetTime, currentTime });
+      return 0; // Fallback for invalid date formats
+    }
+
+    // Return difference in seconds (positive if target is ahead, negative if behind)
+    return (target - current) / 1000;
   };
+
+  // Helper function to format seconds into "Xh Ymin"
+  const secondsToHours = (seconds) => {
+    if (isNaN(seconds)) return "N/A"; // Fallback for invalid input
+
+    const isPast = seconds < 0; // Check if the time difference is negative
+    const absSeconds = Math.abs(seconds); // Get the absolute value of seconds
+    const hours = Math.floor(absSeconds / 3600);
+    const minutes = Math.floor((absSeconds % 3600) / 60);
+
+    return `${isPast ? "-" : ""}${hours > 0 ? `${hours}h ` : ""}${minutes}min`;
+  };
+
+  // Main render function
+  const renderFlightStatus = (data, localTime, localArrTime) => {
+    if (!data || !localTime) return null;
+
+    let remainingTime;
+
+    // Handle different statuses
+    switch (data.status) {
+      case "scheduled":
+        remainingTime = getRemainingTime(data.depTimeTs, localTime);
+        return (
+          <p className="text-sm text-[#7794B0]">
+            Expected to depart in {secondsToHours(remainingTime)}
+          </p>
+        );
+
+      case "landed":
+        remainingTime = getRemainingTime(localArrTime, data.arrTimeTs);
+        return (
+          <p className="text-sm text-[#7794B0]">
+            Landed {secondsToHours(remainingTime)} ago
+          </p>
+        );
+
+      case "cancelled":
+        return null;
+
+      default:
+        const expectedArrivalTime = new Date(
+          new Date(data.depTimeTs.replace(" ", "T")).getTime() +
+            data.duration * 60000 // Add duration in milliseconds
+        ).toISOString();
+
+        remainingTime = getRemainingTime(expectedArrivalTime, localTime);
+        return (
+          <p className="text-sm text-[#7794B0]">
+            Arriving in {secondsToHours(remainingTime)}
+          </p>
+        );
+    }
+  };
+
+  // const renderFlightStatus = (data, localTime, localArrTime) => {
+  //   if (data === null || localTime === null) return null;
+
+  //   const remainingTime = getRemainingTime(data, localTime);
+
+  //   if (data?.status === "landed") {
+  //     return (
+  //       <p className="text-sm text-[#7794B0]">
+  //         Landed   {}   ago
+  //       </p>
+  //     );
+  //   }
+
+  //   if (data?.status === "scheduled") {
+  //     return (
+  //       <p className="text-sm text-[#7794B0]">
+  //         Expected to depart in {secondsToHours(remainingTime)}
+  //       </p>
+  //     );
+  //   }
+  //   if (data?.status === "cancelled") {
+  //     return <p className="text-sm text-[#7794B0]">Flight Cancelled</p>;
+  //   }
+
+  //   return (
+  //     <p className="text-sm text-[#7794B0]">
+  //       Arriving in {secondsToHours(remainingTime)}
+  //     </p>
+  //   );
+  // };
 
   // const renderFlightStatus = (data) => {
   //   if (data === null) return;
@@ -87,20 +256,49 @@ const FlightCard = ({ data, loadingData }) => {
 
   // Function to format time and show delay if exists
   const formatTimeWithDelay = (time, delay) => {
-    const formattedTime = moment(time).format("HH:mm");
-    const formattedDate = moment(time).format("YYYY-MM-DD");
-
-    if (delay && delay > 0) {
-      const delayText = `Delayed by ${minutesToHours(delay)}`;
-      return `${formattedTime} - ${formattedDate} (${delayText})`;
+    // If time is undefined or invalid, return a fallback
+    if (!time) {
+      return (
+        <div>
+          <div>Time: N/A</div>
+          <div>Date: N/A</div>
+        </div>
+      );
     }
 
-    return `${formattedTime} - ${formattedDate}`;
+    // Split the input time into date and time
+    const [formattedDate, formattedTime] = time.toString().split(" ");
+    // Format the date to dd-mm-yyyy
+    const [year, month, day] = formattedDate.split("-");
+    const formattedDateDDMMYYYY = `${day}-${month}-${year}`;
+    // Create the delay text if delay exists
+    const delayText =
+      delay && delay > 0 ? `(Delayed by ${minutesToHours(delay)})` : null;
+
+    // Return a div containing the time, date, and delay information
+    return (
+      <div>
+        <div>
+          {formattedTime} {delayText && `${delayText}`}
+        </div>
+        <div>{formattedDateDDMMYYYY}</div>
+      </div>
+    );
   };
 
   return (
     <section className="container mx-auto my-8">
       <div className="px-4 flex flex-col items-center justify-center sm:px-16">
+        {localTime && (
+          <div className="px-2 border-x-[1px] border-lightBlue-500">
+            <p className="text-lg text-[#7794B0] font-semibold">
+              Departure local Time {localTime}
+            </p>
+            <p className="text-lg text-[#7794B0] font-semibold">
+              Arrival local Time {localArrTime}
+            </p>
+          </div>
+        )}
         {loadingData && (
           <div
             className="ag-custom-loading-cell"
@@ -133,7 +331,7 @@ const FlightCard = ({ data, loadingData }) => {
                 <p className="uppercase text-sm font-bold text-orange-600">
                   {data?.status || ""}
                 </p>
-                {renderFlightStatus(data || null)}
+                {renderFlightStatus(data, localTime, localArrTime) || null}
               </div>
             </div>
             <div className="w-full flex flex-row p-4 gap-4 flex-wrap justify-between lg:px-8">
@@ -154,8 +352,7 @@ const FlightCard = ({ data, loadingData }) => {
                   {data?.depAirportName || ""} - {data?.depIata || ""}
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
-                  {/* {formatDate(parseInt(data?.depTimeTs || null))} */}
-                  {/* {moment(data?.depTimeTs).format("HH:mm z") || null} */}
+                  Local Departure Time
                   {formatTimeWithDelay(data?.depTimeTs, data?.depDelayed)}
                 </p>
                 {/* {data?.depDelayed === null ? (
@@ -174,9 +371,8 @@ const FlightCard = ({ data, loadingData }) => {
                   </p>
                 )} */}
                 <p className="font-light text-sm text-[#7794B0] pt-1">
-                  left{" "}
                   <span className="font-semibold text-base text-[#013877]">
-                    Gate {data?.depGate || ""}
+                    {data?.depGate || ""} Gate
                   </span>
                 </p>
               </div>
@@ -197,10 +393,10 @@ const FlightCard = ({ data, loadingData }) => {
                   {data?.arrAirportName || ""} - {data?.arrIata || ""}
                 </p>
                 <p className="text-sm text-[#7794B0] capitalize">
-                  {/* {formatDate(parseInt(data?.arrTimeTs || null))} */}
-                  {/* {moment(data?.arrTimeTs).format("HH:mm z") || null} */}
+                  Local Arrival Time
                   {formatTimeWithDelay(data?.arrTimeTs, data?.arrDelayed)}
                 </p>
+
                 {/* {data?.arrDelayed === null ? (
                   <p className="text-sm text-[#7794B0] capitalize">
                     {/* {formatTimeWithAMPM(parseInt(data?.arrTimeTs || null))}{" "} }
@@ -217,9 +413,8 @@ const FlightCard = ({ data, loadingData }) => {
                   </p>
                 )} */}
                 <p className="font-light text-sm text-[#7794B0] pt-1">
-                  Arriving at{" "}
                   <span className="font-semibold text-base text-[#013877]">
-                    Gate {data?.arrGate || ""}
+                    {data?.arrGate || ""} Gate
                   </span>
                 </p>
               </div>

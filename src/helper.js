@@ -3,41 +3,56 @@ import moment, { min } from "moment-timezone";
 import { unix } from "moment";
 
 // Get elapsed time since departure based on date string (format: "YYYY-MM-DD HH:mm")
-export function getElapsedTime(flightInfo) {
-  if (!flightInfo) return;
+export function getElapsedTime(flightInfo, localTime) {
+  if (!flightInfo || !localTime) return 0;
 
-  const departureTime = DateTime.fromFormat(
-    flightInfo.depTimeTs,
-    "yyyy-MM-dd HH:mm"
-  );
+  const departureTime = DateTime.fromFormat(flightInfo.depTimeTs, "yyyy-MM-dd HH:mm");
   if (!departureTime.isValid) throw new Error("Invalid departure date format.");
 
-  const currentTime = DateTime.now(); // Current local time
-  return currentTime.diff(departureTime, "seconds").seconds; // Return elapsed time in seconds
+  // Combine `localTime` with today’s date for full DateTime object
+  const currentDateString = DateTime.now().toFormat("yyyy-MM-dd");
+  const currentTime = DateTime.fromFormat(`${currentDateString} ${localTime}`, "yyyy-MM-dd HH:mm");
+
+  if (!currentTime.isValid) {
+    console.error("Invalid localTime format:", localTime);
+    return 0;
+  }
+
+  // Calculate the difference in seconds
+  const elapsedTime = currentTime.diff(departureTime, "seconds").seconds;
+  return isNaN(elapsedTime) ? 0 : elapsedTime; // Return 0 if NaN
 }
 
 // Get remaining flight time based on departure time and duration (duration is in minutes)
-export function getRemainingTime(flightInfo) {
-  if (!flightInfo) return;
+export function getRemainingTime(flightInfo, localTime) {
+  if (!flightInfo || !localTime) return 0;
 
-  const totalDurationSeconds = flightInfo.duration * 60; // Convert minutes to seconds
-  const elapsedTime = getElapsedTime(flightInfo);
+  const totalDurationSeconds = flightInfo.duration * 60; // Convert duration from minutes to seconds
+  const elapsedTime = getElapsedTime(flightInfo, localTime);
 
-  return totalDurationSeconds - elapsedTime;
+  // Calculate remaining time and ensure it’s a valid number
+  const remainingTime = totalDurationSeconds - elapsedTime;
+  return isNaN(remainingTime) ? 0 : remainingTime; // Return 0 if NaN
 }
 
 // Get remaining time before departure
-export function getRemainingTimeToDepart(flightInfo) {
-  if (!flightInfo) return;
+export function getRemainingTimeToDepart(flightInfo, localTime) {
+  if (!flightInfo || !localTime) return 0;
 
-  const departureTime = DateTime.fromFormat(
-    flightInfo.depTimeTs,
-    "yyyy-MM-dd HH:mm"
-  );
+  const departureTime = DateTime.fromFormat(flightInfo.depTimeTs, "yyyy-MM-dd HH:mm");
   if (!departureTime.isValid) throw new Error("Invalid departure date format.");
 
-  const currentTime = DateTime.now();
-  return departureTime.diff(currentTime, "seconds").seconds; // Return remaining time in seconds
+  const currentDateString = DateTime.now().toFormat("yyyy-MM-dd");
+  const currentTime = DateTime.fromFormat(`${currentDateString} ${localTime}`, "yyyy-MM-dd HH:mm");
+
+  if (!currentTime.isValid) {
+    console.error("Invalid localTime format:", localTime);
+    return 0;
+  }
+
+  // Calculate time until departure and ensure it’s a valid number
+  const remainingTimeToDepart = departureTime.diff(currentTime, "seconds").seconds;
+  return isNaN(remainingTimeToDepart) ? 0 : remainingTimeToDepart; // Return 0 if NaN
 }
 
 // Format a date string (YYYY-MM-DD HH:mm) into a readable date format

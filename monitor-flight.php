@@ -3,10 +3,10 @@
 /**
  * Plugin Name: SEO Flight Schedule
  * Description: Muestra los vuelos de los aeropuertos y aerolineas.
- * Version: 2.2
+ * Version: 2.2.2
  * Author: Opentech
  * Text Domain: seo-flight-schedule
- * Last Updated: 2024-08-09
+ * Last Updated: 2024-11-05
  */
 
 defined('ABSPATH') or die('¡Acceso directo no permitido!');
@@ -1329,11 +1329,11 @@ function mi_plugin_fetch_flight_data($request)
                     'status' => $flightData['status'],
                     'depIata' => $flightData['dep_iata'],
                     'depGate' => $flightData['dep_gate'],
-                    'depTimeTs' => $flightData['dep_estimated'] ? $flightData['dep_estimated'] : $flightData['dep_time'],
+                    'depTimeTs' => $flightData['dep_estimated'] !== null ?  $flightData['dep_estimated'] : $flightData['dep_time'],
                     'depDelayed' => $flightData['dep_delayed'],
                     'arrIata' => $flightData['arr_iata'],
                     'arrGate' => $flightData['arr_gate'],
-                    'arrTimeTs' => $flightData['arr_estimated'] ? $flightData['arr_estimated'] : $flightData['arr_time'],
+                    'arrTimeTs' => $flightData['arr_estimated'] !== null  ? $flightData['arr_estimated'] : $flightData['arr_time'],
                     'arrDelayed' => $flightData['arr_delayed'],
                     'duration' => $flightData['duration'],
                     'airlineName' => $airlineData['name'],
@@ -1398,12 +1398,12 @@ function mi_plugin_fetch_flight_data($request)
                             'dep_iata' => $flightData['dep_iata'],
                             'dep_icao' => $flightData['dep_icao'],
                             'dep_gate' => $flightData['dep_gate'],
-                            'dep_time_ts' => $flightData['dep_estimated'] ?? $flightData['dep_time'],
+                            'dep_time_ts' => $flightData['dep_estimated'] !== null ? $flightData['dep_estimated'] : $flightData['dep_time'],
                             'dep_delayed' => $flightData['dep_delayed'],
                             'arr_iata' => $flightData['arr_iata'],
                             'arr_icao' => $flightData['arr_icao'],
                             'arr_gate' => $flightData['arr_gate'],
-                            'arr_time_ts' => $flightData['arr_estimated'] ?? $flightData['arr_time'],
+                            'arr_time_ts' => $flightData['arr_estimated'] !== null ? $flightData['arr_estimated'] : $flightData['arr_time'],
                             'arr_delayed' => $flightData['arr_delayed'],
                             'duration' => $flightData['duration'],
                             'updated_time' => current_time('mysql', 1),
@@ -1429,11 +1429,11 @@ function mi_plugin_fetch_flight_data($request)
                         'status' => $flightData['status'],
                         'depIata' => $flightData['dep_iata'],
                         'depGate' => $flightData['dep_gate'],
-                        'depTimeTs' => $flightData['dep_estimated'] ?? $flightData['dep_time'],
+                        'depTimeTs' => $flightData['dep_estimated'] !== null ? $flightData['dep_estimated'] : $flightData['dep_time'],
                         'depDelayed' => $flightData['dep_delayed'],
                         'arrIata' => $flightData['arr_iata'],
                         'arrGate' => $flightData['arr_gate'],
-                        'arrTimeTs' => $flightData['arr_estimated'] ?? $flightData['arr_time'],
+                        'arrTimeTs' => $flightData['arr_estimated'] !== null ? $flightData['arr_estimated'] : $flightData['arr_time'],
                         'arrDelayed' => $flightData['arr_delayed'],
                         'duration' => $flightData['duration'],
                         'airlineName' => $flightData['airline_name'],
@@ -1747,8 +1747,8 @@ function mi_plugin_fetch_flight_data($request)
                         $flightData['airline_icao'] ?? '',
                         $airportName ?? '',
                         $airline_name ?? '',
-                        $flightData['dep_estimated'] ?? $flightData['dep_time'],
-                        $flightData['arr_estimated'] ?? $flightData['arr_time'],
+                        $flightData['dep_estimated'] !== null ? $flightData['dep_estimated'] : $flightData['dep_time'],
+                        $flightData['arr_estimated'] !== null ? $flightData['arr_estimated'] : $flightData['arr_time'],
                         $flightData['dep_iata'] ?? '',
                         $flightData['dep_icao'] ?? '',
                         $dep_city ?? '',
@@ -1780,8 +1780,8 @@ function mi_plugin_fetch_flight_data($request)
                     $formattedFlights[] = [
                         'flight' => !empty($flightData['flight_iata']) ? $flightData['flight_iata'] : $flightData['flight_icao'],
                         'airport' => $airportName,
-                        'depart' => $flightData['dep_estimated'] ?? $flightData['dep_time'],
-                        'arrive' => $flightData['arr_estimated'] ?? $flightData['arr_time'],
+                        'depart' => $flightData['dep_estimated'] !== null ? $flightData['dep_estimated'] : $flightData['dep_time'],
+                        'arrive' => $flightData['arr_estimated'] !== null ? $flightData['arr_estimated'] : $flightData['arr_time'],
                         'airline_name' => $airline_name,
                         'airline_code' => !empty($flightData['airline_iata']) ? $flightData['airline_iata'] : $flightData['airline_icao'],
                         'arrAirport' => $airports[$flightData['arr_iata']]['name'] ?? '', // Access from $airports
@@ -2074,7 +2074,7 @@ function mi_plugin_docs_page()
             <div class="popup-content">
                 <span class="close" onclick="closePopup('airports-popup')">&times;</span>
                 <h2>Aeropuertos Cargados</h2>
-                <div class="loading">Cargando...</div>
+                <div class="loading" id="loading-airports">Cargando...</div>
                 <div id="airports-table"></div>
             </div>
         </div>
@@ -2084,7 +2084,7 @@ function mi_plugin_docs_page()
             <div class="popup-content">
                 <span class="close" onclick="closePopup('airlines-popup')">&times;</span>
                 <h2>Aerolíneas Cargadas</h2>
-                <div class="loading">Cargando...</div>
+                <div class="loading" id="loading-airlines">Cargando...</div>
                 <div id="airlines-table"></div>
             </div>
         </div>
@@ -2100,8 +2100,11 @@ function mi_plugin_docs_page()
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
             display: none;
+            /* Establecer como oculto por defecto */
             justify-content: center;
             align-items: center;
+            z-index: 1000;
+            /* Asegura que el popup esté sobre otros elementos */
         }
 
         .popup-content {
@@ -2147,46 +2150,77 @@ function mi_plugin_docs_page()
     </style>
 
     <script>
-        function openPopup(id) {
-            document.getElementById(id).style.display = 'flex';
-            if (id === 'airports-popup') {
-                loadJSONData('airports.json', 'airports-table');
-            } else if (id === 'airlines-popup') {
-                loadJSONData('airlines.json', 'airlines-table');
+        function openPopup(popupId) {
+            const popup = document.getElementById(popupId);
+            popup.style.display = 'flex';
+
+            if (popupId === 'airports-popup') {
+                loadJSONData('airports.json', 'airports-table', 'loading-airports');
+            } else if (popupId === 'airlines-popup') {
+                loadJSONData('airlines.json', 'airlines-table', 'loading-airlines');
             }
         }
 
-        function closePopup(id) {
-            document.getElementById(id).style.display = 'none';
+        function closePopup(popupId) {
+            const popup = document.getElementById(popupId);
+            popup.style.display = 'none';
         }
 
-        function loadJSONData(jsonFile, tableId) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '<?php echo plugins_url('react-plugin/') ?>' + jsonFile, true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var data = JSON.parse(xhr.responseText);
-                    var table = document.getElementById(tableId);
-                    var loading = document.querySelector(`#${tableId} ~ .loading`);
-                    loading.style.display = 'none';
+        function loadJSONData(jsonFile, tableId, loadingId) {
+            const url = '<?php echo plugins_url("react-plugin/") ?>' + jsonFile; // Ensure correct URL to JSON file
+            console.log('Intentando cargar el archivo JSON desde:', url); // Mensaje de depuración
 
-                    var headers = Object.keys(data.response[0]);
-                    var tableHTML = '<table><thead><tr>';
-                    headers.forEach(function(header) {
-                        tableHTML += '<th>' + header + '</th>';
-                    });
-                    tableHTML += '</tr></thead><tbody>';
-                    data.response.forEach(function(row) {
-                        tableHTML += '<tr>';
-                        headers.forEach(function(header) {
-                            tableHTML += '<td>' + row[header] + '</td>';
-                        });
-                        tableHTML += '</tr>';
-                    });
-                    tableHTML += '</tbody></table>';
-                    table.innerHTML = tableHTML;
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    const loadingElement = document.getElementById(loadingId);
+
+                    if (xhr.status === 200) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            const table = document.getElementById(tableId);
+                            loadingElement.style.display = 'none';
+
+                            if (data.response && data.response.length > 0) {
+                                let headers = Object.keys(data.response[0]);
+                                let tableHTML = '<table><thead><tr>';
+                                headers.forEach(function(header) {
+                                    tableHTML += '<th>' + header + '</th>';
+                                });
+                                tableHTML += '</tr></thead><tbody>';
+                                data.response.forEach(function(row) {
+                                    tableHTML += '<tr>';
+                                    headers.forEach(function(header) {
+                                        tableHTML += '<td>' + row[header] + '</td>';
+                                    });
+                                    tableHTML += '</tr>';
+                                });
+                                tableHTML += '</tbody></table>';
+                                table.innerHTML = tableHTML;
+                            } else {
+                                table.innerHTML = '<p>No se encontraron datos.</p>';
+                            }
+
+                        } catch (e) {
+                            console.error('Error al parsear el JSON:', e);
+                            loadingElement.innerHTML = 'Error al procesar los datos. Intenta nuevamente.';
+                        }
+                    } else {
+                        console.error('Error al cargar el archivo JSON. Código de estado:', xhr.status, xhr.statusText);
+                        loadingElement.innerHTML = 'Error al cargar los datos. Intenta nuevamente.';
+                    }
                 }
             };
+
+            // Manejo de error de red
+            xhr.onerror = function() {
+                console.error('Error de red o problema al intentar acceder al archivo JSON.');
+                const loadingElement = document.getElementById(loadingId);
+                loadingElement.innerHTML = 'Error al cargar los datos. Verifica tu conexión.';
+            };
+
             xhr.send();
         }
     </script>
