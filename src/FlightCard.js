@@ -420,7 +420,13 @@ const FlightCard = ({ data, loadingData }) => {
               </div>
             </div>
             <div className="w-full px-6 relative lg:px-12">
-              <div className="h-1 w-full bg-orange-300 opacity-90 mb-2">
+              <div
+                className={`${
+                  data?.status !== "cancelled"
+                    ? "h-1 w-full bg-orange-300 opacity-90 mb-2"
+                    : "hidden"
+                }`}
+              >
                 <div
                   className="h-1 bg-customGreen relative"
                   style={{
@@ -445,9 +451,16 @@ const FlightCard = ({ data, loadingData }) => {
                 )}
               </div> */}
               <div>
-                <p className="text-xs font-medium text-center text-[#4C6884] pt-1">
+                <p
+                  className={`${
+                    data?.status !== "cancelled"
+                      ? "text-xs font-medium text-center text-[#4C6884] pt-1"
+                      : "hidden"
+                  }`}
+                >
                   <span className="font-bold">
-                    {minutesToHours(data?.duration || null)}
+                    {data?.status !== "cancelled" &&
+                      minutesToHours(data?.duration || null)}
                   </span>{" "}
                   total travel time
                 </p>

@@ -509,8 +509,8 @@ function mi_plugin_activate()
         dep_icao varchar(4) DEFAULT '',
         arr_iata varchar(3) NOT NULL,
         arr_icao varchar(4) DEFAULT '',
-        dep_time_ts bigint DEFAULT 0,
-        arr_time_ts bigint DEFAULT 0,
+        dep_time_ts datetime NOT NULL DEFAULT current_timestamp(),
+        arr_time_ts datetime NOT NULL DEFAULT current_timestamp(),
         status varchar(20) DEFAULT '',
         flight_number varchar(10) DEFAULT '',
         dep_gate varchar(10) DEFAULT '',
@@ -649,6 +649,21 @@ function mi_plugin_activate()
     if (empty($delayed_time_column)) {
         $wpdb->query("ALTER TABLE $schedule_details_table ADD COLUMN delayed_time BIGINT DEFAULT 0 AFTER dep_terminal");
     }
+
+     // Cambiar el tipo de datos de las columnas dep_time_ts y arr_time_ts si ya existen
+     $flights_table = $wpdb->prefix . 'flights';
+
+     // Verifica si las columnas existen y tienen un tipo diferente de DATETIME
+     $dep_time_column = $wpdb->get_row("SHOW COLUMNS FROM $flights_table LIKE 'dep_time_ts'");
+     $arr_time_column = $wpdb->get_row("SHOW COLUMNS FROM $flights_table LIKE 'arr_time_ts'");
+ 
+     if ($dep_time_column && $dep_time_column->Type !== 'datetime') {
+         $wpdb->query("ALTER TABLE $flights_table MODIFY dep_time_ts DATETIME NOT NULL DEFAULT current_timestamp()");
+     }
+ 
+     if ($arr_time_column && $arr_time_column->Type !== 'datetime') {
+         $wpdb->query("ALTER TABLE $flights_table MODIFY arr_time_ts DATETIME NOT NULL DEFAULT current_timestamp()");
+     }
 
     // Intenta cargar datos JSON de aeropuertos
     $airportJson = file_get_contents(plugin_dir_path(__FILE__) . 'airports.json');
@@ -1408,7 +1423,7 @@ function mi_plugin_fetch_flight_data($request)
                             'duration' => $flightData['duration'],
                             'updated_time' => current_time('mysql', 1),
                         ],
-                        ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%s']
+                        ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s']
                     );
 
                     $end_time_save = microtime(true);
