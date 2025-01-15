@@ -34,7 +34,6 @@ const FlightCard = ({ data, loadingData }) => {
       })
       .then((data) => {
         const localDateTime = data.local_time; // Store the full datetime string
-        const localTime = localDateTime.split(" ")[1]; // Extract only the time part
 
         setLocalTime(localDateTime); // Set only the time part if needed elsewhere
       })
@@ -50,7 +49,6 @@ const FlightCard = ({ data, loadingData }) => {
       })
       .then((data) => {
         const localDateTime = data.local_time; // Store the full datetime string
-        const localTime = localDateTime.split(" ")[1]; // Extract only the time part
 
         setLocalArrTime(localDateTime); // Set only the time part if needed elsewhere
       })
@@ -257,14 +255,6 @@ const FlightCard = ({ data, loadingData }) => {
   // Function to format time and show delay if exists
   const formatTimeWithDelay = (time, delay) => {
     // If time is undefined or invalid, return a fallback
-    if (!time) {
-      return (
-        <div>
-          <div>Time: N/A</div>
-          <div>Date: N/A</div>
-        </div>
-      );
-    }
 
     // Split the input time into date and time
     const [formattedDate, formattedTime] = time.toString().split(" ");
@@ -289,7 +279,7 @@ const FlightCard = ({ data, loadingData }) => {
   return (
     <section className="container mx-auto my-8">
       <div className="px-4 flex flex-col items-center justify-center sm:px-16">
-        {localTime && (
+        {/* {localTime && (
           <div className="px-2 border-x-[1px] border-lightBlue-500">
             <p className="text-lg text-[#7794B0] font-semibold">
               Departure local Time {localTime}
@@ -298,7 +288,7 @@ const FlightCard = ({ data, loadingData }) => {
               Arrival local Time {localArrTime}
             </p>
           </div>
-        )}
+        )} */}
         {loadingData && (
           <div
             className="ag-custom-loading-cell"

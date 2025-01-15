@@ -3,10 +3,10 @@
 /**
  * Plugin Name: SEO Flight Schedule
  * Description: Muestra los vuelos de los aeropuertos y aerolineas.
- * Version: 2.2.2
+ * Version: 2.2.3
  * Author: Opentech
  * Text Domain: seo-flight-schedule
- * Last Updated: 2024-11-05
+ * Last Updated: 2025-01-15
  */
 
 defined('ABSPATH') or die('¡Acceso directo no permitido!');
@@ -2168,7 +2168,7 @@ function mi_plugin_docs_page()
 
         function loadJSONData(jsonFile, tableId, loadingId) {
             const url = '<?php echo plugins_url("react-plugin/") ?>' + jsonFile; // Ensure correct URL to JSON file
-            console.log('Intentando cargar el archivo JSON desde:', url); // Mensaje de depuración
+            // console.log('Intentando cargar el archivo JSON desde:', url); // Mensaje de depuración
 
             const xhr = new XMLHttpRequest();
             xhr.open('GET', url, true);
