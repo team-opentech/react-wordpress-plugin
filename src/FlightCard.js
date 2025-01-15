@@ -34,6 +34,7 @@ const FlightCard = ({ data, loadingData }) => {
       })
       .then((data) => {
         const localDateTime = data.local_time; // Store the full datetime string
+        const localTime = localDateTime.split(" ")[1]; // Extract only the time part
 
         setLocalTime(localDateTime); // Set only the time part if needed elsewhere
       })
@@ -49,6 +50,7 @@ const FlightCard = ({ data, loadingData }) => {
       })
       .then((data) => {
         const localDateTime = data.local_time; // Store the full datetime string
+        const localTime = localDateTime.split(" ")[1]; // Extract only the time part
 
         setLocalArrTime(localDateTime); // Set only the time part if needed elsewhere
       })
@@ -255,6 +257,14 @@ const FlightCard = ({ data, loadingData }) => {
   // Function to format time and show delay if exists
   const formatTimeWithDelay = (time, delay) => {
     // If time is undefined or invalid, return a fallback
+    if (!time) {
+      return (
+        <div>
+          <div>Time: N/A</div>
+          <div>Date: N/A</div>
+        </div>
+      );
+    }
 
     // Split the input time into date and time
     const [formattedDate, formattedTime] = time.toString().split(" ");
