@@ -289,7 +289,7 @@ const FlightCard = ({ data, loadingData }) => {
   return (
     <section className="container mx-auto my-8">
       <div className="px-4 flex flex-col items-center justify-center sm:px-16">
-        {/* {localTime && (
+        {localTime && (
           <div className="px-2 border-x-[1px] border-lightBlue-500">
             <p className="text-lg text-[#7794B0] font-semibold">
               Departure local Time {localTime}
@@ -298,7 +298,7 @@ const FlightCard = ({ data, loadingData }) => {
               Arrival local Time {localArrTime}
             </p>
           </div>
-        )} */}
+        )}
         {loadingData && (
           <div
             className="ag-custom-loading-cell"
