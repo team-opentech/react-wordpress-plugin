@@ -3,10 +3,10 @@
 /**
  * Plugin Name: SEO Flight Schedule
  * Description: Muestra los vuelos de los aeropuertos y aerolineas.
- * Version: 2.2.3
+ * Version: 2.2.4
  * Author: Opentech
  * Text Domain: seo-flight-schedule
- * Last Updated: 2025-01-15
+ * Last Updated: 2025-01-16
  */
 
 defined('ABSPATH') or die('¡Acceso directo no permitido!');
